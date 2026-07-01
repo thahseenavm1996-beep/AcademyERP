@@ -1,0 +1,17 @@
+/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/bin/Debug/net10.0/AcademyERP.Infrastructure.deps.json
+/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/bin/Debug/net10.0/AcademyERP.Infrastructure.dll
+/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/bin/Debug/net10.0/AcademyERP.Infrastructure.pdb
+/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/bin/Debug/net10.0/AcademyERP.Application.dll
+/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/bin/Debug/net10.0/AcademyERP.Domain.dll
+/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/bin/Debug/net10.0/AcademyERP.Application.pdb
+/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/bin/Debug/net10.0/AcademyERP.Domain.pdb
+/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/obj/Debug/net10.0/AcademyERP.Infrastructure.csproj.AssemblyReference.cache
+/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/obj/Debug/net10.0/AcademyERP.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/obj/Debug/net10.0/AcademyERP.Infrastructure.AssemblyInfoInputs.cache
+/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/obj/Debug/net10.0/AcademyERP.Infrastructure.AssemblyInfo.cs
+/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/obj/Debug/net10.0/AcademyERP.Infrastructure.csproj.CoreCompileInputs.cache
+/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/obj/Debug/net10.0/AcademyE.25D454E0.Up2Date
+/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/obj/Debug/net10.0/AcademyERP.Infrastructure.dll
+/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/obj/Debug/net10.0/refint/AcademyERP.Infrastructure.dll
+/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/obj/Debug/net10.0/AcademyERP.Infrastructure.pdb
+/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/obj/Debug/net10.0/ref/AcademyERP.Infrastructure.dll

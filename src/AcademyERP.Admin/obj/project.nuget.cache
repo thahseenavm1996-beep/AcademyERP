@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "dgSpecHash": "bNB/WJr7DCs=",
+  "success": true,
+  "projectFilePath": "/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Admin/AcademyERP.Admin.csproj",
+  "expectedPackageFiles": [
+    "/Users/thahsiii/.nuget/packages/microsoft.aspnetcore.identity.entityframeworkcore/10.0.9/microsoft.aspnetcore.identity.entityframeworkcore.10.0.9.nupkg.sha512",
+    "/Users/thahsiii/.nuget/packages/microsoft.entityframeworkcore/10.0.9/microsoft.entityframeworkcore.10.0.9.nupkg.sha512",
+    "/Users/thahsiii/.nuget/packages/microsoft.entityframeworkcore.abstractions/10.0.9/microsoft.entityframeworkcore.abstractions.10.0.9.nupkg.sha512",
+    "/Users/thahsiii/.nuget/packages/microsoft.entityframeworkcore.analyzers/10.0.9/microsoft.entityframeworkcore.analyzers.10.0.9.nupkg.sha512",
+    "/Users/thahsiii/.nuget/packages/microsoft.entityframeworkcore.relational/10.0.9/microsoft.entityframeworkcore.relational.10.0.9.nupkg.sha512"
+  ],
+  "logs": []
+}

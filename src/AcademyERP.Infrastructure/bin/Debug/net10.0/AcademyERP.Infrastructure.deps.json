@@ -1,0 +1,56 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v10.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v10.0": {
+      "AcademyERP.Infrastructure/1.0.0": {
+        "dependencies": {
+          "AcademyERP.Application": "1.0.0",
+          "AcademyERP.Domain": "1.0.0"
+        },
+        "runtime": {
+          "AcademyERP.Infrastructure.dll": {}
+        }
+      },
+      "AcademyERP.Application/1.0.0": {
+        "dependencies": {
+          "AcademyERP.Domain": "1.0.0"
+        },
+        "runtime": {
+          "AcademyERP.Application.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "AcademyERP.Domain/1.0.0": {
+        "runtime": {
+          "AcademyERP.Domain.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "AcademyERP.Infrastructure/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "AcademyERP.Application/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "AcademyERP.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
