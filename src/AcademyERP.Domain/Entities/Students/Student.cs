@@ -1,5 +1,7 @@
 using AcademyERP.Domain.Entities.Common;
 using AcademyERP.Domain.Enums;
+using AcademyERP.Domain.Entities.Enrollments;
+using AcademyERP.Domain.Entities.StudentParents;
 
 namespace AcademyERP.Domain.Entities.Students;
 
@@ -27,4 +29,7 @@ public class Student : BaseEntity
     public string? Remarks { get; set; }
 
     public UserStatus Status { get; set; } = UserStatus.Active;
+    public ICollection<Enrollment> Enrollments { get; set; } = new List<Enrollment>();
+
+    public ICollection<StudentParent> StudentParents { get; set; } = new List<StudentParent>();
 }

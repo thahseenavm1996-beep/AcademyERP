@@ -8,6 +8,17 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AcademyERP.Application\AcademyERP.Application.csproj" />
+    <ProjectReference Include="..\AcademyERP.Persistence\AcademyERP.Persistence.csproj" />
+    <ProjectReference Include="..\AcademyERP.Domain\AcademyERP.Domain.csproj" />
   </ItemGroup>
 
 </Project>
