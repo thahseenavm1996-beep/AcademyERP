@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AcademyERP.Persistence")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cd63237238f4ca92656c8019b48d726294b8fc0e")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f96dfa34cfee796ba5b00c1ee5b56528367e3435")]
 [assembly: System.Reflection.AssemblyProductAttribute("AcademyERP.Persistence")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AcademyERP.Persistence")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

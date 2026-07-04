@@ -46,3 +46,12 @@
 2026-07-05 02:25:38.891 +05:30 [INF] HTTP GET /api/Students responded 200 in 20.8662 ms
 2026-07-05 02:25:59.580 +05:30 [INF] HTTP DELETE /api/Students/dc053240-bba4-4fbe-59cf-08deda001b32 responded 200 in 116.2804 ms
 2026-07-05 02:25:59.596 +05:30 [INF] HTTP GET /api/Students responded 200 in 11.1448 ms
+2026-07-05 02:39:21.958 +05:30 [WRN] Failed to determine the https port for redirect.
+2026-07-05 02:39:22.169 +05:30 [INF] HTTP GET /api/Students responded 200 in 212.1453 ms
+2026-07-05 02:39:22.468 +05:30 [INF] HTTP GET /api/Students responded 200 in 32.4205 ms
+2026-07-05 02:39:28.838 +05:30 [INF] HTTP GET /api/Students responded 200 in 23.8799 ms
+2026-07-05 02:41:23.612 +05:30 [INF] HTTP GET /api/Students responded 200 in 53.6340 ms
+2026-07-05 02:41:23.883 +05:30 [INF] HTTP GET /api/Students responded 200 in 140.5885 ms
+2026-07-05 02:41:57.270 +05:30 [WRN] Failed to determine the https port for redirect.
+2026-07-05 02:41:57.496 +05:30 [INF] HTTP GET /api/Students responded 200 in 227.5833 ms
+2026-07-05 02:41:57.728 +05:30 [INF] HTTP GET /api/Students responded 200 in 17.8687 ms

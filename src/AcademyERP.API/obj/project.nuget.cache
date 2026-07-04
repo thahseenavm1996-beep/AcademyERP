@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "0I2SFh3u0ts=",
+  "dgSpecHash": "EARdMaH5NV4=",
   "success": true,
-  "projectFilePath": "/Users/thahsiii/Development/AcademyERP/src/AcademyERP.API/AcademyERP.API.csproj",
+  "projectFilePath": "/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Api/AcademyERP.API.csproj",
   "expectedPackageFiles": [
     "/Users/thahsiii/.nuget/packages/automapper/12.0.1/automapper.12.0.1.nupkg.sha512",
     "/Users/thahsiii/.nuget/packages/automapper.extensions.microsoft.dependencyinjection/12.0.1/automapper.extensions.microsoft.dependencyinjection.12.0.1.nupkg.sha512",
@@ -79,9 +79,9 @@
       "code": "NU1903",
       "level": "Warning",
       "message": "Package 'AutoMapper' 12.0.1 has a known high severity vulnerability, https://github.com/advisories/GHSA-rvv3-g6hj-g44x",
-      "projectPath": "/Users/thahsiii/Development/AcademyERP/src/AcademyERP.API/AcademyERP.API.csproj",
+      "projectPath": "/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Api/AcademyERP.API.csproj",
       "warningLevel": 1,
-      "filePath": "/Users/thahsiii/Development/AcademyERP/src/AcademyERP.API/AcademyERP.API.csproj",
+      "filePath": "/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Api/AcademyERP.API.csproj",
       "libraryId": "AutoMapper",
       "targetGraphs": [
         "net10.0"

@@ -4254,11 +4254,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/thahsiii/Development/AcademyERP/src/AcademyERP.API/AcademyERP.API.csproj",
+      "projectUniqueName": "/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Api/AcademyERP.API.csproj",
       "projectName": "AcademyERP.API",
-      "projectPath": "/Users/thahsiii/Development/AcademyERP/src/AcademyERP.API/AcademyERP.API.csproj",
+      "projectPath": "/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Api/AcademyERP.API.csproj",
       "packagesPath": "/Users/thahsiii/.nuget/packages/",
-      "outputPath": "/Users/thahsiii/Development/AcademyERP/src/AcademyERP.API/obj/",
+      "outputPath": "/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Api/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/Users/thahsiii/.nuget/NuGet/NuGet.Config"
