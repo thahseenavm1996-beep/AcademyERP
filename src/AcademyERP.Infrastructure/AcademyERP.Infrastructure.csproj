@@ -4,6 +4,13 @@
     <ProjectReference Include="..\AcademyERP.Application\AcademyERP.Application.csproj" />
     <ProjectReference Include="..\AcademyERP.Domain\AcademyERP.Domain.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AcademyERP.Persistence\AcademyERP.Persistence.csproj" />
+</ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.19.1" />
+  </ItemGroup>
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>

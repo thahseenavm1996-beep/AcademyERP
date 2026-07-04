@@ -1,6 +1,7 @@
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Domain/bin/Debug/net10.0/AcademyERP.Domain.deps.json
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Domain/bin/Debug/net10.0/AcademyERP.Domain.dll
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Domain/bin/Debug/net10.0/AcademyERP.Domain.pdb
+/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Domain/obj/Debug/net10.0/AcademyERP.Domain.csproj.AssemblyReference.cache
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Domain/obj/Debug/net10.0/AcademyERP.Domain.GeneratedMSBuildEditorConfig.editorconfig
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Domain/obj/Debug/net10.0/AcademyERP.Domain.AssemblyInfoInputs.cache
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Domain/obj/Debug/net10.0/AcademyERP.Domain.AssemblyInfo.cs

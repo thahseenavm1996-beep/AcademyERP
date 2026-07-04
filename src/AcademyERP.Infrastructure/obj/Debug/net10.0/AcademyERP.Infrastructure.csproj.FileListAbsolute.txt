@@ -3,8 +3,10 @@
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/bin/Debug/net10.0/AcademyERP.Infrastructure.pdb
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/bin/Debug/net10.0/AcademyERP.Application.dll
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/bin/Debug/net10.0/AcademyERP.Domain.dll
+/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/bin/Debug/net10.0/AcademyERP.Persistence.dll
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/bin/Debug/net10.0/AcademyERP.Application.pdb
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/bin/Debug/net10.0/AcademyERP.Domain.pdb
+/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/bin/Debug/net10.0/AcademyERP.Persistence.pdb
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/obj/Debug/net10.0/AcademyERP.Infrastructure.csproj.AssemblyReference.cache
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/obj/Debug/net10.0/AcademyERP.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/obj/Debug/net10.0/AcademyERP.Infrastructure.AssemblyInfoInputs.cache

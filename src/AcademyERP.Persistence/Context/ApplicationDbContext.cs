@@ -5,37 +5,34 @@ using AcademyERP.Domain.Entities.Courses;
 using AcademyERP.Domain.Entities.StudentParents;
 using AcademyERP.Domain.Entities.Students;
 using AcademyERP.Domain.Entities.Teachers;
-using Microsoft.EntityFrameworkCore;
 using AcademyERP.Domain.Entities.TeacherCourses;
 using AcademyERP.Domain.Entities.TeacherAvailabilities;
+using AcademyERP.Domain.Entities.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using AcademyERP.Domain.Entities.Common;
+using AcademyERP.Domain.Entities;
+
 
 namespace AcademyERP.Persistence.Context;
 
-public class ApplicationDbContext : DbContext
+public class ApplicationDbContext
+    : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
     {
     }
-
+    public DbSet<DocumentSequence> DocumentSequences => Set<DocumentSequence>();
     public DbSet<Student> Students => Set<Student>();
-
     public DbSet<Teacher> Teachers => Set<Teacher>();
-
     public DbSet<Parent> Parents => Set<Parent>();
-
     public DbSet<StudentParent> StudentParents => Set<StudentParent>();
-
-
     public DbSet<Course> Courses => Set<Course>();
-
     public DbSet<Enrollment> Enrollments => Set<Enrollment>();
-
     public DbSet<ClassDuration> ClassDurations => Set<ClassDuration>();
-
     public DbSet<TimeSlot> TimeSlots => Set<TimeSlot>();
     public DbSet<TeacherCourse> TeacherCourses => Set<TeacherCourse>();
-
     public DbSet<TeacherAvailability> TeacherAvailabilities => Set<TeacherAvailability>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -43,5 +40,27 @@ public class ApplicationDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+    }
+    public override async Task<int> SaveChangesAsync(
+    CancellationToken cancellationToken = default)
+    {
+        var entries = ChangeTracker
+            .Entries<BaseEntity>();
+
+        foreach (var entry in entries)
+        {
+            switch (entry.State)
+            {
+                case EntityState.Added:
+                    entry.Entity.CreatedAt = DateTime.UtcNow;
+                    break;
+
+                case EntityState.Modified:
+                    entry.Entity.UpdatedAt = DateTime.UtcNow;
+                    break;
+            }
+        }
+
+        return await base.SaveChangesAsync(cancellationToken);
     }
 }

@@ -1,0 +1,155 @@
+@using MudBlazor
+@using AcademyERP.Admin.Models
+@using AcademyERP.Admin.Services
+
+@inject StudentApiService StudentApi
+@inject ISnackbar Snackbar
+
+<MudDialog>
+
+    <DialogContent>
+
+        <MudText Typo="Typo.h5">
+            @(IsEdit ? "Edit Student" : "Add Student")
+        </MudText>
+        <MudForm @ref="_form">
+
+            <!--  <MudTextField T="string" Label="Admission Number" @bind-Value="_model.AdmissionNumber"
+                          For="@(() => _model.AdmissionNumber)" />-->
+
+            <MudTextField T="string" Label="Full Name" @bind-Value="_model.FullName" For="@(() => _model.FullName)" />
+            <MudDatePicker Label="Admission Date" @bind-Date="_model.AdmissionDate" MinDate="@_model.DateOfBirth"
+                           For="@(() => _model.AdmissionDate)" />
+
+            <MudDatePicker Label="Date of Birth" @bind-Date="_model.DateOfBirth" For="@(() => _model.DateOfBirth)"
+                           MaxDate="@DateTime.Today.AddYears(-4)" />
+
+            <MudSelect T="int" Label="Gender" @bind-Value="_model.Gender" For="@(() => _model.Gender)">
+
+                <MudSelectItem Value="0">Male</MudSelectItem>
+                <MudSelectItem Value="1">Female</MudSelectItem>
+
+            </MudSelect>
+
+            <MudTextField T="string" Label="Country" @bind-Value="_model.Country" For="@(() => _model.Country)" />
+
+            <MudTextField T="string" Label="Time Zone" @bind-Value="_model.TimeZone" For="@(() => _model.TimeZone)" />
+
+            <MudTextField T="string" Label="Remarks" Lines="3" @bind-Value="_model.Remarks" />
+        </MudForm>
+    </DialogContent>
+
+    <DialogActions>
+
+        <MudButton OnClick="Cancel">
+            Cancel
+        </MudButton>
+
+        <!-- <MudButton Color="Color.Primary">
+            Save
+        </MudButton>-->
+        <MudButton Color="Color.Primary" OnClick="Save">
+            @(IsEdit ? "Update" : "Save")
+        </MudButton>
+
+    </DialogActions>
+
+</MudDialog>
+
+@code {
+    [Parameter]
+    public StudentResponse? Student { get; set; }
+
+    [Parameter]
+    public bool IsEdit { get; set; }
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+    private CreateStudentRequest _model = new();
+    private async Task Save()
+    {
+        if (IsEdit)
+        {
+            var updateRequest = new UpdateStudentRequest
+            {
+                FullName = _model.FullName,
+                AdmissionDate = _model.AdmissionDate!.Value,
+                DateOfBirth = _model.DateOfBirth!.Value,
+                Gender = _model.Gender,
+                Country = _model.Country,
+                TimeZone = _model.TimeZone,
+                Remarks = _model.Remarks
+            };
+
+            var result = await StudentApi.UpdateStudentAsync(_studentId, updateRequest);
+
+            if (result.Success)
+            {
+                Snackbar.Add("Student updated successfully!", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                foreach (var error in result.Errors)
+                    Snackbar.Add(error, Severity.Error);
+            }
+        }
+        else
+        {
+            // Your existing CreateStudentAsync() code stays here.
+
+            await _form!.ValidateAsync();
+
+            if (!_form.IsValid)
+                return;
+
+            var result = await StudentApi.CreateStudentAsync(_model);
+
+            if (result.Success)
+            {
+                Snackbar.Add("Student created successfully!", Severity.Success);
+
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                foreach (var error in result.Errors)
+                {
+                    Snackbar.Add(error, Severity.Error);
+                }
+            }
+        }
+    }
+    private MudForm? _form;
+    protected override void OnInitialized()
+    {
+        if (IsEdit && Student is not null)
+        {
+            _model.FullName = Student.FullName;
+            _model.AdmissionDate = Student.AdmissionDate;
+            _model.DateOfBirth = Student.DateOfBirth;
+            _model.Gender = Student.Gender;
+            _model.Country = Student.Country;
+            _model.TimeZone = Student.TimeZone;
+            _model.Remarks = Student.Remarks;
+        }
+        if (IsEdit && Student is not null)
+        {
+            _studentId = Student.Id;
+
+            _model.FullName = Student.FullName;
+            _model.AdmissionDate = Student.AdmissionDate;
+            _model.DateOfBirth = Student.DateOfBirth;
+            _model.Gender = Student.Gender;
+            _model.Country = Student.Country;
+            _model.TimeZone = Student.TimeZone;
+            _model.Remarks = Student.Remarks;
+        }
+    }
+    private Guid _studentId;
+}

@@ -12,8 +12,8 @@ public abstract class BaseEntityConfiguration<TEntity>
     {
         builder.HasKey(e => e.Id);
 
-        builder.Property(e => e.CreatedOn)
-               .IsRequired();
+        builder.Property(x => x.CreatedAt)
+       .HasDefaultValueSql("GETUTCDATE()");
 
         builder.Property(e => e.CreatedBy)
                .HasMaxLength(100);

@@ -11,8 +11,6 @@ public class TeacherConfiguration : BaseEntityConfiguration<Teacher>
         base.Configure(builder);
         builder.ToTable("Teachers");
 
-        builder.HasKey(t => t.Id);
-
         builder.Property(t => t.EmployeeCode)
                .HasMaxLength(20)
                .IsRequired();

@@ -1,0 +1,44 @@
+﻿@inherits LayoutComponentBase
+
+<MudThemeProvider />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+
+    <MudAppBar Color="Color.Primary" Elevation="1">
+
+        <MudText Typo="Typo.h5" Class="fw-bold">
+            🎓 Academy ERP
+        </MudText>
+
+        <MudSpacer />
+
+        <MudAvatar Size="Size.Medium" Color="Color.Secondary">
+            A
+        </MudAvatar>
+
+        <MudText Class="ms-2">
+            Administrator
+        </MudText>
+
+    </MudAppBar>
+
+    <MudDrawer Open="true" Elevation="1" Variant="DrawerVariant.Responsive" Width="260px">
+
+        <NavMenu />
+
+    </MudDrawer>
+
+    <MudMainContent>
+
+        <MudContainer MaxWidth="MaxWidth.False" Class="pa-6">
+
+            @Body
+
+        </MudContainer>
+
+    </MudMainContent>
+
+</MudLayout>

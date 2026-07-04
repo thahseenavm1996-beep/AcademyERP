@@ -1,14 +1,10 @@
-using AcademyERP.Domain.Entities.Common;
+using Microsoft.AspNetCore.Identity;
 
 namespace AcademyERP.Domain.Entities.Identity;
 
-public class ApplicationUser : BaseEntity
+public class ApplicationUser : IdentityUser<Guid>
 {
     public string FullName { get; set; } = string.Empty;
-
-    public string Email { get; set; } = string.Empty;
-
-    public string PhoneNumber { get; set; } = string.Empty;
 
     public bool IsActive { get; set; } = true;
 }

@@ -11,7 +11,7 @@ public class StudentConfiguration : BaseEntityConfiguration<Student>
         base.Configure(builder);
         builder.ToTable("Students");
 
-        builder.HasKey(x => x.Id);
+
 
         builder.Property(x => x.AdmissionNumber)
             .HasMaxLength(50)
