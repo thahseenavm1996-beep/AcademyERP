@@ -168,6 +168,7 @@
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.API/obj/Debug/net10.0/AcademyERP.API.csproj.CoreCompileInputs.cache
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.API/obj/Debug/net10.0/AcademyERP.API.MvcApplicationPartsAssemblyInfo.cs
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.API/obj/Debug/net10.0/AcademyERP.API.MvcApplicationPartsAssemblyInfo.cache
+/Users/thahsiii/Development/AcademyERP/src/AcademyERP.API/obj/Debug/net10.0/AcademyERP.API.sourcelink.json
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.API/obj/Debug/net10.0/rjimswa.dswa.cache.json
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.API/obj/Debug/net10.0/rjsmrazor.dswa.cache.json
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.API/obj/Debug/net10.0/rjsmcshtml.dswa.cache.json

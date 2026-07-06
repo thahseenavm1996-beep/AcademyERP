@@ -1,0 +1,172 @@
+@using AcademyERP.Admin.Models
+@using MudBlazor
+@using AcademyERP.Admin.Services
+@inject ParentApiService ParentApi
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+
+        <MudForm @ref="_form">
+
+            <MudTextField Label="Full Name" @bind-Value="_model.FullName" Required="true"
+                          RequiredError="Full Name is required." />
+
+            <MudTextField Label="Phone Number" @bind-Value="_model.PhoneNumber" Required="true"
+                          RequiredError="Phone Number is required." />
+
+            <MudTextField Label="Email" @bind-Value="_model.Email" Required="true" RequiredError="Email is required." />
+            <MudTextField T="string" Label="Password" @bind-Value="_model.Password" InputType="InputType.Password"
+                          Required="true" RequiredError="Password is required."
+                          Validation="@(new Func<string, IEnumerable<string>>(ValidatePassword))" Immediate="true"
+                          HelperText="Minimum 6 characters" />
+
+            <MudTextField T="string" Label="Confirm Password" @bind-Value="_model.ConfirmPassword"
+                          InputType="InputType.Password" Validation="@(new Func<string, string?>(ValidateConfirmPassword))" />
+            <MudTextField Label="Remarks" @bind-Value="_model.Remarks" Lines="3" />
+
+        </MudForm>
+
+    </DialogContent>
+
+    <DialogActions>
+
+        <MudButton Color="Color.Secondary" Variant="Variant.Outlined" OnClick="Cancel">
+            Cancel
+        </MudButton>
+
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save">
+            Save
+        </MudButton>
+
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public Guid ParentId { get; set; }
+
+    [Parameter]
+    public bool IsEdit { get; set; }
+
+    private MudForm? _form;
+
+    private CreateParentRequest _model = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (IsEdit)
+        {
+            var parent = await ParentApi.GetParentAsync(ParentId);
+
+            if (parent != null)
+            {
+                _model.FullName = parent.FullName;
+                _model.PhoneNumber = parent.PhoneNumber;
+                _model.Email = parent.Email;
+                _model.Remarks = parent.Remarks;
+            }
+
+        }
+    }
+
+    private async Task Save()
+    {
+        await _form.ValidateAsync();
+
+        if (!_form.IsValid)
+            return;
+
+        if (_model.Password.Length < 6)
+        {
+            Snackbar.Add("Password must be at least 6 characters.", Severity.Warning);
+            return;
+        }
+
+        if (_model.Password != _model.ConfirmPassword)
+        {
+            Snackbar.Add("Password and Confirm Password do not match.", Severity.Warning);
+            return;
+        }
+
+        ApiResult<ParentResponse> result;
+
+        if (IsEdit)
+        {
+            var request = new UpdateParentRequest
+            {
+                FullName = _model.FullName,
+                PhoneNumber = _model.PhoneNumber,
+                Email = _model.Email,
+                Remarks = _model.Remarks,
+
+            };
+
+            result = await ParentApi.UpdateParentAsync(ParentId, request);
+        }
+        else
+        {
+            var request = new CreateParentRequest
+            {
+                FullName = _model.FullName,
+                PhoneNumber = _model.PhoneNumber,
+                Email = _model.Email,
+                Password = _model.Password,
+                ConfirmPassword = _model.ConfirmPassword,
+                Remarks = _model.Remarks,
+
+            };
+
+            result = await ParentApi.CreateParentAsync(request);
+        }
+
+        if (result.Success)
+        {
+            Snackbar.Add(
+                IsEdit ? "Parent updated successfully." : "Parent created successfully.",
+                Severity.Success);
+
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        else
+        {
+            foreach (var error in result.Errors)
+            {
+                Snackbar.Add(error, Severity.Error);
+            }
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+    private string? ValidateConfirmPassword(string value)
+    {
+        if (value != _model.Password)
+            return "Passwords do not match.";
+
+        return null;
+    }
+    private IEnumerable<string> ValidatePassword(string password)
+    {
+        if (string.IsNullOrWhiteSpace(password))
+            yield return "Password is required.";
+
+        if (password.Length < 6)
+            yield return "Password must be at least 6 characters.";
+
+        if (!password.Any(char.IsUpper))
+            yield return "Password must contain at least one uppercase letter.";
+
+        if (!password.Any(char.IsDigit))
+            yield return "Password must contain at least one number.";
+
+        if (!password.Any(ch => !char.IsLetterOrDigit(ch)))
+            yield return "Password must contain at least one special character.";
+    }
+}

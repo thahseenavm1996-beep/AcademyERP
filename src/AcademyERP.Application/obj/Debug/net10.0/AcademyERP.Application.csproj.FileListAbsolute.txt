@@ -8,6 +8,7 @@
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Application/obj/Debug/net10.0/AcademyERP.Application.AssemblyInfoInputs.cache
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Application/obj/Debug/net10.0/AcademyERP.Application.AssemblyInfo.cs
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Application/obj/Debug/net10.0/AcademyERP.Application.csproj.CoreCompileInputs.cache
+/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Application/obj/Debug/net10.0/AcademyERP.Application.sourcelink.json
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Application/obj/Debug/net10.0/AcademyE.232D5EEE.Up2Date
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Application/obj/Debug/net10.0/AcademyERP.Application.dll
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Application/obj/Debug/net10.0/refint/AcademyERP.Application.dll

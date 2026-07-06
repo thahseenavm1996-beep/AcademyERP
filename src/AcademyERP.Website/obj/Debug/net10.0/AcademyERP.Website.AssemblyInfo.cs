@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AcademyERP.Website")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f96dfa34cfee796ba5b00c1ee5b56528367e3435")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1037f3f5655d2a6ca9388005c8fabbb107f9ec99")]
 [assembly: System.Reflection.AssemblyProductAttribute("AcademyERP.Website")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AcademyERP.Website")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

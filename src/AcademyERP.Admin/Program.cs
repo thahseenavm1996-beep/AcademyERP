@@ -10,6 +10,8 @@ builder.Services.AddScoped(sp =>
         BaseAddress = new Uri("http://localhost:5235/")
     });
 builder.Services.AddScoped<StudentApiService>();
+builder.Services.AddScoped<TeacherApiService>();
+builder.Services.AddScoped<ParentApiService>();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()

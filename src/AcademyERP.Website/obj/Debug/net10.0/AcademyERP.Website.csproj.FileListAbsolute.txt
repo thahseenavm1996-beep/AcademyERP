@@ -15,6 +15,7 @@
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Website/obj/Debug/net10.0/AcademyERP.Website.MvcApplicationPartsAssemblyInfo.cache
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Website/obj/Debug/net10.0/AcademyERP.Website.RazorAssemblyInfo.cache
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Website/obj/Debug/net10.0/AcademyERP.Website.RazorAssemblyInfo.cs
+/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Website/obj/Debug/net10.0/AcademyERP.Website.sourcelink.json
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Website/obj/Debug/net10.0/rjimswa.dswa.cache.json
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Website/obj/Debug/net10.0/rjsmrazor.dswa.cache.json
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Website/obj/Debug/net10.0/rjsmcshtml.dswa.cache.json

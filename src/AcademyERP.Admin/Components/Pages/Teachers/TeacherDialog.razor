@@ -1,0 +1,162 @@
+@using MudBlazor
+@using AcademyERP.Admin.Models
+@using AcademyERP.Admin.Services
+
+@inject TeacherApiService TeacherApi
+@inject ISnackbar Snackbar
+
+<MudDialog>
+
+    <DialogContent>
+
+        <!-- <MudText Typo="Typo.h5">
+            @(IsEdit ? "Edit Teacher" : "Add Teacher")
+        </MudText>-->
+        <MudForm @ref="_form">
+
+            <!--  <MudTextField T="string" Label="Admission Number" @bind-Value="_model.AdmissionNumber"
+                          For="@(() => _model.AdmissionNumber)" />-->
+
+            <MudTextField Label="Full Name" @bind-Value="_model.FullName" Required="true" />
+
+            <MudDatePicker Label="Joining Date" @bind-Date="_model.JoiningDate" Required="true" />
+
+            <MudDatePicker Label="Date of Birth" @bind-Date="_model.DateOfBirth" Required="true" />
+
+            <MudSelect T="int" Label="Gender" @bind-Value="_model.Gender">
+                <MudSelectItem Value="0">Male</MudSelectItem>
+                <MudSelectItem Value="1">Female</MudSelectItem>
+                <MudSelectItem Value="2">Other</MudSelectItem>
+            </MudSelect>
+
+            <MudTextField Label="Mobile Number" @bind-Value="_model.MobileNumber" />
+
+            <MudTextField Label="Email" @bind-Value="_model.Email" />
+
+            <MudTextField Label="Qualification" @bind-Value="_model.Qualification" />
+
+            <MudTextField Label="Department" @bind-Value="_model.Department" />
+
+            <MudTextField Label="Country" @bind-Value="_model.Country" />
+
+            <MudTextField Label="Time Zone" @bind-Value="_model.TimeZone" />
+
+            <MudTextField Label="Address" @bind-Value="_model.Address" />
+
+            <MudTextField Label="Remarks" @bind-Value="_model.Remarks" Lines="3" TextArea="true" />
+        </MudForm>
+    </DialogContent>
+
+    <DialogActions>
+
+        <MudButton OnClick="Cancel">
+            Cancel
+        </MudButton>
+
+        <!-- <MudButton Color="Color.Primary">
+            Save
+        </MudButton>-->
+        <MudButton Color="Color.Primary" OnClick="Save">
+            @(IsEdit ? "Update" : "Save")
+        </MudButton>
+
+    </DialogActions>
+
+</MudDialog>
+
+@code {
+    [Parameter]
+    public TeacherResponse? Teacher { get; set; }
+
+    [Parameter]
+    public bool IsEdit { get; set; }
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+    private CreateTeacherRequest _model = new();
+    private async Task Save()
+    {
+        if (IsEdit)
+        {
+            var updateRequest = new UpdateTeacherRequest
+            {
+                FullName = _model.FullName,
+                JoiningDate = _model.JoiningDate!.Value,
+                DateOfBirth = _model.DateOfBirth!.Value,
+                Gender = _model.Gender,
+
+                MobileNumber = _model.MobileNumber,
+                Email = _model.Email,
+                Qualification = _model.Qualification,
+                Department = _model.Department,
+
+                Country = _model.Country,
+                TimeZone = _model.TimeZone,
+                Address = _model.Address,
+                Remarks = _model.Remarks
+            };
+            var result = await TeacherApi.UpdateTeacherAsync(TeacherId, updateRequest);
+            if (result.Success)
+            {
+                Snackbar.Add("Teacher updated successfully!", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                foreach (var error in result.Errors)
+                    Snackbar.Add(error, Severity.Error);
+            }
+        }
+        else
+        {
+            await _form!.ValidateAsync();
+
+            if (!_form.IsValid)
+                return;
+            Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(_model));
+            var result = await TeacherApi.CreateTeacherAsync(_model);
+
+            if (result.Success)
+            {
+                Snackbar.Add("Teacher created successfully!", Severity.Success);
+
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                foreach (var error in result.Errors)
+                {
+                    Snackbar.Add(error, Severity.Error);
+                }
+            }
+        }
+    }
+    private MudForm? _form;
+    protected override void OnInitialized()
+    {
+        if (IsEdit && Teacher is not null)
+        {
+            TeacherId = Teacher.Id;
+
+            _model.FullName = Teacher.FullName;
+            _model.JoiningDate = Teacher.JoiningDate;
+            _model.DateOfBirth = Teacher.DateOfBirth;
+            _model.Gender = Teacher.Gender;
+            _model.Country = Teacher.Country;
+            _model.TimeZone = Teacher.TimeZone;
+            _model.Remarks = Teacher.Remarks;
+
+            _model.MobileNumber = Teacher.MobileNumber;
+            _model.Email = Teacher.Email;
+            _model.Qualification = Teacher.Qualification;
+            _model.Department = Teacher.Department;
+            _model.Address = Teacher.Address;
+        }
+    }
+    private Guid TeacherId;
+}

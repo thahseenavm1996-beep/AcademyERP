@@ -1,14 +1,17 @@
 ﻿<MudNavMenu>
+    <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">
+        Dashboard
+    </MudNavLink>
     <MudNavLink Href="/students" Icon="@Icons.Material.Filled.People">
 
         Students
 
     </MudNavLink>
-
-    <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">
-        Dashboard
+    <MudNavLink Href="/teachers" Icon="@Icons.Material.Filled.Person" Match="NavLinkMatch.Prefix">
+        Teachers
     </MudNavLink>
 
+   
     <!-- <MudNavLink Href="/students" Icon="@Icons.Material.Filled.School">
         //Students
     </MudNavLink>//-->
@@ -17,9 +20,6 @@
         Parents
     </MudNavLink>
 
-    <MudNavLink Href="/teachers" Icon="@Icons.Material.Filled.Person">
-        Teachers
-    </MudNavLink>
 
     <MudNavLink Href="/courses" Icon="@Icons.Material.Filled.MenuBook">
         Courses

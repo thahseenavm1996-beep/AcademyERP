@@ -46,12 +46,32 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Ob3RGb3VuZC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
+[/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Admin/Components/Pages/Parents/ParentDialog.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9QYXJlbnRzL1BhcmVudERpYWxvZy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Admin/Components/Pages/Parents/ParentList.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9QYXJlbnRzL1BhcmVudExpc3QucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Admin/Components/Pages/Parents/ResetParentPasswordDialog.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9QYXJlbnRzL1Jlc2V0UGFyZW50UGFzc3dvcmREaWFsb2cucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Admin/Components/Pages/Students/StudentDialog.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9TdHVkZW50cy9TdHVkZW50RGlhbG9nLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Admin/Components/Pages/Students/StudentList.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9TdHVkZW50cy9TdHVkZW50TGlzdC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Admin/Components/Pages/Teachers/TeacherDialog.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9UZWFjaGVycy9UZWFjaGVyRGlhbG9nLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Admin/Components/Pages/Teachers/TeacherList.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9UZWFjaGVycy9UZWFjaGVyTGlzdC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Admin/Components/Pages/Weather.razor]

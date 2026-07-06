@@ -1,0 +1,240 @@
+@page "/Teachers"
+
+@using AcademyERP.Admin.Models
+@using AcademyERP.Admin.Services
+@inject TeacherApiService TeacherApi
+@using AcademyERP.Admin.Components.Pages.Teachers
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>Teachers</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">
+    Teacher Management
+</MudText>
+
+<MudPaper Class="pa-4 mb-4">
+
+    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+
+        <MudTextField T="string" @bind-Value="_search" Placeholder="Search Teachers..." Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search" Style="width:300px" />
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="SearchTeachers">
+
+            Search
+
+        </MudButton>
+
+        
+
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="OpenAddTeacherDialog">
+
+            Add Teacher
+
+        </MudButton>
+
+    </MudStack>
+
+</MudPaper>
+
+<MudTable T="TeacherResponse" Items="_Teachers" Loading="_loading" Hover="true" Dense="true" Striped="true">
+
+    
+    <!-- <HeaderContent>
+
+        <MudTh>Admission No</MudTh>
+        <MudTh>Name</MudTh>
+        <MudTh>Admission Date</MudTh>
+        <MudTh>Country</MudTh>
+
+    </HeaderContent>-->
+    <HeaderContent>
+        <MudTh>Employee Code</MudTh>
+        <MudTh>Full Name</MudTh>
+
+        <MudTh>Country</MudTh>
+        <MudTh>Status</MudTh>
+        <MudTh>Actions</MudTh>
+
+    </HeaderContent>
+
+    <RowTemplate>
+
+        <MudTd>@context.EmployeeCode</MudTd>
+        <MudTd>@context.FullName</MudTd>
+
+        <MudTd>@context.Country</MudTd>
+        <MudTd>
+            @(context.IsActive ? "Active" : "Inactive")
+        </MudTd>
+
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small"
+                           OnClick="@(() => EditTeacher(context))" />
+
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                           OnClick="@(() => DeleteTeacher(context))" />
+        </MudTd>
+
+    </RowTemplate>
+
+</MudTable>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-4">
+
+    <MudButton Variant="Variant.Outlined" Disabled="@(_page.Page <= 1)" OnClick="PreviousPage">
+
+        Previous
+
+    </MudButton>
+
+    <MudText>
+
+        Page @_page.Page of @_page.TotalPages
+
+    </MudText>
+
+    <MudButton Variant="Variant.Outlined" Disabled="@(_page.Page >= _page.TotalPages)" OnClick="NextPage">
+
+        Next
+
+    </MudButton>
+
+</MudStack>
+<MudText Class="mt-4">
+
+    Showing @_Teachers.Count of @_page.TotalCount Teachers
+    (Page @_page.Page of @_page.TotalPages)
+
+</MudText>
+@code
+{
+    private List<TeacherResponse> _Teachers = new();
+    private TeacherData _page = new();
+
+    private bool _loading = true;
+    private string _search = string.Empty;
+
+    private readonly TeacherQueryRequest _request = new()
+    {
+        Page = 1,
+        PageSize = 10
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTeachersAsync();
+    }
+    private async Task LoadTeachersAsync()
+    {
+        _loading = true;
+
+        var response = await TeacherApi.GetTeachersAsync(_request);
+
+        if (response is not null)
+        {
+            _page = response.Data;
+            _Teachers = _page.Items;
+        }
+
+        _loading = false;
+    }
+    private async Task NextPage()
+    {
+        if (_page.Page >= _page.TotalPages)
+            return;
+
+        _request.Page++;
+
+        await LoadTeachersAsync();
+    }
+
+    private async Task PreviousPage()
+    {
+        if (_page.Page <= 1)
+            return;
+
+        _request.Page--;
+
+        await LoadTeachersAsync();
+    }
+
+    private async Task SearchTeachers()
+    {
+        Console.WriteLine("Search button clicked");
+
+        _request.Page = 1;
+        _request.Search = _search;
+
+        await LoadTeachersAsync();
+    }
+    private async Task OnSearchChanged(string value)
+    {
+        Console.WriteLine($"Searching for: {value}");
+        _search = value;
+
+        _request.Page = 1;
+        _request.Search = _search;
+
+        await LoadTeachersAsync();
+    }
+    private async Task OpenAddTeacherDialog()
+    {
+        Console.WriteLine("Button clicked");
+
+        Snackbar.Add("Button clicked", Severity.Info);
+
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<TeacherDialog>(
+            "Add Teacher",
+            options);
+
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+            await LoadTeachersAsync();
+    }
+    private async Task EditTeacher(TeacherResponse Teacher)
+    {
+        var parameters = new DialogParameters<TeacherDialog>
+    {
+        { x => x.Teacher, Teacher },
+        { x => x.IsEdit, true }
+    };
+
+        var dialog = await DialogService.ShowAsync<TeacherDialog>(
+            "Update Teacher",
+            parameters);
+
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            await LoadTeachersAsync();
+        }
+    }
+    private async Task DeleteTeacher(TeacherResponse Teacher)
+    {
+
+        
+        var success = await TeacherApi.DeleteTeacherAsync(Teacher.Id);
+
+        if (success)
+        {
+            Snackbar.Add("Teacher deleted successfully.", Severity.Success);
+            await LoadTeachersAsync();
+        }
+        else
+        {
+            Snackbar.Add("Failed to delete Teacher.", Severity.Error);
+        }
+    }
+
+}

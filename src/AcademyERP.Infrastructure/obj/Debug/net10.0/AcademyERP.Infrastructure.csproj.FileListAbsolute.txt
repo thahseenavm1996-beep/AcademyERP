@@ -12,6 +12,7 @@
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/obj/Debug/net10.0/AcademyERP.Infrastructure.AssemblyInfoInputs.cache
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/obj/Debug/net10.0/AcademyERP.Infrastructure.AssemblyInfo.cs
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/obj/Debug/net10.0/AcademyERP.Infrastructure.csproj.CoreCompileInputs.cache
+/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/obj/Debug/net10.0/AcademyERP.Infrastructure.sourcelink.json
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/obj/Debug/net10.0/AcademyE.25D454E0.Up2Date
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/obj/Debug/net10.0/AcademyERP.Infrastructure.dll
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/obj/Debug/net10.0/refint/AcademyERP.Infrastructure.dll

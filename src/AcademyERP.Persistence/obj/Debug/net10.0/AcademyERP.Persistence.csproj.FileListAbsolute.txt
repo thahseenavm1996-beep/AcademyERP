@@ -11,6 +11,7 @@
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Persistence/obj/Debug/net10.0/AcademyERP.Persistence.AssemblyInfoInputs.cache
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Persistence/obj/Debug/net10.0/AcademyERP.Persistence.AssemblyInfo.cs
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Persistence/obj/Debug/net10.0/AcademyERP.Persistence.csproj.CoreCompileInputs.cache
+/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Persistence/obj/Debug/net10.0/AcademyERP.Persistence.sourcelink.json
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Persistence/obj/Debug/net10.0/AcademyE.2C28BC3C.Up2Date
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Persistence/obj/Debug/net10.0/AcademyERP.Persistence.dll
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Persistence/obj/Debug/net10.0/refint/AcademyERP.Persistence.dll

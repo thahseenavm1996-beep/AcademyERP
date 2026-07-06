@@ -6,6 +6,7 @@
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Domain/obj/Debug/net10.0/AcademyERP.Domain.AssemblyInfoInputs.cache
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Domain/obj/Debug/net10.0/AcademyERP.Domain.AssemblyInfo.cs
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Domain/obj/Debug/net10.0/AcademyERP.Domain.csproj.CoreCompileInputs.cache
+/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Domain/obj/Debug/net10.0/AcademyERP.Domain.sourcelink.json
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Domain/obj/Debug/net10.0/AcademyERP.Domain.dll
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Domain/obj/Debug/net10.0/refint/AcademyERP.Domain.dll
 /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Domain/obj/Debug/net10.0/AcademyERP.Domain.pdb

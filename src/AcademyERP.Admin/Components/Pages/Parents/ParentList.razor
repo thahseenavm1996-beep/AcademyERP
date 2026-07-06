@@ -1,0 +1,159 @@
+@page "/parents"
+@using AcademyERP.Admin.Services
+@using AcademyERP.Admin.Models
+@using MudBlazor
+
+@inject ParentApiService ParentApi
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>Parents</PageTitle>
+
+<MudPaper Class="pa-4">
+
+    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+
+        <MudText Typo="Typo.h5">
+            Parents
+        </MudText>
+
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="AddParent">
+            Add Parent
+        </MudButton>
+
+    </MudStack>
+
+    <MudSpacer />
+
+    <MudTable Items="_parents" Hover="true" Dense="true" Striped="true">
+
+        <HeaderContent>
+
+            <MudTh>Name</MudTh>
+            <MudTh>Phone</MudTh>
+            <MudTh>Email</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh></MudTh>
+
+        </HeaderContent>
+
+        <RowTemplate>
+
+            <MudTd>@context.FullName</MudTd>
+            <MudTd>@context.PhoneNumber</MudTd>
+            <MudTd>@context.Email</MudTd>
+
+            <MudTd>
+                @(context.Status == 1 ? "Active" : "Inactive")
+            </MudTd>
+
+            <MudTd Align="Align.Right">
+
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary"
+                               OnClick="@(() => EditParent(context.Id))" />
+
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
+                               OnClick="@(() => DeleteParent(context.Id))" />
+                <MudIconButton Icon="@Icons.Material.Filled.LockReset" Color="Color.Warning"
+                               OnClick="@(() => ResetPassword(context.Id))" />
+
+            </MudTd>
+
+        </RowTemplate>
+
+    </MudTable>
+
+</MudPaper>
+
+@code
+{
+    private List<ParentResponse> _parents = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadParents();
+    }
+
+    private async Task LoadParents()
+    {
+        var result = await ParentApi.GetParentsAsync(new ParentQueryRequest
+        {
+            Page = 1,
+            PageSize = 20,
+            Search = ""
+        });
+
+        if (result != null)
+        {
+            _parents = result.Data.Items;
+        }
+    }
+
+    private async Task AddParent()
+    {
+        var dialog = await DialogService.ShowAsync<ParentDialog>(
+            "Add Parent");
+
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadParents();
+            StateHasChanged();
+        }
+    }
+
+    private async Task EditParent(Guid id)
+    {
+        var parameters = new DialogParameters
+        {
+            { nameof(ParentDialog.ParentId), id },
+            { nameof(ParentDialog.IsEdit), true }
+        };
+
+        var dialog = await DialogService.ShowAsync<ParentDialog>(
+            "Update Parent",
+            parameters);
+
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadParents();
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteParent(Guid id)
+    {
+        var success = await ParentApi.DeleteParentAsync(id);
+
+        if (success)
+        {
+            Snackbar.Add("Teacher deleted successfully.", Severity.Success);
+            await LoadParents();
+        }
+        else
+        {
+            Snackbar.Add("Failed to delete Teacher.", Severity.Error);
+        }
+    }
+    private async Task ResetPassword(Guid id)
+    {
+        var parameters = new DialogParameters
+    {
+        { nameof(ResetParentPasswordDialog.ParentId), id }
+    };
+
+        var dialog = await DialogService.ShowAsync<ResetParentPasswordDialog>(
+            "Reset Password",
+            parameters);
+
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            Snackbar.Add("Password reset successfully.", Severity.Success);
+        }
+    }
+}
