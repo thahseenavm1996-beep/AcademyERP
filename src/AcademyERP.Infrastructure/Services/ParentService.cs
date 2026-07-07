@@ -8,6 +8,8 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using AcademyERP.Domain.Entities.Identity;
 using Microsoft.AspNetCore.Identity;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 
 namespace AcademyERP.Infrastructure.Services;
 
@@ -18,16 +20,18 @@ public class ParentService : IParentService
     private readonly ApplicationDbContext _context;
     private readonly UserManager<ApplicationUser> _userManager;
 
+
     public ParentService(
-        IRepository<Parent> repository,
-        IMapper mapper,
-        ApplicationDbContext context,
-        UserManager<ApplicationUser> userManager)
+     IRepository<Parent> repository,
+     IMapper mapper,
+     ApplicationDbContext context,
+     UserManager<ApplicationUser> userManager)
     {
         _repository = repository;
         _mapper = mapper;
         _context = context;
         _userManager = userManager;
+
     }
 
     public async Task<ParentResponse> CreateAsync(CreateParentRequest request)
@@ -129,11 +133,29 @@ public class ParentService : IParentService
         parent.Email = request.Email;
         parent.Remarks = request.Remarks;
 
+        // Update Identity user
+        var user = await _userManager.FindByIdAsync(parent.ApplicationUserId.ToString());
+
+        if (user != null)
+        {
+            user.Email = request.Email;
+            user.UserName = request.Email;
+            user.PhoneNumber = request.PhoneNumber;
+            user.FullName = request.FullName;
+
+            var result = await _userManager.UpdateAsync(user);
+
+            if (!result.Succeeded)
+            {
+                throw new Exception(string.Join(", ",
+                    result.Errors.Select(x => x.Description)));
+            }
+        }
+
         await _context.SaveChangesAsync();
 
         return _mapper.Map<ParentResponse>(parent);
     }
-
     public async Task<bool> DeleteAsync(Guid id)
     {
         var parent = await _context.Parents.FindAsync(id);
@@ -141,48 +163,27 @@ public class ParentService : IParentService
         if (parent == null)
             return false;
 
+        // Delete Identity User first
+        var user = await _userManager.FindByIdAsync(parent.ApplicationUserId.ToString());
+
+        if (user != null)
+        {
+            var result = await _userManager.DeleteAsync(user);
+
+            if (!result.Succeeded)
+            {
+                throw new Exception(string.Join(", ",
+                    result.Errors.Select(x => x.Description)));
+            }
+        }
+
+        // Delete Parent
         _context.Parents.Remove(parent);
 
         await _context.SaveChangesAsync();
 
         return true;
     }
-    /*  public async Task<bool> ResetPasswordAsync(
-      Guid id,
-      ResetParentPasswordRequest request)
-      {
-          var parent = await _context.Parents.FindAsync(id);
-
-          if (parent == null)
-          {
-              throw new Exception("Parent not found.");
-
-              throw new Exception($"ApplicationUserId = {parent.ApplicationUserId}");
-          }
-
-          if (parent == null)
-              return false;
-
-          var user = await _userManager.FindByIdAsync(parent.ApplicationUserId.ToString());
-
-          if (user == null)
-              return false;
-
-          var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-
-          var result = await _userManager.ResetPasswordAsync(
-              user,
-              token,
-              request.Password);
-
-          if (!result.Succeeded)
-          {
-              throw new Exception(string.Join(Environment.NewLine,
-                  result.Errors.Select(e => e.Description)));
-          }
-
-          return true;
-      }*/
     public async Task<bool> ResetPasswordAsync(Guid id, ResetParentPasswordRequest request)
     {
         var parent = await _context.Parents.FindAsync(id);

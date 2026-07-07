@@ -22,7 +22,21 @@ public class StudentApiService
     }
     public async Task<ApiResult<StudentResponse>> CreateStudentAsync(CreateStudentRequest request)
     {
-        var response = await _httpClient.PostAsJsonAsync("api/Students", request);
+        var apiRequest = new
+        {
+            FullName = request.FullName,
+            AdmissionDate = request.AdmissionDate!.Value,
+            DateOfBirth = request.DateOfBirth!.Value,
+            Gender = request.Gender,
+            PhoneNumber = request.MobileNumber,
+            Email = request.Email,
+            Country = request.Country,
+            TimeZone = request.TimeZone,
+            Password = request.Password,
+            Remarks = request.Remarks
+        };
+
+        var response = await _httpClient.PostAsJsonAsync("api/Students", apiRequest);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -104,5 +118,20 @@ public class StudentApiService
         var response = await _httpClient.DeleteAsync($"api/Students/{id}");
 
         return response.IsSuccessStatusCode;
+    }
+    public async Task<bool> ResetPasswordAsync(Guid id, ResetStudentPasswordRequest request)
+    {
+        var response = await _httpClient.PostAsJsonAsync(
+            $"api/Students/{id}/reset-password",
+            request);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var error = await response.Content.ReadAsStringAsync();
+
+            throw new Exception(error);
+        }
+
+        return true;
     }
 }

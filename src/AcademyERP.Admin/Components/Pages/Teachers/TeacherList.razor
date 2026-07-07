@@ -75,6 +75,9 @@
 
             <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
                            OnClick="@(() => DeleteTeacher(context))" />
+
+            <MudIconButton Icon="@Icons.Material.Filled.LockReset" Color="Color.Warning" Size="Size.Small"
+                           OnClick="@(() => ResetPassword(context.Id))" />
         </MudTd>
 
     </RowTemplate>
@@ -234,6 +237,25 @@
         else
         {
             Snackbar.Add("Failed to delete Teacher.", Severity.Error);
+        }
+    }
+
+    private async Task ResetPassword(Guid id)
+    {
+        var parameters = new DialogParameters
+        {
+            { nameof(ResetPasswordTeacherDialog.TeacherId), id }
+        };
+
+        var dialog = await DialogService.ShowAsync<ResetPasswordTeacherDialog>(
+            "Reset Password",
+            parameters);
+
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            Snackbar.Add("Password reset successfully.", Severity.Success);
         }
     }
 

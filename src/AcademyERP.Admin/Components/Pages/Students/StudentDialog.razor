@@ -31,9 +31,21 @@
 
             </MudSelect>
 
+            <MudTextField Label="Mobile Number" @bind-Value="_model.MobileNumber" />
+
+            <MudTextField Label="Email" @bind-Value="_model.Email" />
+
             <MudTextField T="string" Label="Country" @bind-Value="_model.Country" For="@(() => _model.Country)" />
 
             <MudTextField T="string" Label="Time Zone" @bind-Value="_model.TimeZone" For="@(() => _model.TimeZone)" />
+
+            @if (!IsEdit)
+            {
+                <MudTextField T="string" Label="Password" @bind-Value="_model.Password" InputType="InputType.Password"
+                              Required="true" RequiredError="Password is required."
+                              Validation="@(new Func<string, IEnumerable<string>>(ValidatePassword))" Immediate="true"
+                              HelperText="Minimum 6 characters" />
+            }
 
             <MudTextField T="string" Label="Remarks" Lines="3" @bind-Value="_model.Remarks" />
         </MudForm>
@@ -81,6 +93,8 @@
                 AdmissionDate = _model.AdmissionDate!.Value,
                 DateOfBirth = _model.DateOfBirth!.Value,
                 Gender = _model.Gender,
+                PhoneNumber = _model.MobileNumber,
+                Email = _model.Email,
                 Country = _model.Country,
                 TimeZone = _model.TimeZone,
                 Remarks = _model.Remarks
@@ -130,26 +144,36 @@
     {
         if (IsEdit && Student is not null)
         {
-            _model.FullName = Student.FullName;
-            _model.AdmissionDate = Student.AdmissionDate;
-            _model.DateOfBirth = Student.DateOfBirth;
-            _model.Gender = Student.Gender;
-            _model.Country = Student.Country;
-            _model.TimeZone = Student.TimeZone;
-            _model.Remarks = Student.Remarks;
-        }
-        if (IsEdit && Student is not null)
-        {
             _studentId = Student.Id;
 
             _model.FullName = Student.FullName;
             _model.AdmissionDate = Student.AdmissionDate;
             _model.DateOfBirth = Student.DateOfBirth;
             _model.Gender = Student.Gender;
+            _model.MobileNumber = _model.MobileNumber;
+            _model.Email = _model.Email;
             _model.Country = Student.Country;
             _model.TimeZone = Student.TimeZone;
             _model.Remarks = Student.Remarks;
         }
     }
     private Guid _studentId;
+
+    private IEnumerable<string> ValidatePassword(string password)
+    {
+        if (string.IsNullOrWhiteSpace(password))
+            yield return "Password is required.";
+
+        if (password.Length < 6)
+            yield return "Password must be at least 6 characters.";
+
+        if (!password.Any(char.IsUpper))
+            yield return "Password must contain at least one uppercase letter.";
+
+        if (!password.Any(char.IsDigit))
+            yield return "Password must contain at least one number.";
+
+        if (!password.Any(ch => !char.IsLetterOrDigit(ch)))
+            yield return "Password must contain at least one special character.";
+    }
 }

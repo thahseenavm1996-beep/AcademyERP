@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using AutoMapper;
 using AcademyERP.Application.Common;
 using AcademyERP.Application.Interfaces;
+using AcademyERP.Domain.Entities.Identity;
+using Microsoft.AspNetCore.Identity;
 
 
 namespace AcademyERP.Infrastructure.Services;
@@ -14,16 +16,19 @@ public class TeacherService : ITeacherService
 {
     private readonly IRepository<Teacher> _repository;
     private readonly IMapper _mapper;
+    private readonly UserManager<ApplicationUser> _userManager;
     private readonly ApplicationDbContext _context;
 
     public TeacherService(
-        IRepository<Teacher> repository,
-        IMapper mapper,
-        ApplicationDbContext context)
+    IRepository<Teacher> repository,
+    IMapper mapper,
+    ApplicationDbContext context,
+    UserManager<ApplicationUser> userManager)
     {
         _repository = repository;
         _mapper = mapper;
         _context = context;
+        _userManager = userManager;
     }
     public async Task<TeacherResponse> CreateAsync(CreateTeacherRequest request)
     {
@@ -36,7 +41,7 @@ public class TeacherService : ITeacherService
         try
         {
             var sequence = await _context.DocumentSequences
-     .SingleOrDefaultAsync(x => x.Code == "TEACHER");
+                .SingleOrDefaultAsync(x => x.Code == "TEACHER");
 
             if (sequence == null)
             {
@@ -46,9 +51,28 @@ public class TeacherService : ITeacherService
             var generatedNumber = $"{sequence.Prefix}{sequence.NextNumber}";
             sequence.NextNumber++;
 
+            var user = new ApplicationUser
+            {
+                UserName = request.Email,
+                Email = request.Email,
+                FullName = request.FullName,
+                PhoneNumber = request.MobileNumber,
+                IsActive = true
+            };
+
+            var result = await _userManager.CreateAsync(user, request.Password);
+
+            if (!result.Succeeded)
+            {
+                throw new Exception("Identity Error: " +
+                    string.Join(", ", result.Errors.Select(e => e.Description)));
+            }
+
+            await _userManager.AddToRoleAsync(user, "Teacher");
+
             var teacher = _mapper.Map<Teacher>(request);
 
-            teacher.ApplicationUserId = Guid.Empty;
+            teacher.ApplicationUserId = user.Id;
             teacher.EmployeeCode = generatedNumber;
 
             _context.Teachers.Add(teacher);
@@ -139,6 +163,24 @@ public class TeacherService : ITeacherService
         teacher.TimeZone = request.TimeZone;
         teacher.Remarks = request.Remarks;
 
+        var user = await _userManager.FindByIdAsync(teacher.ApplicationUserId.ToString());
+
+        if (user != null)
+        {
+            user.Email = request.Email;
+            user.UserName = request.Email;
+            user.PhoneNumber = request.MobileNumber;
+            user.FullName = request.FullName;
+
+            var result = await _userManager.UpdateAsync(user);
+
+            if (!result.Succeeded)
+            {
+                throw new Exception(string.Join(", ",
+                    result.Errors.Select(x => x.Description)));
+            }
+        }
+
         await _context.SaveChangesAsync();
 
         return _mapper.Map<TeacherResponse>(teacher);
@@ -148,13 +190,54 @@ public class TeacherService : ITeacherService
         var teacher = await _context.Teachers.FindAsync(id);
 
         if (teacher == null)
-        {
             return false;
+
+        // Delete Identity User first
+        var user = await _userManager.FindByIdAsync(teacher.ApplicationUserId.ToString());
+
+        if (user != null)
+        {
+            var result = await _userManager.DeleteAsync(user);
+
+            if (!result.Succeeded)
+            {
+                throw new Exception(string.Join(", ",
+                    result.Errors.Select(x => x.Description)));
+            }
         }
 
+        // Delete Parent
         _context.Teachers.Remove(teacher);
 
         await _context.SaveChangesAsync();
+
+        return true;
+    }
+
+    public async Task<bool> ResetPasswordAsync(Guid id, ResetTeacherPasswordRequest request)
+    {
+        var teacher = await _context.Teachers.FindAsync(id);
+
+        if (teacher == null)
+            throw new Exception("Teacher not found.");
+
+        var user = await _userManager.FindByIdAsync(teacher.ApplicationUserId.ToString());
+
+        if (user == null)
+            throw new Exception($"Identity user not found. UserId = {teacher.ApplicationUserId}");
+
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+        var result = await _userManager.ResetPasswordAsync(
+            user,
+            token,
+            request.Password);
+
+        if (!result.Succeeded)
+        {
+            throw new Exception(string.Join(", ",
+                result.Errors.Select(e => e.Description)));
+        }
 
         return true;
     }

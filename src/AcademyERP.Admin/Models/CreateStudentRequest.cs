@@ -20,10 +20,21 @@ public class CreateStudentRequest : IValidatableObject
     public int Gender { get; set; }
 
     [Required]
+    public string MobileNumber { get; set; } = string.Empty;
+
+    [Required]
+    [EmailAddress]
+    public string Email { get; set; } = string.Empty;
+
+    [Required]
     public string Country { get; set; } = string.Empty;
 
     [Required]
     public string TimeZone { get; set; } = string.Empty;
+
+    [Required]
+    [MinLength(8)]
+    public string Password { get; set; } = string.Empty;
 
     public string? Remarks { get; set; }
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

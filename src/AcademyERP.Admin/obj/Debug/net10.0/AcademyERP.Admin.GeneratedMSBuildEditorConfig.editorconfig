@@ -58,12 +58,20 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9QYXJlbnRzL1Jlc2V0UGFyZW50UGFzc3dvcmREaWFsb2cucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Admin/Components/Pages/Students/ResetStudentPasswordDialog.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9TdHVkZW50cy9SZXNldFN0dWRlbnRQYXNzd29yZERpYWxvZy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
 [/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Admin/Components/Pages/Students/StudentDialog.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9TdHVkZW50cy9TdHVkZW50RGlhbG9nLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Admin/Components/Pages/Students/StudentList.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9TdHVkZW50cy9TdHVkZW50TGlzdC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Admin/Components/Pages/Teachers/ResetPasswordTeacherDialog.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9UZWFjaGVycy9SZXNldFBhc3N3b3JkVGVhY2hlckRpYWxvZy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [/Users/thahsiii/Development/AcademyERP/src/AcademyERP.Admin/Components/Pages/Teachers/TeacherDialog.razor]

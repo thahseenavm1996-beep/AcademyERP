@@ -1,8 +1,9 @@
 using System.Linq.Expressions;
+using AcademyERP.Domain.Entities.Common;
 
 namespace AcademyERP.Application.Interfaces;
 
-public interface IRepository<T> where T : class
+public interface IRepository<T> where T : BaseEntity
 {
     Task<T?> GetByIdAsync(Guid id);
 
@@ -10,9 +11,9 @@ public interface IRepository<T> where T : class
 
     Task AddAsync(T entity);
 
-    void Update(T entity);
+    Task UpdateAsync(T entity);
 
-    void Delete(T entity);
+    Task DeleteAsync(Guid id);
 
     IQueryable<T> Query();
 }

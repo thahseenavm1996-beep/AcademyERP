@@ -34,7 +34,9 @@ public class CreateTeacherRequest : IValidatableObject
 
     [Required]
     public string TimeZone { get; set; } = string.Empty;
-
+    [Required]
+    [MinLength(8)]
+    public string Password { get; set; } = string.Empty;
     public string? Address { get; set; }
 
     public string? Remarks { get; set; }

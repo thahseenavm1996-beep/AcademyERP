@@ -4,7 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AcademyERP.Infrastructure.Repositories;
 
-public class Repository<T> : IRepository<T> where T : class
+using AcademyERP.Domain.Entities.Common;
+
+public class Repository<T> : IRepository<T> where T : BaseEntity
 {
     protected readonly ApplicationDbContext _context;
     protected readonly DbSet<T> _dbSet;
@@ -28,16 +30,27 @@ public class Repository<T> : IRepository<T> where T : class
     public async Task AddAsync(T entity)
     {
         await _dbSet.AddAsync(entity);
+        await _context.SaveChangesAsync();
     }
 
-    public void Update(T entity)
+    public async Task UpdateAsync(T entity)
     {
         _dbSet.Update(entity);
+        await _context.SaveChangesAsync();
     }
-
-    public void Delete(T entity)
+    public async Task DeleteAsync(Guid id)
     {
-        _dbSet.Remove(entity);
+        var entity = await _context.Set<T>().FindAsync(id);
+
+        if (entity == null)
+            return;
+
+        entity.IsDeleted = true;
+        entity.DeletedAt = DateTime.UtcNow;
+
+        _context.Set<T>().Update(entity);
+
+        await _context.SaveChangesAsync();
     }
 
     public IQueryable<T> Query()

@@ -81,4 +81,30 @@ public class StudentsController : ControllerBase
     "Deleted",
     "Student deleted successfully."));
     }
+    [HttpPost("{id}/reset-password")]
+    public async Task<IActionResult> ResetPassword(
+        Guid id,
+        [FromBody] ResetStudentPasswordRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage));
+        }
+
+        try
+        {
+            var success = await _studentService.ResetPasswordAsync(id, request.Password);
+
+            if (!success)
+                return NotFound("Student or User not found.");
+
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
 }

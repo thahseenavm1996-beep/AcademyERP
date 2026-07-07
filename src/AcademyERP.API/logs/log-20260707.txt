@@ -1,0 +1,349 @@
+2026-07-07 01:56:22.929 +05:30 [WRN] Failed to determine the https port for redirect.
+2026-07-07 01:56:24.194 +05:30 [INF] HTTP GET /api/Parents responded 200 in 455.4012 ms
+2026-07-07 01:56:24.196 +05:30 [INF] HTTP GET /api/Parents responded 200 in 1269.9430 ms
+2026-07-07 01:56:24.933 +05:30 [INF] HTTP GET /api/Parents responded 200 in 74.9558 ms
+2026-07-07 01:56:27.270 +05:30 [WRN] The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2026-07-07 01:56:27.272 +05:30 [WRN] The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2026-07-07 01:56:27.500 +05:30 [INF] HTTP GET /api/Teachers responded 200 in 358.4961 ms
+2026-07-07 01:57:38.720 +05:30 [INF] HTTP POST /api/Teachers responded 200 in 673.1920 ms
+2026-07-07 01:57:38.734 +05:30 [INF] HTTP GET /api/Teachers responded 200 in 9.4430 ms
+2026-07-07 01:57:50.921 +05:30 [INF] HTTP PUT /api/Teachers/70301da6-32eb-4162-917b-08dedb9d05ca responded 200 in 70.5376 ms
+2026-07-07 01:57:50.937 +05:30 [INF] HTTP GET /api/Teachers responded 200 in 12.9201 ms
+2026-07-07 02:36:23.507 +05:30 [WRN] Failed to determine the https port for redirect.
+2026-07-07 02:36:23.972 +05:30 [WRN] The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2026-07-07 02:36:23.974 +05:30 [WRN] The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2026-07-07 02:36:24.150 +05:30 [INF] HTTP GET /api/Teachers responded 200 in 645.6415 ms
+2026-07-07 02:36:24.946 +05:30 [INF] HTTP GET /api/Teachers responded 200 in 51.0806 ms
+2026-07-07 02:36:28.621 +05:30 [INF] HTTP GET /api/Students responded 200 in 177.9117 ms
+2026-07-07 02:37:07.141 +05:30 [INF] HTTP POST /api/Students responded 400 in 58.4219 ms
+2026-07-07 02:42:45.549 +05:30 [WRN] Failed to determine the https port for redirect.
+2026-07-07 02:42:45.820 +05:30 [INF] HTTP GET /api/Students responded 200 in 270.6895 ms
+2026-07-07 02:42:47.028 +05:30 [INF] HTTP GET /api/Students responded 200 in 72.0548 ms
+2026-07-07 02:42:52.172 +05:30 [INF] HTTP GET /api/Students responded 200 in 26.9258 ms
+2026-07-07 02:42:52.252 +05:30 [INF] HTTP GET /api/Students responded 200 in 9.9344 ms
+2026-07-07 02:43:29.202 +05:30 [INF] HTTP POST /api/Students responded 400 in 62.3395 ms
+2026-07-07 02:44:02.516 +05:30 [INF] HTTP POST /api/Students responded 200 in 452.3732 ms
+2026-07-07 02:44:02.545 +05:30 [INF] HTTP GET /api/Students responded 200 in 22.6283 ms
+2026-07-07 02:44:22.386 +05:30 [INF] HTTP PUT /api/Students/32ebe1d2-219e-46bc-3849-08ded9da15b0 responded 200 in 40.2431 ms
+2026-07-07 02:44:22.408 +05:30 [INF] HTTP GET /api/Students responded 200 in 16.0056 ms
+2026-07-07 02:58:53.954 +05:30 [WRN] Failed to determine the https port for redirect.
+2026-07-07 02:58:55.024 +05:30 [INF] HTTP GET /api/Students responded 200 in 1072.6999 ms
+2026-07-07 02:58:55.851 +05:30 [INF] HTTP GET /api/Students responded 200 in 49.9153 ms
+2026-07-07 02:59:00.836 +05:30 [INF] HTTP GET /api/Students responded 200 in 38.8157 ms
+2026-07-07 02:59:00.930 +05:30 [INF] HTTP GET /api/Students responded 200 in 13.1857 ms
+2026-07-07 02:59:03.506 +05:30 [INF] HTTP GET /api/Students responded 200 in 6.9460 ms
+2026-07-07 02:59:03.560 +05:30 [INF] HTTP GET /api/Students responded 200 in 7.8945 ms
+2026-07-07 02:59:05.991 +05:30 [WRN] The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2026-07-07 02:59:05.993 +05:30 [WRN] The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2026-07-07 02:59:06.032 +05:30 [INF] HTTP GET /api/Teachers responded 200 in 75.5443 ms
+2026-07-07 02:59:07.748 +05:30 [INF] HTTP GET /api/Teachers responded 200 in 7.1455 ms
+2026-07-07 02:59:07.802 +05:30 [INF] HTTP GET /api/Teachers responded 200 in 7.3412 ms
+2026-07-07 02:59:18.499 +05:30 [INF] HTTP POST /api/Teachers/ad8e69d9-a30c-4cf7-5722-08deda997427/reset-password responded 400 in 30.4116 ms
+2026-07-07 02:59:58.336 +05:30 [INF] HTTP GET /api/Teachers responded 200 in 17.0638 ms
+2026-07-07 02:59:58.431 +05:30 [INF] HTTP GET /api/Teachers responded 200 in 26.2487 ms
+2026-07-07 03:00:19.862 +05:30 [INF] HTTP POST /api/Teachers/70301da6-32eb-4162-917b-08dedb9d05ca/reset-password responded 200 in 278.6464 ms
+2026-07-07 03:00:23.115 +05:30 [INF] HTTP DELETE /api/Teachers/ad8e69d9-a30c-4cf7-5722-08deda997427 responded 200 in 52.3530 ms
+2026-07-07 03:00:23.122 +05:30 [INF] HTTP GET /api/Teachers responded 200 in 5.7194 ms
+2026-07-07 03:00:52.333 +05:30 [INF] HTTP PUT /api/Teachers/f7eb3a0f-dbd4-489e-5721-08deda997427 responded 200 in 257.5192 ms
+2026-07-07 03:00:52.342 +05:30 [INF] HTTP GET /api/Teachers responded 200 in 6.3863 ms
+2026-07-07 03:01:01.037 +05:30 [INF] HTTP PUT /api/Teachers/f7eb3a0f-dbd4-489e-5721-08deda997427 responded 200 in 8.1313 ms
+2026-07-07 03:01:01.044 +05:30 [INF] HTTP GET /api/Teachers responded 200 in 5.6167 ms
+2026-07-07 03:01:20.804 +05:30 [INF] HTTP POST /api/Teachers/f7eb3a0f-dbd4-489e-5721-08deda997427/reset-password responded 400 in 12.9460 ms
+2026-07-07 03:02:04.781 +05:30 [INF] HTTP GET /api/Teachers responded 200 in 19.4112 ms
+2026-07-07 03:02:04.861 +05:30 [INF] HTTP GET /api/Teachers responded 200 in 5.0773 ms
+2026-07-07 03:33:20.358 +05:30 [WRN] Failed to determine the https port for redirect.
+2026-07-07 03:33:20.994 +05:30 [WRN] The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2026-07-07 03:33:20.996 +05:30 [WRN] The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2026-07-07 03:33:21.355 +05:30 [INF] HTTP GET /api/Teachers responded 200 in 1003.3756 ms
+2026-07-07 03:33:22.415 +05:30 [INF] HTTP GET /api/Teachers responded 200 in 100.6086 ms
+2026-07-07 03:33:25.084 +05:30 [INF] HTTP GET /api/Students responded 200 in 432.8052 ms
+2026-07-07 03:33:27.848 +05:30 [INF] HTTP GET /api/Students responded 200 in 26.1562 ms
+2026-07-07 03:33:28.004 +05:30 [INF] HTTP GET /api/Students responded 200 in 34.8942 ms
+2026-07-07 03:33:28.825 +05:30 [INF] HTTP GET /api/Students responded 200 in 5.6100 ms
+2026-07-07 03:33:28.889 +05:30 [INF] HTTP GET /api/Students responded 200 in 9.1154 ms
+2026-07-07 04:00:03.162 +05:30 [ERR] An error occurred using the connection to database 'AcademyERPDb' on server 'localhost,1433'.
+2026-07-07 04:00:03.286 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'AcademyERP.Persistence.Context.ApplicationDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Connection Timeout Expired.  The timeout period elapsed while attempting to consume the pre-login handshake acknowledgement.  This could be because the pre-login handshake failed or the server was unable to respond back in time.  The duration spent while attempting to connect to this server was - [Pre-Login] initialization=115; handshake=14897; 
+ ---> System.ComponentModel.Win32Exception (258): Unknown error: 258
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, SqlCommand command, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParserStateObject.ThrowExceptionAndWarning(Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParserStateObject.ReadSniError(TdsParserStateObject stateObj, UInt32 error)
+   at Microsoft.Data.SqlClient.TdsParserStateObject.ReadSniSyncOverAsync()
+   at Microsoft.Data.SqlClient.TdsParserStateObject.TryReadNetworkPacket()
+   at Microsoft.Data.SqlClient.TdsParser.ConsumePreLoginHandshake(SqlConnectionEncryptOption encrypt, Boolean trustServerCert, Boolean integratedSecurity, Boolean& marsCapable, Boolean& fedAuthRequired, Boolean tlsFirst, String serverCertificateFilename)
+   at Microsoft.Data.SqlClient.TdsParser.Connect(ServerInfo serverInfo, SqlInternalConnectionTds connHandler, TimeoutTimer timeout, SqlConnectionString connectionOptions, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.AttemptOneLogin(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, TimeoutTimer timeout, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.LoginNoFailover(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString connectionOptions, SqlCredential credential, TimeoutTimer timeout)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.OpenLoginEnlist(TimeoutTimer timeout, SqlConnectionString connectionOptions, SqlCredential credential, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds..ctor(DbConnectionPoolIdentity identity, SqlConnectionString connectionOptions, SqlCredential credential, Object providerInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString userConnectionOptions, SessionData reconnectSessionData, Boolean applyTransientFaultHandling, String accessToken, IDbConnectionPool pool, Func`3 accessTokenCallback)
+   at Microsoft.Data.SqlClient.SqlConnectionFactory.CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionPoolGroupProviderInfo poolGroupProviderInfo, IDbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.CreatePooledConnection(IDbConnectionPool pool, DbConnection owningObject, DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionOptions userOptions)
+   at Microsoft.Data.SqlClient.ConnectionPool.WaitHandleDbConnectionPool.CreateObject(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.SqlClient.ConnectionPool.WaitHandleDbConnectionPool.UserCreateRequest(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.SqlClient.ConnectionPool.WaitHandleDbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.SqlClient.ConnectionPool.WaitHandleDbConnectionPool.WaitForPendingOpen()
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:e6a5ccf5-a7f8-4af0-a73a-163451ebcc99
+Error Number:-2,State:0,Class:11
+Microsoft.Data.SqlClient.SqlException (0x80131904): Connection Timeout Expired.  The timeout period elapsed while attempting to consume the pre-login handshake acknowledgement.  This could be because the pre-login handshake failed or the server was unable to respond back in time.  The duration spent while attempting to connect to this server was - [Pre-Login] initialization=115; handshake=14897; 
+ ---> System.ComponentModel.Win32Exception (258): Unknown error: 258
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, SqlCommand command, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParserStateObject.ThrowExceptionAndWarning(Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParserStateObject.ReadSniError(TdsParserStateObject stateObj, UInt32 error)
+   at Microsoft.Data.SqlClient.TdsParserStateObject.ReadSniSyncOverAsync()
+   at Microsoft.Data.SqlClient.TdsParserStateObject.TryReadNetworkPacket()
+   at Microsoft.Data.SqlClient.TdsParser.ConsumePreLoginHandshake(SqlConnectionEncryptOption encrypt, Boolean trustServerCert, Boolean integratedSecurity, Boolean& marsCapable, Boolean& fedAuthRequired, Boolean tlsFirst, String serverCertificateFilename)
+   at Microsoft.Data.SqlClient.TdsParser.Connect(ServerInfo serverInfo, SqlInternalConnectionTds connHandler, TimeoutTimer timeout, SqlConnectionString connectionOptions, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.AttemptOneLogin(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, TimeoutTimer timeout, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.LoginNoFailover(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString connectionOptions, SqlCredential credential, TimeoutTimer timeout)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.OpenLoginEnlist(TimeoutTimer timeout, SqlConnectionString connectionOptions, SqlCredential credential, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds..ctor(DbConnectionPoolIdentity identity, SqlConnectionString connectionOptions, SqlCredential credential, Object providerInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString userConnectionOptions, SessionData reconnectSessionData, Boolean applyTransientFaultHandling, String accessToken, IDbConnectionPool pool, Func`3 accessTokenCallback)
+   at Microsoft.Data.SqlClient.SqlConnectionFactory.CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionPoolGroupProviderInfo poolGroupProviderInfo, IDbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.CreatePooledConnection(IDbConnectionPool pool, DbConnection owningObject, DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionOptions userOptions)
+   at Microsoft.Data.SqlClient.ConnectionPool.WaitHandleDbConnectionPool.CreateObject(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.SqlClient.ConnectionPool.WaitHandleDbConnectionPool.UserCreateRequest(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.SqlClient.ConnectionPool.WaitHandleDbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.SqlClient.ConnectionPool.WaitHandleDbConnectionPool.WaitForPendingOpen()
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:e6a5ccf5-a7f8-4af0-a73a-163451ebcc99
+Error Number:-2,State:0,Class:11
+2026-07-07 04:01:31.196 +05:30 [WRN] Failed to determine the https port for redirect.
+2026-07-07 04:01:46.003 +05:30 [INF] HTTP GET /api/Students responded 200 in 14898.7229 ms
+2026-07-07 04:01:46.416 +05:30 [INF] HTTP GET /api/Students responded 200 in 16.6495 ms
+2026-07-07 04:01:57.492 +05:30 [ERR] An error occurred using the connection to database 'AcademyERPDb' on server 'localhost,1433'.
+2026-07-07 04:01:57.504 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'AcademyERP.Persistence.Context.ApplicationDbContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): Connection Timeout Expired.  The timeout period elapsed while attempting to consume the pre-login handshake acknowledgement.  This could be because the pre-login handshake failed or the server was unable to respond back in time.  The duration spent while attempting to connect to this server was - [Pre-Login] initialization=14; handshake=14991; 
+ ---> System.ComponentModel.Win32Exception (258): Unknown error: 258
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, SqlCommand command, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParserStateObject.ThrowExceptionAndWarning(Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParserStateObject.ReadSniError(TdsParserStateObject stateObj, UInt32 error)
+   at Microsoft.Data.SqlClient.TdsParserStateObject.ReadSniSyncOverAsync()
+   at Microsoft.Data.SqlClient.TdsParserStateObject.TryReadNetworkPacket()
+   at Microsoft.Data.SqlClient.TdsParser.ConsumePreLoginHandshake(SqlConnectionEncryptOption encrypt, Boolean trustServerCert, Boolean integratedSecurity, Boolean& marsCapable, Boolean& fedAuthRequired, Boolean tlsFirst, String serverCertificateFilename)
+   at Microsoft.Data.SqlClient.TdsParser.Connect(ServerInfo serverInfo, SqlInternalConnectionTds connHandler, TimeoutTimer timeout, SqlConnectionString connectionOptions, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.AttemptOneLogin(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, TimeoutTimer timeout, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.LoginNoFailover(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString connectionOptions, SqlCredential credential, TimeoutTimer timeout)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.OpenLoginEnlist(TimeoutTimer timeout, SqlConnectionString connectionOptions, SqlCredential credential, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds..ctor(DbConnectionPoolIdentity identity, SqlConnectionString connectionOptions, SqlCredential credential, Object providerInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString userConnectionOptions, SessionData reconnectSessionData, Boolean applyTransientFaultHandling, String accessToken, IDbConnectionPool pool, Func`3 accessTokenCallback)
+   at Microsoft.Data.SqlClient.SqlConnectionFactory.CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionPoolGroupProviderInfo poolGroupProviderInfo, IDbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.CreatePooledConnection(IDbConnectionPool pool, DbConnection owningObject, DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionOptions userOptions)
+   at Microsoft.Data.SqlClient.ConnectionPool.WaitHandleDbConnectionPool.CreateObject(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.SqlClient.ConnectionPool.WaitHandleDbConnectionPool.UserCreateRequest(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.SqlClient.ConnectionPool.WaitHandleDbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.SqlClient.ConnectionPool.WaitHandleDbConnectionPool.WaitForPendingOpen()
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:addf4733-e8cb-413c-978e-ccf2eb476c4c
+Error Number:-2,State:0,Class:11
+Microsoft.Data.SqlClient.SqlException (0x80131904): Connection Timeout Expired.  The timeout period elapsed while attempting to consume the pre-login handshake acknowledgement.  This could be because the pre-login handshake failed or the server was unable to respond back in time.  The duration spent while attempting to connect to this server was - [Pre-Login] initialization=14; handshake=14991; 
+ ---> System.ComponentModel.Win32Exception (258): Unknown error: 258
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, SqlCommand command, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParserStateObject.ThrowExceptionAndWarning(Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParserStateObject.ReadSniError(TdsParserStateObject stateObj, UInt32 error)
+   at Microsoft.Data.SqlClient.TdsParserStateObject.ReadSniSyncOverAsync()
+   at Microsoft.Data.SqlClient.TdsParserStateObject.TryReadNetworkPacket()
+   at Microsoft.Data.SqlClient.TdsParser.ConsumePreLoginHandshake(SqlConnectionEncryptOption encrypt, Boolean trustServerCert, Boolean integratedSecurity, Boolean& marsCapable, Boolean& fedAuthRequired, Boolean tlsFirst, String serverCertificateFilename)
+   at Microsoft.Data.SqlClient.TdsParser.Connect(ServerInfo serverInfo, SqlInternalConnectionTds connHandler, TimeoutTimer timeout, SqlConnectionString connectionOptions, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.AttemptOneLogin(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, TimeoutTimer timeout, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.LoginNoFailover(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString connectionOptions, SqlCredential credential, TimeoutTimer timeout)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.OpenLoginEnlist(TimeoutTimer timeout, SqlConnectionString connectionOptions, SqlCredential credential, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds..ctor(DbConnectionPoolIdentity identity, SqlConnectionString connectionOptions, SqlCredential credential, Object providerInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString userConnectionOptions, SessionData reconnectSessionData, Boolean applyTransientFaultHandling, String accessToken, IDbConnectionPool pool, Func`3 accessTokenCallback)
+   at Microsoft.Data.SqlClient.SqlConnectionFactory.CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionPoolGroupProviderInfo poolGroupProviderInfo, IDbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.CreatePooledConnection(IDbConnectionPool pool, DbConnection owningObject, DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionOptions userOptions)
+   at Microsoft.Data.SqlClient.ConnectionPool.WaitHandleDbConnectionPool.CreateObject(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.SqlClient.ConnectionPool.WaitHandleDbConnectionPool.UserCreateRequest(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.SqlClient.ConnectionPool.WaitHandleDbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.SqlClient.ConnectionPool.WaitHandleDbConnectionPool.WaitForPendingOpen()
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:addf4733-e8cb-413c-978e-ccf2eb476c4c
+Error Number:-2,State:0,Class:11
+2026-07-07 04:01:57.507 +05:30 [ERR] HTTP GET /api/Parents responded 500 in 15062.9456 ms
+Microsoft.Data.SqlClient.SqlException (0x80131904): Connection Timeout Expired.  The timeout period elapsed while attempting to consume the pre-login handshake acknowledgement.  This could be because the pre-login handshake failed or the server was unable to respond back in time.  The duration spent while attempting to connect to this server was - [Pre-Login] initialization=14; handshake=14991; 
+ ---> System.ComponentModel.Win32Exception (258): Unknown error: 258
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, SqlCommand command, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParserStateObject.ThrowExceptionAndWarning(Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParserStateObject.ReadSniError(TdsParserStateObject stateObj, UInt32 error)
+   at Microsoft.Data.SqlClient.TdsParserStateObject.ReadSniSyncOverAsync()
+   at Microsoft.Data.SqlClient.TdsParserStateObject.TryReadNetworkPacket()
+   at Microsoft.Data.SqlClient.TdsParser.ConsumePreLoginHandshake(SqlConnectionEncryptOption encrypt, Boolean trustServerCert, Boolean integratedSecurity, Boolean& marsCapable, Boolean& fedAuthRequired, Boolean tlsFirst, String serverCertificateFilename)
+   at Microsoft.Data.SqlClient.TdsParser.Connect(ServerInfo serverInfo, SqlInternalConnectionTds connHandler, TimeoutTimer timeout, SqlConnectionString connectionOptions, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.AttemptOneLogin(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, TimeoutTimer timeout, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.LoginNoFailover(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString connectionOptions, SqlCredential credential, TimeoutTimer timeout)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.OpenLoginEnlist(TimeoutTimer timeout, SqlConnectionString connectionOptions, SqlCredential credential, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds..ctor(DbConnectionPoolIdentity identity, SqlConnectionString connectionOptions, SqlCredential credential, Object providerInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString userConnectionOptions, SessionData reconnectSessionData, Boolean applyTransientFaultHandling, String accessToken, IDbConnectionPool pool, Func`3 accessTokenCallback)
+   at Microsoft.Data.SqlClient.SqlConnectionFactory.CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionPoolGroupProviderInfo poolGroupProviderInfo, IDbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.CreatePooledConnection(IDbConnectionPool pool, DbConnection owningObject, DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionOptions userOptions)
+   at Microsoft.Data.SqlClient.ConnectionPool.WaitHandleDbConnectionPool.CreateObject(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.SqlClient.ConnectionPool.WaitHandleDbConnectionPool.UserCreateRequest(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.SqlClient.ConnectionPool.WaitHandleDbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.SqlClient.ConnectionPool.WaitHandleDbConnectionPool.WaitForPendingOpen()
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at AcademyERP.Infrastructure.Services.ParentService.GetAllAsync(ParentQueryRequest request) in /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/Services/ParentService.cs:line 95
+   at AcademyERP.API.Controllers.ParentsController.GetParents(ParentQueryRequest request) in /Users/thahsiii/Development/AcademyERP/src/AcademyERP.API/Controllers/ParentsController.cs:line 22
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+ClientConnectionId:addf4733-e8cb-413c-978e-ccf2eb476c4c
+Error Number:-2,State:0,Class:11
+2026-07-07 04:07:40.338 +05:30 [WRN] Failed to determine the https port for redirect.
+2026-07-07 04:07:40.685 +05:30 [INF] HTTP GET /api/Students responded 200 in 350.0191 ms
+2026-07-07 04:07:41.100 +05:30 [INF] HTTP GET /api/Students responded 200 in 47.4210 ms
+2026-07-07 16:07:49.170 +05:30 [WRN] Failed to determine the https port for redirect.
+2026-07-07 16:07:49.486 +05:30 [INF] HTTP GET /api/Students responded 200 in 317.7089 ms
+2026-07-07 16:07:50.015 +05:30 [INF] HTTP GET /api/Students responded 200 in 38.1297 ms
+2026-07-07 16:08:17.901 +05:30 [INF] HTTP POST /api/Students/126e97a5-7291-4257-977d-08dedba3810e/reset-password responded 400 in 64.5303 ms
+2026-07-07 16:23:35.728 +05:30 [WRN] Failed to determine the https port for redirect.
+2026-07-07 16:23:36.016 +05:30 [INF] HTTP GET /api/Students responded 200 in 289.9160 ms
+2026-07-07 16:23:36.327 +05:30 [INF] HTTP GET /api/Students responded 200 in 37.9283 ms
+2026-07-07 16:23:52.004 +05:30 [INF] HTTP POST /api/Students/126e97a5-7291-4257-977d-08dedba3810e/reset-password responded 200 in 330.3448 ms
+2026-07-07 16:31:29.124 +05:30 [INF] HTTP GET /api/Students responded 200 in 680.9882 ms
+2026-07-07 16:31:29.481 +05:30 [INF] HTTP GET /api/Students responded 200 in 56.5188 ms
+2026-07-07 16:32:19.578 +05:30 [INF] HTTP POST /api/Students responded 200 in 252.5418 ms
+2026-07-07 16:32:19.598 +05:30 [INF] HTTP GET /api/Students responded 200 in 15.0970 ms
+2026-07-07 16:32:24.714 +05:30 [INF] HTTP DELETE /api/Students/781ce352-5a73-406e-384b-08ded9da15b0 responded 200 in 43.1813 ms
+2026-07-07 16:32:24.721 +05:30 [INF] HTTP GET /api/Students responded 200 in 4.8932 ms
+2026-07-07 16:34:27.022 +05:30 [INF] HTTP DELETE /api/Students/126e97a5-7291-4257-977d-08dedba3810e responded 200 in 36.3771 ms
+2026-07-07 16:34:27.038 +05:30 [INF] HTTP GET /api/Students responded 200 in 8.6314 ms
+2026-07-07 16:35:29.544 +05:30 [WRN] The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2026-07-07 16:35:29.549 +05:30 [WRN] The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2026-07-07 16:35:29.605 +05:30 [INF] HTTP GET /api/Teachers responded 200 in 123.3514 ms
+2026-07-07 16:35:52.194 +05:30 [INF] HTTP DELETE /api/Teachers/70301da6-32eb-4162-917b-08dedb9d05ca responded 200 in 98.9195 ms
+2026-07-07 16:35:52.209 +05:30 [INF] HTTP GET /api/Teachers responded 200 in 9.5290 ms
+2026-07-07 16:42:43.497 +05:30 [INF] HTTP GET /api/Parents responded 200 in 239.1548 ms
+2026-07-07 16:43:34.613 +05:30 [INF] HTTP DELETE /api/Parents/7fac7937-810b-48ac-8343-08dedad9d4ce responded 200 in 70.2448 ms
+2026-07-07 16:43:34.622 +05:30 [INF] HTTP GET /api/Parents responded 200 in 6.3665 ms
+2026-07-07 19:53:22.034 +05:30 [WRN] Failed to determine the https port for redirect.
+2026-07-07 19:53:22.471 +05:30 [INF] HTTP GET /api/Parents responded 200 in 438.6170 ms
+2026-07-07 19:53:22.935 +05:30 [INF] HTTP GET /api/Parents responded 200 in 25.3105 ms
+2026-07-07 19:54:07.577 +05:30 [ERR] HTTP POST /api/Parents responded 500 in 81.9347 ms
+System.Exception: Identity Error: Passwords must have at least one lowercase ('a'-'z').
+   at AcademyERP.Infrastructure.Services.ParentService.CreateAsync(CreateParentRequest request) in /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/Services/ParentService.cs:line 56
+   at AcademyERP.Infrastructure.Services.ParentService.CreateAsync(CreateParentRequest request) in /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/Services/ParentService.cs:line 79
+   at AcademyERP.API.Controllers.ParentsController.CreateParent(CreateParentRequest request) in /Users/thahsiii/Development/AcademyERP/src/AcademyERP.API/Controllers/ParentsController.cs:line 45
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeInnerFilterAsync()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+2026-07-07 19:54:20.649 +05:30 [INF] HTTP POST /api/Parents responded 200 in 322.1588 ms
+2026-07-07 19:54:20.662 +05:30 [INF] HTTP GET /api/Parents responded 200 in 8.8251 ms
+2026-07-07 19:59:57.133 +05:30 [INF] HTTP DELETE /api/Parents/7bef345a-277d-4cfa-6841-08dedc336f8c responded 200 in 443.5196 ms
+2026-07-07 19:59:57.142 +05:30 [INF] HTTP GET /api/Parents responded 200 in 4.7447 ms
+2026-07-07 20:00:31.183 +05:30 [WRN] The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2026-07-07 20:00:31.221 +05:30 [WRN] The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2026-07-07 20:00:31.361 +05:30 [INF] HTTP GET /api/Teachers responded 200 in 426.7655 ms
+2026-07-07 20:01:36.624 +05:30 [INF] HTTP POST /api/Teachers responded 400 in 47.3543 ms
+2026-07-07 20:01:43.719 +05:30 [INF] HTTP POST /api/Teachers responded 200 in 178.8729 ms
+2026-07-07 20:01:43.728 +05:30 [INF] HTTP GET /api/Teachers responded 200 in 5.5687 ms
+2026-07-07 20:02:14.971 +05:30 [INF] HTTP DELETE /api/Teachers/3a135fe9-fbe9-413f-c6c5-08dedc3477a5 responded 200 in 81.9070 ms
+2026-07-07 20:02:14.983 +05:30 [INF] HTTP GET /api/Teachers responded 200 in 8.6814 ms
+2026-07-07 20:02:28.467 +05:30 [INF] HTTP GET /api/Students responded 200 in 97.4128 ms
+2026-07-07 20:02:41.614 +05:30 [INF] HTTP DELETE /api/Students/b4d5a874-0f08-4d56-9e03-08dedc1736d5 responded 200 in 42.2883 ms
+2026-07-07 20:02:41.620 +05:30 [INF] HTTP GET /api/Students responded 200 in 4.5797 ms
+2026-07-07 20:07:53.221 +05:30 [INF] HTTP POST /api/Students responded 200 in 427.8475 ms
+2026-07-07 20:07:53.234 +05:30 [INF] HTTP GET /api/Students responded 200 in 6.4835 ms
+2026-07-07 20:08:49.917 +05:30 [INF] HTTP PUT /api/Students/05d5f66c-538a-4a96-1af5-08dedc3553e5 responded 200 in 58.4660 ms
+2026-07-07 20:08:49.928 +05:30 [INF] HTTP GET /api/Students responded 200 in 8.6078 ms
+2026-07-07 20:09:37.134 +05:30 [INF] HTTP PUT /api/Students/05d5f66c-538a-4a96-1af5-08dedc3553e5 responded 200 in 20.7392 ms
+2026-07-07 20:09:37.154 +05:30 [INF] HTTP GET /api/Students responded 200 in 16.7368 ms
+2026-07-07 20:38:48.990 +05:30 [WRN] Failed to determine the https port for redirect.
+2026-07-07 20:38:49.376 +05:30 [INF] HTTP GET /api/Students responded 200 in 397.1459 ms
+2026-07-07 20:38:49.798 +05:30 [INF] HTTP GET /api/Students responded 200 in 43.8986 ms
+2026-07-07 20:39:17.496 +05:30 [INF] HTTP PUT /api/Students/05d5f66c-538a-4a96-1af5-08dedc3553e5 responded 400 in 54.9989 ms
+2026-07-07 20:39:37.904 +05:30 [INF] HTTP PUT /api/Students/05d5f66c-538a-4a96-1af5-08dedc3553e5 responded 400 in 8.1954 ms
+2026-07-07 20:39:45.572 +05:30 [INF] HTTP PUT /api/Students/05d5f66c-538a-4a96-1af5-08dedc3553e5 responded 400 in 2.1243 ms
+2026-07-07 20:39:47.653 +05:30 [INF] HTTP PUT /api/Students/05d5f66c-538a-4a96-1af5-08dedc3553e5 responded 400 in 7.0602 ms
+2026-07-07 21:12:21.181 +05:30 [WRN] Failed to determine the https port for redirect.
+2026-07-07 21:12:21.476 +05:30 [INF] HTTP GET /api/Students responded 200 in 296.9744 ms
+2026-07-07 21:12:21.849 +05:30 [INF] HTTP GET /api/Students responded 200 in 23.0417 ms
+2026-07-07 21:12:51.841 +05:30 [INF] HTTP PUT /api/Students/05d5f66c-538a-4a96-1af5-08dedc3553e5 responded 200 in 303.8525 ms
+2026-07-07 21:12:51.864 +05:30 [INF] HTTP GET /api/Students responded 200 in 9.9255 ms
+2026-07-07 21:14:43.905 +05:30 [WRN] The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2026-07-07 21:14:43.908 +05:30 [WRN] The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2026-07-07 21:14:43.960 +05:30 [INF] HTTP GET /api/Teachers responded 200 in 160.1313 ms
+2026-07-07 21:15:38.166 +05:30 [INF] HTTP POST /api/Teachers responded 400 in 35.2080 ms
+2026-07-07 21:15:51.384 +05:30 [INF] HTTP POST /api/Teachers responded 200 in 284.6242 ms
+2026-07-07 21:15:51.393 +05:30 [INF] HTTP GET /api/Teachers responded 200 in 5.3955 ms
+2026-07-07 21:16:56.476 +05:30 [INF] HTTP PUT /api/Teachers/03b03c1e-941e-45f5-341d-08dedc3ed2a8 responded 200 in 255.5710 ms
+2026-07-07 21:16:56.482 +05:30 [INF] HTTP GET /api/Teachers responded 200 in 3.8477 ms
+2026-07-07 21:17:24.500 +05:30 [INF] HTTP GET /api/Parents responded 200 in 106.9067 ms
+2026-07-07 21:18:01.032 +05:30 [ERR] HTTP POST /api/Parents responded 500 in 92.8863 ms
+System.Exception: Identity Error: Username 'Mahroof@gmail.com' is already taken.
+   at AcademyERP.Infrastructure.Services.ParentService.CreateAsync(CreateParentRequest request) in /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/Services/ParentService.cs:line 56
+   at AcademyERP.Infrastructure.Services.ParentService.CreateAsync(CreateParentRequest request) in /Users/thahsiii/Development/AcademyERP/src/AcademyERP.Infrastructure/Services/ParentService.cs:line 79
+   at AcademyERP.API.Controllers.ParentsController.CreateParent(CreateParentRequest request) in /Users/thahsiii/Development/AcademyERP/src/AcademyERP.API/Controllers/ParentsController.cs:line 45
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+2026-07-07 21:18:09.720 +05:30 [INF] HTTP POST /api/Parents responded 200 in 116.6933 ms
+2026-07-07 21:18:09.744 +05:30 [INF] HTTP GET /api/Parents responded 200 in 12.2957 ms
+2026-07-07 21:18:59.985 +05:30 [INF] HTTP GET /api/Parents/5e8bde34-bf76-4da4-0bc3-08dedc3f251e responded 200 in 50.3422 ms
+2026-07-07 21:19:30.558 +05:30 [INF] HTTP PUT /api/Parents/5e8bde34-bf76-4da4-0bc3-08dedc3f251e responded 200 in 114.8234 ms
+2026-07-07 21:19:30.569 +05:30 [INF] HTTP GET /api/Parents responded 200 in 5.2328 ms

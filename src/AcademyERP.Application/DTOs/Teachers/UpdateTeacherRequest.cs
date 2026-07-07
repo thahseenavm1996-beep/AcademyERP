@@ -30,6 +30,7 @@ public class UpdateTeacherRequest : IValidatableObject
     [Required]
     public string Department { get; set; } = string.Empty;
 
+
     [Required]
     public string Country { get; set; } = string.Empty;
 

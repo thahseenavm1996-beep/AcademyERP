@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using AutoMapper;
 using AcademyERP.Application.Common;
 using AcademyERP.Application.Interfaces;
+using AcademyERP.Domain.Entities.Identity;
+using Microsoft.AspNetCore.Identity;
 
 namespace AcademyERP.Infrastructure.Services;
 
@@ -13,16 +15,19 @@ public class StudentService : IStudentService
 {
     private readonly IRepository<Student> _repository;
     private readonly IMapper _mapper;
+    private readonly UserManager<ApplicationUser> _userManager;
     private readonly ApplicationDbContext _context;
 
     public StudentService(
         IRepository<Student> repository,
         IMapper mapper,
-        ApplicationDbContext context)
+        ApplicationDbContext context,
+        UserManager<ApplicationUser> userManager)
     {
         _repository = repository;
         _mapper = mapper;
         _context = context;
+        _userManager = userManager;
     }
     public async Task<StudentResponse> CreateAsync(CreateStudentRequest request)
     {
@@ -40,9 +45,28 @@ public class StudentService : IStudentService
             var generatedNumber = $"{sequence.Prefix}{sequence.NextNumber}";
             sequence.NextNumber++;
 
+            var user = new ApplicationUser
+            {
+                UserName = request.Email,
+                Email = request.Email,
+                FullName = request.FullName,
+                PhoneNumber = request.PhoneNumber,
+                IsActive = true
+            };
+
+            var result = await _userManager.CreateAsync(user, request.Password);
+
+            if (!result.Succeeded)
+            {
+                throw new Exception("Identity Error: " +
+                    string.Join(", ", result.Errors.Select(e => e.Description)));
+            }
+
+            await _userManager.AddToRoleAsync(user, "Student");
+
             var student = _mapper.Map<Student>(request);
 
-            student.ApplicationUserId = Guid.Empty;
+            student.ApplicationUserId = user.Id;
             student.AdmissionNumber = generatedNumber;
 
             _context.Students.Add(student);
@@ -134,6 +158,24 @@ public class StudentService : IStudentService
         student.TimeZone = request.TimeZone;
         student.Remarks = request.Remarks;
 
+        var user = await _userManager.FindByIdAsync(student.ApplicationUserId.ToString());
+
+        if (user != null)
+        {
+            user.Email = request.Email;
+            user.UserName = request.Email;
+            user.PhoneNumber = request.PhoneNumber;
+            user.FullName = request.FullName;
+
+            var result = await _userManager.UpdateAsync(user);
+
+            if (!result.Succeeded)
+            {
+                throw new Exception(string.Join(", ",
+                    result.Errors.Select(x => x.Description)));
+            }
+        }
+
         await _context.SaveChangesAsync();
 
         return _mapper.Map<StudentResponse>(student);
@@ -143,15 +185,46 @@ public class StudentService : IStudentService
         var student = await _context.Students.FindAsync(id);
 
         if (student == null)
-        {
             return false;
+
+        // Delete Identity User first
+        var user = await _userManager.FindByIdAsync(student.ApplicationUserId.ToString());
+
+        if (user != null)
+        {
+            var result = await _userManager.DeleteAsync(user);
+
+            if (!result.Succeeded)
+            {
+                throw new Exception(string.Join(", ",
+                    result.Errors.Select(x => x.Description)));
+            }
         }
 
+        // Delete 
         _context.Students.Remove(student);
 
         await _context.SaveChangesAsync();
 
         return true;
+    }
+    public async Task<bool> ResetPasswordAsync(Guid id, string newPassword)
+    {
+        var student = await _context.Students.FindAsync(id);
+
+        if (student == null)
+            return false;
+
+        var user = await _userManager.FindByIdAsync(student.ApplicationUserId.ToString());
+
+        if (user == null)
+            return false;
+
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+        var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+
+        return result.Succeeded;
     }
 
 }

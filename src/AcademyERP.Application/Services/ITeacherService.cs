@@ -14,4 +14,8 @@ public interface ITeacherService
     Task<TeacherResponse?> UpdateAsync(Guid id, UpdateTeacherRequest request);
 
     Task<bool> DeleteAsync(Guid id);
+
+    Task<bool> ResetPasswordAsync(
+        Guid id,
+        ResetTeacherPasswordRequest request);
 }

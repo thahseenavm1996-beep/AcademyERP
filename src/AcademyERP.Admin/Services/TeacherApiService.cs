@@ -110,4 +110,20 @@ public class TeacherApiService
 
         return response.IsSuccessStatusCode;
     }
+
+    public async Task<bool> ResetPasswordAsync(Guid id, ResetTeacherPasswordRequest request)
+    {
+        var response = await _httpClient.PostAsJsonAsync(
+            $"api/Teachers/{id}/reset-password",
+            request);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var error = await response.Content.ReadAsStringAsync();
+
+            throw new Exception(error);
+        }
+
+        return true;
+    }
 }
