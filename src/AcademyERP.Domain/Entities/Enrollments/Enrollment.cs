@@ -4,7 +4,7 @@ using AcademyERP.Domain.Entities.Courses;
 using AcademyERP.Domain.Entities.Lookups;
 using AcademyERP.Domain.Entities.Students;
 using AcademyERP.Domain.Entities.Teachers;
-
+using AcademyERP.Domain.Entities.ClassReports;
 
 namespace AcademyERP.Domain.Entities.Enrollments;
 
@@ -50,4 +50,5 @@ public class Enrollment : BaseEntity
     public string? DiscountReason { get; set; }
 
     public string? Remarks { get; set; }
+    public ICollection<ClassReport> ClassReports { get; set; } = new List<ClassReport>();
 }

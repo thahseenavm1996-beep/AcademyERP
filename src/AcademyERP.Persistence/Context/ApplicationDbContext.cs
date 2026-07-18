@@ -12,7 +12,10 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using AcademyERP.Domain.Entities.Common;
 using AcademyERP.Domain.Entities;
-
+using AcademyERP.Domain.Entities.Programs;
+using AcademyERP.Domain.Entities.ClassReports;
+using AcademyERP.Domain.Entities.TeachingSchedules;
+using AcademyERP.Domain.Entities.ScheduledClasses;
 
 namespace AcademyERP.Persistence.Context;
 
@@ -28,7 +31,11 @@ public class ApplicationDbContext
     public DbSet<Teacher> Teachers => Set<Teacher>();
     public DbSet<Parent> Parents => Set<Parent>();
     public DbSet<StudentParent> StudentParents => Set<StudentParent>();
+    public DbSet<Program> Programs => Set<Program>();
     public DbSet<Course> Courses => Set<Course>();
+    public DbSet<ClassReport> ClassReports => Set<ClassReport>();
+    public DbSet<TeachingSchedule> TeachingSchedules => Set<TeachingSchedule>();
+    public DbSet<ScheduledClass> ScheduledClasses => Set<ScheduledClass>();
     public DbSet<Enrollment> Enrollments => Set<Enrollment>();
     public DbSet<ClassDuration> ClassDurations => Set<ClassDuration>();
     public DbSet<TimeSlot> TimeSlots => Set<TimeSlot>();

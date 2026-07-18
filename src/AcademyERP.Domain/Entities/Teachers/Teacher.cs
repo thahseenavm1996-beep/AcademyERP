@@ -3,6 +3,7 @@ using AcademyERP.Domain.Enums;
 using AcademyERP.Domain.Entities.Enrollments;
 using AcademyERP.Domain.Entities.TeacherCourses;
 using AcademyERP.Domain.Entities.TeacherAvailabilities;
+using AcademyERP.Domain.Entities.ClassReports;
 
 namespace AcademyERP.Domain.Entities.Teachers;
 
@@ -40,6 +41,6 @@ public class Teacher : BaseEntity
     public ICollection<Enrollment> Enrollments { get; set; } = new List<Enrollment>();
 
     public ICollection<TeacherCourse> TeacherCourses { get; set; } = new List<TeacherCourse>();
-
+    public ICollection<ClassReport> ClassReports { get; set; } = new List<ClassReport>();
     public ICollection<TeacherAvailability> TeacherAvailabilities { get; set; } = new List<TeacherAvailability>();
 }

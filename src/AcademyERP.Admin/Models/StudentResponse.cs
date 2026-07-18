@@ -19,4 +19,9 @@ public class StudentResponse
     public string TimeZone { get; set; } = string.Empty;
 
     public string? Remarks { get; set; }
+    public string Email { get; set; } = string.Empty;
+
+    public string PhoneNumber { get; set; } = string.Empty;
+
+    public string Status { get; set; } = string.Empty;
 }

@@ -1,5 +1,6 @@
 using AcademyERP.Domain.Entities.Identity;
 using Microsoft.AspNetCore.Identity;
+using AcademyERP.Application.Constants;
 
 namespace AcademyERP.Persistence.Seed;
 
@@ -9,14 +10,16 @@ public static class DbInitializer
         UserManager<ApplicationUser> userManager,
         RoleManager<ApplicationRole> roleManager)
     {
-        string[] roles =
-        {
-            "Admin",
-            "Teacher",
-            "Student",
-            "Parent"
-        };
-
+        var roles = new[]
+{
+    Roles.SuperAdmin,
+    Roles.Administrator,
+    Roles.Teacher,
+    Roles.Parent,
+    Roles.Student,
+    Roles.Accountant,
+    Roles.HR
+};
         foreach (var role in roles)
         {
             if (!await roleManager.RoleExistsAsync(role))
@@ -45,7 +48,7 @@ public static class DbInitializer
 
             await userManager.CreateAsync(admin, "Admin@123");
 
-            await userManager.AddToRoleAsync(admin, "Admin");
+            await userManager.AddToRoleAsync(admin, Roles.SuperAdmin);
         }
     }
 }

@@ -59,6 +59,13 @@ public class JwtTokenService : IJwtTokenService
             expires: expires,
             signingCredentials: credentials);
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        /* return new JwtSecurityTokenHandler().WriteToken(token);*/
+        var jwts = new JwtSecurityTokenHandler().WriteToken(token);
+
+        Console.WriteLine("JWT:");
+        Console.WriteLine(jwts);
+        Console.WriteLine($"DOT COUNT: {jwts.Count(c => c == '.')}");
+
+        return jwts;
     }
 }

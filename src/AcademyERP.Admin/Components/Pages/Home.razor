@@ -1,8 +1,29 @@
-﻿@page "/"
+﻿@inject DashboardApiService DashboardApi
+@page "/"
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using AcademyERP.Admin.Models
+@using AcademyERP.Admin.Services
+@inject DashboardApiService DashboardApi
+@using MudBlazor
 
 <PageTitle>Dashboard</PageTitle>
 
 <h3 class="mb-4">Dashboard</h3>
+<AuthorizeView>
+    <Authorized>
+        <MudAlert Severity="Severity.Success" Class="mb-4">
+            Welcome, @context.User.Identity?.Name
+        </MudAlert>
+    </Authorized>
+
+    <NotAuthorized>
+        <MudAlert Severity="Severity.Error" Class="mb-4">
+            You are not logged in.
+        </MudAlert>
+    </NotAuthorized>
+</AuthorizeView>
 
 <div class="row">
 
@@ -10,7 +31,7 @@
         <div class="card shadow-sm">
             <div class="card-body">
                 <h6>Total Students</h6>
-                <h2 class="text-primary">120</h2>
+                <h2 class="text-primary">@(Summary?.TotalStudents ?? 0)</h2>
             </div>
         </div>
     </div>
@@ -19,7 +40,7 @@
         <div class="card shadow-sm">
             <div class="card-body">
                 <h6>Total Parents</h6>
-                <h2 class="text-success">98</h2>
+                <h2 class="text-success">@(Summary?.TotalParents ?? 0)</h2>
             </div>
         </div>
     </div>
@@ -28,7 +49,7 @@
         <div class="card shadow-sm">
             <div class="card-body">
                 <h6>Total Teachers</h6>
-                <h2 class="text-warning">18</h2>
+                <h2 class="text-warning">@(Summary?.TotalTeachers ?? 0)</h2>
             </div>
         </div>
     </div>
@@ -37,7 +58,7 @@
         <div class="card shadow-sm">
             <div class="card-body">
                 <h6>Courses</h6>
-                <h2 class="text-danger">12</h2>
+                <h2 class="text-danger">@(Summary?.TotalPrograms ?? 0)</h2>
             </div>
         </div>
     </div>
@@ -88,3 +109,13 @@
     </div>
 
 </div>
+@code {
+
+    private DashboardSummaryResponse? Summary;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Summary = await DashboardApi.GetSummaryAsync();
+    }
+
+}

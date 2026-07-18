@@ -1,5 +1,3 @@
-using AcademyERP.Domain.Enums;
-
 namespace AcademyERP.Application.DTOs.Parents;
 
 public class ParentResponse
@@ -14,5 +12,22 @@ public class ParentResponse
 
     public string? Remarks { get; set; }
 
-    public UserStatus Status { get; set; }
+    public string Status { get; set; } = string.Empty;
+
+    public int ChildrenCount { get; set; }
+
+    public List<ParentStudentResponse> Children { get; set; } = new();
+}
+
+public class ParentStudentResponse
+{
+    public Guid StudentId { get; set; }
+
+    public string AdmissionNumber { get; set; } = string.Empty;
+
+    public string FullName { get; set; } = string.Empty;
+
+    public string Gender { get; set; } = string.Empty;
+
+    public string Status { get; set; } = string.Empty;
 }

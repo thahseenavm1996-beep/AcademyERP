@@ -1,0 +1,125 @@
+@using AcademyERP.Admin.Models.Courses
+@using AcademyERP.Admin.Services
+@using AcademyERP.Application.DTOs.Programs
+
+@inject ProgramApiService ProgramApi
+@inject CourseApiService CourseApi
+@inject ISnackbar Snackbar
+
+
+<MudDialog>
+
+    <DialogContent>
+
+        <MudStack Spacing="2">
+
+            <MudTextField Label="Course Code" @bind-Value="_model.CourseCode" Required="true" />
+
+            <MudTextField Label="Course Name" @bind-Value="_model.CourseName" Required="true" />
+
+            <MudTextField Label="Description" @bind-Value="_model.Description" Lines="3" />
+
+            <MudNumericField T="decimal" Label="Monthly Fee" @bind-Value="_model.StandardMonthlyFee" />
+
+            <MudSwitch Label="Group Class Allowed" @bind-Value="_model.IsGroupClassAllowed" />
+
+            <MudSwitch Label="Active" @bind-Value="_model.IsActive" />
+
+        </MudStack>
+
+    </DialogContent>
+
+    <DialogActions>
+
+        <MudButton OnClick="Cancel">
+            Cancel
+        </MudButton>
+
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save">
+
+            Save
+
+        </MudButton>
+
+    </DialogActions>
+
+</MudDialog>
+<MudSelect T="Guid" Label="Program" @bind-Value="_model.ProgramId" Required="true">
+
+    @foreach (var program in _programs)
+    {
+        <MudSelectItem Value="@program.Id">
+            @($"{program.ProgramCode} - {program.ProgramName}")
+        </MudSelectItem>
+    }
+
+</MudSelect>
+@code
+{
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter]
+    public bool IsEdit { get; set; }
+
+    [Parameter]
+    public CourseResponse? Course { get; set; }
+
+    private CreateCourseRequest _model = new();
+    private List<ProgramResponse> _programs = new();
+    protected override async Task OnInitializedAsync()
+    {
+        _programs = await ProgramApi.GetAllAsync();
+
+        if (IsEdit && Course is not null)
+        {
+            _model.ProgramId = Course.ProgramId;
+            _model.CourseCode = Course.CourseCode;
+            _model.CourseName = Course.CourseName;
+            _model.Description = Course.Description;
+            _model.StandardMonthlyFee = Course.StandardMonthlyFee;
+            _model.IsGroupClassAllowed = Course.IsGroupClassAllowed;
+            _model.IsActive = Course.IsActive;
+        }
+    }
+
+    private async Task Save()
+    {
+        try
+        {
+            if (IsEdit && Course is not null)
+            {
+                var update = new UpdateCourseRequest
+                {
+                    ProgramId = _model.ProgramId,
+                    CourseCode = _model.CourseCode,
+                    CourseName = _model.CourseName,
+                    Description = _model.Description,
+                    StandardMonthlyFee = _model.StandardMonthlyFee,
+                    IsGroupClassAllowed = _model.IsGroupClassAllowed,
+                    IsActive = _model.IsActive
+                };
+
+                await CourseApi.UpdateAsync(Course.Id, update);
+
+                Snackbar.Add("Course updated successfully.", Severity.Success);
+            }
+            else
+            {
+                await CourseApi.CreateAsync(_model);
+
+                Snackbar.Add("Course created successfully.", Severity.Success);
+            }
+
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}

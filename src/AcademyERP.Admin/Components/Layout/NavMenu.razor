@@ -1,44 +1,59 @@
-﻿<MudNavMenu>
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using AcademyERP.Admin.Constants
+
+<MudNavMenu>
+
     <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">
         Dashboard
     </MudNavLink>
-    <MudNavLink Href="/students" Icon="@Icons.Material.Filled.People">
 
-        Students
+    <AuthorizeView Roles="@($"{Roles.SuperAdmin},{Roles.Administrator}")">
 
-    </MudNavLink>
-    <MudNavLink Href="/teachers" Icon="@Icons.Material.Filled.Person" Match="NavLinkMatch.Prefix">
-        Teachers
-    </MudNavLink>
+        <MudNavLink Href="/students" Icon="@Icons.Material.Filled.People">
+            Students
+        </MudNavLink>
 
-   
-    <!-- <MudNavLink Href="/students" Icon="@Icons.Material.Filled.School">
-        //Students
-    </MudNavLink>//-->
+        <MudNavLink Href="/teachers" Icon="@Icons.Material.Filled.Person">
+            Teachers
+        </MudNavLink>
+        <MudNavLink Href="/teachingschedules" Icon="@Icons.Material.Filled.Schedule">
 
-    <MudNavLink Href="/parents" Icon="@Icons.Material.Filled.Groups">
-        Parents
-    </MudNavLink>
+            Teaching Schedule
 
+        </MudNavLink>
+        <MudNavLink Href="/parents" Icon="@Icons.Material.Filled.Groups">
+            Parents
+        </MudNavLink>
+        <MudNavLink Href="/programs" Icon="@Icons.Material.Filled.School">
 
-    <MudNavLink Href="/courses" Icon="@Icons.Material.Filled.MenuBook">
-        Courses
-    </MudNavLink>
+            Programs
 
-    <MudNavLink Href="/enrollments" Icon="@Icons.Material.Filled.Assignment">
-        Enrollments
-    </MudNavLink>
+        </MudNavLink>
 
-    <MudNavLink Href="/fees" Icon="@Icons.Material.Filled.Payments">
-        Fees
-    </MudNavLink>
+        <MudNavLink Href="/courses" Icon="@Icons.Material.Filled.MenuBook">
+            Courses
+        </MudNavLink>
 
-    <MudNavLink Href="/reports" Icon="@Icons.Material.Filled.Analytics">
-        Reports
-    </MudNavLink>
+        <MudNavLink Href="/enrollments" Icon="@Icons.Material.Filled.Assignment">
+            Enrollments
+        </MudNavLink>
 
-    <MudNavLink Href="/settings" Icon="@Icons.Material.Filled.Settings">
-        Settings
-    </MudNavLink>
+        <MudNavLink Href="/fees" Icon="@Icons.Material.Filled.Payments">
+            Fees
+        </MudNavLink>
+
+        <MudNavLink Href="/reports" Icon="@Icons.Material.Filled.Analytics">
+            Reports
+        </MudNavLink>
+
+    </AuthorizeView>
+
+    <AuthorizeView Roles="@Roles.SuperAdmin">
+
+        <MudNavLink Href="/settings" Icon="@Icons.Material.Filled.Settings">
+            Settings
+        </MudNavLink>
+
+    </AuthorizeView>
 
 </MudNavMenu>

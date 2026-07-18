@@ -134,12 +134,25 @@ public class StudentService : IStudentService
     }
     public async Task<StudentResponse?> GetByIdAsync(Guid id)
     {
-        var student = await _context.Students.FindAsync(id);
+        var student = await _context.Students
+            .FirstOrDefaultAsync(x => x.Id == id);
 
         if (student == null)
             return null;
 
-        return _mapper.Map<StudentResponse>(student);
+        var response = _mapper.Map<StudentResponse>(student);
+
+        var user = await _userManager.FindByIdAsync(student.ApplicationUserId.ToString());
+
+        if (user != null)
+        {
+            response.Email = user.Email ?? string.Empty;
+            response.PhoneNumber = user.PhoneNumber ?? string.Empty;
+        }
+
+        response.Status = student.Status.ToString();
+
+        return response;
     }
 
     public async Task<StudentResponse> UpdateAsync(Guid id, UpdateStudentRequest request)

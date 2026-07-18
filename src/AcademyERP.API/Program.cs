@@ -17,6 +17,9 @@ using AcademyERP.Application.Mappings;
 using AcademyERP.Application.Interfaces;
 using AcademyERP.Infrastructure.Repositories;
 
+
+
+
 var builder = WebApplication.CreateBuilder(args);
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
@@ -32,15 +35,16 @@ builder.Host.UseSerilog();
 
 // Add services
 builder.Services.AddControllers();
-builder.Services.AddAutoMapper(typeof(StudentMappingProfile));
+builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
 builder.Services.AddFluentValidationAutoValidation();
 
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
+
+builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -56,11 +60,18 @@ builder.Services
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IStudentService, StudentService>();
 builder.Services.AddScoped<ITeacherService, TeacherService>();
 builder.Services.AddScoped<IParentService, ParentService>();
-builder.Services.AddAutoMapper(typeof(Program).Assembly);
+builder.Services.AddScoped<IProgramService, ProgramService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<ITeacherDashboardService, TeacherDashboardService>();
+builder.Services.AddScoped<ITeachingScheduleService, TeachingScheduleService>();
+builder.Services.AddScoped<ICourseService, CourseService>();
+
+builder.Services.AddAutoMapper(typeof(ProgramMappingProfile).Assembly);
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -99,8 +110,12 @@ builder.Services.AddAuthentication(options =>
         }
     };
 });
+Console.WriteLine("Before Build");
 var app = builder.Build();
-using (var scope = app.Services.CreateScope())
+Console.WriteLine("After Build");
+
+
+/*using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
 
@@ -109,7 +124,7 @@ using (var scope = app.Services.CreateScope())
     var roleManager = services.GetRequiredService<RoleManager<ApplicationRole>>();
 
     await DbInitializer.SeedAsync(userManager, roleManager);
-}
+}*/
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -123,5 +138,13 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+Console.WriteLine("Before app.Run()");
+Console.WriteLine("Environment: " + app.Environment.EnvironmentName);
+
+Console.WriteLine("URLs before Run:");
+foreach (var url in app.Urls)
+{
+    Console.WriteLine(url);
+}
 
 app.Run();

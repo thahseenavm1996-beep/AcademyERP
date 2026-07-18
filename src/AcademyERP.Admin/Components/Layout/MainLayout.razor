@@ -1,44 +1,123 @@
-﻿@inherits LayoutComponentBase
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components
+@using System.Security.Claims
+@using AcademyERP.Admin.Authentication
+@inherits LayoutComponentBase
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+@inject AcademyERP.Admin.Services.TokenService TokenService
 
 <MudThemeProvider />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<MudLayout>
+<AuthorizeView>
 
-    <MudAppBar Color="Color.Primary" Elevation="1">
+    <Authorized>
 
-        <MudText Typo="Typo.h5" Class="fw-bold">
-            🎓 Academy ERP
-        </MudText>
+        <MudLayout>
 
-        <MudSpacer />
+            <MudAppBar Color="Color.Primary" Elevation="1">
 
-        <MudAvatar Size="Size.Medium" Color="Color.Secondary">
-            A
-        </MudAvatar>
+                <MudText Typo="Typo.h5" Class="fw-bold">
+                    🎓 Academy ERP
+                </MudText>
 
-        <MudText Class="ms-2">
-            Administrator
-        </MudText>
+                <MudSpacer />
 
-    </MudAppBar>
+                <!--  <MudMenu Icon="@Icons.Material.Filled.AccountCircle">
 
-    <MudDrawer Open="true" Elevation="1" Variant="DrawerVariant.Responsive" Width="260px">
+                    <ActivatorContent Context="menu">
 
-        <NavMenu />
+                        <MudAvatar Size="Size.Medium" Color="Color.Secondary">
+                            @UserInitial
+                        </MudAvatar>
 
-    </MudDrawer>
+                    </ActivatorContent>
 
-    <MudMainContent>
+                    <ChildContent>
 
-        <MudContainer MaxWidth="MaxWidth.False" Class="pa-6">
+                        <MudText Class="px-4 pt-2">@UserName</MudText>
 
-            @Body
+                        <MudText Class="px-4 pb-2" Typo="Typo.caption">
+                            @UserRole
+                        </MudText>
 
-        </MudContainer>
+                        <MudDivider />
 
-    </MudMainContent>
+                        <MudMenuItem OnClick="Logout">
+                            Logout
+                        </MudMenuItem>
 
-</MudLayout>
+                    </ChildContent>
+
+                </MudMenu>-->
+                <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="Logout">
+                    Logout
+                </MudButton>
+
+            </MudAppBar>
+
+            <MudDrawer Open="true" Elevation="1" Variant="DrawerVariant.Responsive" Width="260px">
+
+                <NavMenu />
+
+            </MudDrawer>
+
+            <MudMainContent>
+
+                <MudContainer MaxWidth="MaxWidth.False" Class="pa-6">
+
+                    @Body
+
+                </MudContainer>
+
+            </MudMainContent>
+
+        </MudLayout>
+
+    </Authorized>
+
+    <NotAuthorized>
+
+        @Body
+
+    </NotAuthorized>
+
+</AuthorizeView>
+@code {
+
+    private string UserName = "";
+    private string UserRole = "";
+    private string UserInitial = "A";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            UserName = user.Identity.Name ?? "";
+
+            UserRole = user.FindFirst(ClaimTypes.Role)?.Value ?? "";
+            if (!string.IsNullOrWhiteSpace(UserName))
+            {
+                UserInitial = UserName.Substring(0, 1).ToUpper();
+            }
+        }
+    }
+
+    private async Task Logout()
+    {
+        await TokenService.RemoveTokenAsync();
+
+        ((JwtAuthenticationStateProvider)AuthenticationStateProvider)
+            .NotifyUserLogout();
+
+        NavigationManager.NavigateTo("/login", true);
+    }
+
+}

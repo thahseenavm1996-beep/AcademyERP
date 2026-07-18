@@ -1,0 +1,130 @@
+@page "/courses"
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+@using AcademyERP.Admin.Models.Courses
+@using AcademyERP.Admin.Services
+@inject IDialogService DialogService
+@inject CourseApiService CourseApi
+@inject ISnackbar Snackbar
+
+<PageTitle>Courses</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">
+    Course Management
+</MudText>
+
+<MudPaper Class="pa-4 mb-4">
+
+    <MudStack Row="true" Justify="Justify.SpaceBetween">
+
+        <MudText Typo="Typo.h6">
+            Courses
+        </MudText>
+
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="OpenAddCourseDialog">
+
+            Add Course
+
+        </MudButton>
+    </MudStack>
+
+</MudPaper>
+
+<MudTable T="CourseResponse" Items="_courses" Loading="_loading" Hover="true" Dense="true" Striped="true">
+
+    <HeaderContent>
+
+        <MudTh>Code</MudTh>
+        <MudTh>Course</MudTh>
+        <MudTh>Program</MudTh>
+        <MudTh>Fee</MudTh>
+        <MudTh>Group</MudTh>
+        <MudTh>Status</MudTh>
+
+    </HeaderContent>
+
+    <RowTemplate>
+
+        <MudTd>@context.CourseCode</MudTd>
+
+        <MudTd>@context.CourseName</MudTd>
+
+        <MudTd>@context.ProgramName</MudTd>
+
+        <MudTd>@context.StandardMonthlyFee</MudTd>
+
+        <MudTd>
+
+            @(context.IsGroupClassAllowed ? "Yes" : "No")
+
+        </MudTd>
+
+        <MudTd>
+
+            @(context.IsActive ? "Active" : "Inactive")
+
+        </MudTd>
+
+    </RowTemplate>
+
+</MudTable>
+
+@if (!_loading && !_courses.Any())
+{
+    <MudAlert Severity="Severity.Info">
+
+        No courses found.
+
+    </MudAlert>
+}
+
+@code
+{
+    private List<CourseResponse> _courses = new();
+
+    private bool _loading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCoursesAsync();
+    }
+
+    private async Task LoadCoursesAsync()
+    {
+        try
+        {
+            _loading = true;
+
+            _courses = await CourseApi.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+    private async Task OpenAddCourseDialog()
+    {
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            FullWidth = true,
+            MaxWidth = MaxWidth.Medium
+        };
+
+        var dialog = await DialogService.ShowAsync<CourseDialog>(
+            "Add Course",
+            options);
+
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            await LoadCoursesAsync();
+        }
+    }
+}

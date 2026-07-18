@@ -112,12 +112,34 @@ public class ParentService : IParentService
 
     public async Task<ParentResponse?> GetByIdAsync(Guid id)
     {
-        var parent = await _context.Parents.FindAsync(id);
+        var parent = await _context.Parents
+
+            .Include(x => x.StudentParents)
+                .ThenInclude(x => x.Student)
+
+            .FirstOrDefaultAsync(x => x.Id == id);
 
         if (parent == null)
             return null;
 
-        return _mapper.Map<ParentResponse>(parent);
+        var response = _mapper.Map<ParentResponse>(parent);
+
+        response.Status = parent.Status.ToString();
+
+        response.ChildrenCount = parent.StudentParents.Count;
+
+        response.Children = parent.StudentParents
+            .Select(x => new ParentStudentResponse
+            {
+                StudentId = x.Student!.Id,
+                AdmissionNumber = x.Student.AdmissionNumber,
+                FullName = x.Student.FullName,
+                Gender = x.Student.Gender.ToString(),
+                Status = x.Student.Status.ToString()
+            })
+            .ToList();
+
+        return response;
     }
 
     public async Task<ParentResponse?> UpdateAsync(Guid id, UpdateParentRequest request)

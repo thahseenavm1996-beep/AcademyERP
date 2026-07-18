@@ -1,0 +1,64 @@
+@page "/login"
+@layout EmptyLayout
+@using AcademyERP.Admin.Components.Layout
+@using AcademyERP.Admin.Models
+@using AcademyERP.Admin.Services
+@using AcademyERP.Admin.Authentication
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject TokenService TokenService
+@inject AuthApiService AuthApi
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<MudPaper Width="400px" Class="pa-6 mx-auto mt-12">
+
+    <MudText Typo="Typo.h4" Align="Align.Center">
+        Academy ERP
+    </MudText>
+
+    <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-4">
+        Administrator Login
+    </MudText>
+
+    <MudTextField Label="Email" @bind-Value="_model.Email" Required="true" />
+
+    <MudTextField Label="Password" InputType="InputType.Password" @bind-Value="_model.Password" Required="true" />
+
+    <MudButton FullWidth="true" Variant="Variant.Filled" Color="Color.Primary" OnClick="LoginUser" Class="mt-4">
+
+        Login
+
+    </MudButton>
+
+</MudPaper>
+
+@code {
+
+    private LoginRequest _model = new();
+
+    private async Task LoginUser()
+    {
+        var result = await AuthApi.LoginAsync(_model);
+
+        if (result == null)
+        {
+            Snackbar.Add("Invalid email or password.", Severity.Error);
+            return;
+        }
+
+        
+        await TokenService.SaveTokenAsync(result.Token);
+        ((JwtAuthenticationStateProvider)AuthenticationStateProvider)
+            .NotifyUserAuthentication();
+        Snackbar.Add("Login successful.", Severity.Success);
+
+        Navigation.NavigateTo("/");
+
+        
+    }
+
+   
+
+}

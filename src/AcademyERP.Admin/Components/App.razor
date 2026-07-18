@@ -21,9 +21,13 @@
     <MudDialogProvider />
 
     <MudSnackbarProvider />
+    <CascadingAuthenticationState>
+        <Routes @rendermode="InteractiveServer" />
 
-    <Routes @rendermode="InteractiveServer" />
+  
+    </CascadingAuthenticationState>
 
+   
     <ReconnectModal />
 
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>

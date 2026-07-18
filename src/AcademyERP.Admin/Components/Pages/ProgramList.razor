@@ -1,0 +1,138 @@
+@page "/programs"
+@using AcademyERP.Admin.Services
+@using AcademyERP.Admin.Components.Pages.Programs
+
+@using AcademyERP.Application.DTOs.Programs
+@inject ProgramApiService ProgramService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+
+<PageTitle>Programs</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">
+    Programs
+</MudText>
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+           OnClick="OpenAddProgramDialog">
+
+    Add Program
+
+</MudButton>
+
+<MudTable Items="_programs" Hover="true" Dense="true" Striped="true" Class="mt-4">
+
+    <HeaderContent>
+
+        <MudTh>Code</MudTh>
+        <MudTh>Name</MudTh>
+        <MudTh>Duration</MudTh>
+        <MudTh>Status</MudTh>
+        <MudTh>Actions</MudTh>
+
+    </HeaderContent>
+
+    <RowTemplate>
+
+        <MudTd>@context.ProgramCode</MudTd>
+
+        <MudTd>@context.ProgramName</MudTd>
+
+        <MudTd>@context.DefaultDurationMinutes min</MudTd>
+
+        <MudTd>
+
+            @if (context.IsActive)
+            {
+                <MudChip T="string" Color="Color.Success">Active</MudChip>
+            }
+            else
+            {
+                <MudChip T="string" Color="Color.Error">Inactive</MudChip>
+            }
+
+        </MudTd>
+        <MudTd>
+
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small"
+                           OnClick="@(() => EditProgram(context))" />
+
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                           OnClick="@(() => DeleteProgram(context.Id))" />
+
+        </MudTd>
+
+    </RowTemplate>
+
+</MudTable>
+
+@code
+{
+    private List<ProgramResponse> _programs = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPrograms();
+    }
+
+    private async Task LoadPrograms()
+    {
+        _programs = await ProgramService.GetAllAsync();
+
+        Snackbar.Add("Programs loaded.", Severity.Success);
+    }
+    private async Task EditProgram(ProgramResponse program)
+    {
+        var parameters = new DialogParameters
+        {
+            ["Program"] = program,
+            ["IsEdit"] = true
+        };
+
+        var dialog = await DialogService.ShowAsync<ProgramDialog>(
+            "Edit Program",
+            parameters);
+
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadPrograms();
+        }
+    }
+    private async Task OpenAddProgramDialog()
+    {
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<ProgramDialog>(
+            "Add Program",
+            options);
+
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            await LoadPrograms();
+        }
+    }
+    private async Task DeleteProgram(Guid id)
+    {
+        var success = await ProgramService.DeleteAsync(id);
+
+        if (success)
+        {
+            Snackbar.Add("Program deleted successfully.", Severity.Success);
+            await LoadPrograms();
+        }
+        else
+        {
+            Snackbar.Add("Failed to delete program.", Severity.Error);
+        }
+    }
+}

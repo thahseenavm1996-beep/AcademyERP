@@ -1,10 +1,14 @@
 @page "/students"
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+
 
 @using AcademyERP.Admin.Models
 @using AcademyERP.Admin.Services
 @inject StudentApiService StudentApi
 @using AcademyERP.Admin.Components.Pages.Students
 @inject IDialogService DialogService
+@inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 
 <PageTitle>Students</PageTitle>
@@ -17,16 +21,11 @@
 
     <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
 
-        <MudTextField T="string" @bind-Value="_search" Placeholder="Search students..." Adornment="Adornment.Start"
-                      AdornmentIcon="@Icons.Material.Filled.Search" Style="width:300px" />
-        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="SearchStudents">
-
-            Search
-
-        </MudButton>
+        <MudTextField T="string" Value="@_search" ValueChanged="OnSearchChanged"
+                      Placeholder="Search by name or admission no..." Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" Clearable="true" Style="width:350px" />
 
         
-
         <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add"
                    OnClick="OpenAddStudentDialog">
 
@@ -73,18 +72,38 @@
             @context.Country
         </MudTd>
         <MudTd>
-            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small"
-                           OnClick="@(() => EditStudent(context))" />
+            <MudTooltip Text="View Student">
+                <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" Size="Size.Small"
+                               OnClick="@(() => ViewStudent(context.Id))" />
+            </MudTooltip>
+            <MudTooltip Text="Edit Student">
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small"
+                               OnClick="@(() => EditStudent(context))" />
+            </MudTooltip>
 
-            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
-                           OnClick="@(() => DeleteStudent(context))" />
-            <MudIconButton Icon="@Icons.Material.Filled.LockReset" Color="Color.Warning"
-                           OnClick="@(() => OpenResetPasswordDialog(context.Id))" />
+            <MudTooltip Text="Reset Password">
+                <MudIconButton Icon="@Icons.Material.Filled.LockReset" Color="Color.Warning" Size="Size.Small"
+                               OnClick="@(() => OpenResetPasswordDialog(context.Id))" />
+            </MudTooltip>
+
+            <MudTooltip Text="Delete Student">
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                               OnClick="@(() => DeleteStudent(context))" />
+            </MudTooltip>
+
         </MudTd>
 
     </RowTemplate>
 
 </MudTable>
+@if (!_loading && !_students.Any())
+{
+    <MudAlert Severity="Severity.Info">
+
+        No students found.
+
+    </MudAlert>
+}
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-4">
 
@@ -133,18 +152,47 @@
     }
     private async Task LoadStudentsAsync()
     {
-        _loading = true;
-
-        var response = await StudentApi.GetStudentsAsync(_request);
-
-        if (response is not null)
+        try
         {
-            _page = response.Data;
-            _students = _page.Items;
-        }
+            Console.WriteLine("LoadStudentsAsync started");
 
-        _loading = false;
+            _loading = true;
+
+            var response = await StudentApi.GetStudentsAsync(_request);
+
+            Console.WriteLine("API call finished");
+
+            if (response != null)
+            {
+                Console.WriteLine("Response received");
+
+                _page = response.Data;
+                _students = _page.Items;
+            }
+
+            _loading = false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.ToString());
+
+            Snackbar.Add(ex.ToString(), Severity.Error);
+        }
     }
+    /* private async Task LoadStudentsAsync()
+      {
+          _loading = true;
+
+          var response = await StudentApi.GetStudentsAsync(_request);
+
+          if (response is not null)
+          {
+              _page = response.Data;
+              _students = _page.Items;
+          }
+
+          _loading = false;
+      }*/
     private async Task NextPage()
     {
         if (_page.Page >= _page.TotalPages)
@@ -204,6 +252,10 @@
             await LoadStudentsAsync();
         }
     }
+    private void ViewStudent(Guid id)
+    {
+        Navigation.NavigateTo($"/students/{id}");
+    }
     private async Task EditStudent(StudentResponse student)
     {
         var parameters = new DialogParameters<StudentDialog>
@@ -225,8 +277,6 @@
     }
     private async Task DeleteStudent(StudentResponse student)
     {
-
-        
         var success = await StudentApi.DeleteStudentAsync(student.Id);
 
         if (success)

@@ -8,7 +8,10 @@ public class StudentMappingProfile : Profile
 {
     public StudentMappingProfile()
     {
-        CreateMap<Student, StudentResponse>();
+        CreateMap<Student, StudentResponse>()
+    .ForMember(
+        dest => dest.Gender,
+        opt => opt.MapFrom(src => src.Gender.ToString()));
 
         CreateMap<CreateStudentRequest, Student>();
 

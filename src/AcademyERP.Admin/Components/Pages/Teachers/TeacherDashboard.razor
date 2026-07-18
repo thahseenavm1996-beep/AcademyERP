@@ -1,0 +1,191 @@
+@page "/Teachers/TeacherDashboard"
+
+
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using AcademyERP.Admin.Services
+@using AcademyERP.Admin.Models.TeacherDashboard
+@using AcademyERP.Domain.Enums
+
+@inject TeacherDashboardApiService DashboardApi
+
+<PageTitle>Teacher Dashboard</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False">
+
+    <MudText Typo="Typo.h4" GutterBottom="true">
+        Good Morning 🌸
+    </MudText>
+
+    <MudText Typo="Typo.subtitle1">
+        Welcome back!
+    </MudText>
+
+    <div style="height:20px"></div>
+
+    <MudGrid>
+
+        <MudItem xs="12" md="3">
+
+            <MudPaper Class="pa-4">
+
+                <MudText Typo="Typo.subtitle2">
+                    Today's Classes
+                </MudText>
+
+                <MudText Typo="Typo.h3">
+                    @(DashboardData?.Summary.TotalClassesToday ?? 0)
+                </MudText>
+
+            </MudPaper>
+
+        </MudItem>
+
+        <MudItem xs="12" md="3">
+
+            <MudPaper Class="pa-4">
+
+                <MudText Typo="Typo.subtitle2">
+                    Completed
+                </MudText>
+
+                <MudText Typo="Typo.h3">
+                    @(DashboardData?.Summary.CompletedClasses ?? 0)
+                </MudText>
+
+            </MudPaper>
+
+        </MudItem>
+
+        <MudItem xs="12" md="3">
+
+            <MudPaper Class="pa-4">
+
+                <MudText Typo="Typo.subtitle2">
+                    Pending
+                </MudText>
+
+                <MudText Typo="Typo.h3">
+                    @(DashboardData?.Summary.PendingClasses ?? 0)
+                </MudText>
+
+            </MudPaper>
+
+        </MudItem>
+
+        <MudItem xs="12" md="3">
+
+            <MudPaper Class="pa-4">
+
+                <MudText Typo="Typo.subtitle2">
+                    Completion
+                </MudText>
+
+                <MudProgressLinear Value="@(DashboardData?.Summary.CompletionPercentage ?? 0)" Rounded="true" />
+
+                <MudText>
+                    @(DashboardData?.Summary.CompletionPercentage ?? 0)%
+                </MudText>
+
+            </MudPaper>
+
+        </MudItem>
+
+    </MudGrid>
+
+    <div style="height:25px"></div>
+
+    <MudPaper Class="pa-4">
+
+        <MudText Typo="Typo.h5">
+            Today's Classes
+        </MudText>
+
+        <MudDivider Class="my-3" />
+
+        <MudTable T="TodayClassResponse" Dense="true"
+                  Items="@(DashboardData?.TodayClasses ?? new List<TodayClassResponse>())">
+
+            <HeaderContent>
+
+                <MudTh>Time</MudTh>
+                <MudTh>Student</MudTh>
+                <MudTh>Course</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh></MudTh>
+
+            </HeaderContent>
+
+            <RowTemplate Context="item">
+
+                <MudTd>
+                    @item.StartTime.ToString("HH:mm")
+                </MudTd>
+
+                <MudTd>
+                    @item.StudentName
+                </MudTd>
+
+                <MudTd>
+                    @item.CourseName
+                </MudTd>
+
+                <MudTd>
+
+                    <MudChip T="string" Color="@GetStatusColor(item.Status)">
+
+                        @item.Status
+
+                    </MudChip>
+
+                </MudTd>
+
+                <MudTd>
+
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary">
+
+                        Start Class
+
+                    </MudButton>
+
+                </MudTd>
+
+            </RowTemplate>
+
+        </MudTable>
+
+    </MudPaper>
+
+</MudContainer>
+
+@code
+{
+    private TeacherDashboardResponse? DashboardData;
+    private bool _loaded;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _loaded)
+            return;
+
+        _loaded = true;
+
+        var teacherId = Guid.Parse("03b03c1e-941e-45f5-341d-08dedc3ed2a8");
+
+        DashboardData = await DashboardApi.GetDashboardAsync(teacherId);
+
+        StateHasChanged();
+    }
+    private Color GetStatusColor(ScheduledClassStatus status)
+    {
+        return status switch
+        {
+            ScheduledClassStatus.Scheduled => Color.Info,
+            ScheduledClassStatus.Started => Color.Warning,
+            ScheduledClassStatus.Completed => Color.Success,
+            ScheduledClassStatus.Cancelled => Color.Error,
+            ScheduledClassStatus.Missed => Color.Dark,
+            _ => Color.Default
+        };
+    }
+}

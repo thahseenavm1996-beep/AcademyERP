@@ -1,0 +1,8 @@
+namespace AcademyERP.Admin.Models.TeacherDashboard;
+
+public class TeacherDashboardResponse
+{
+    public TeacherSummaryResponse Summary { get; set; } = new();
+
+    public List<TodayClassResponse> TodayClasses { get; set; } = new();
+}

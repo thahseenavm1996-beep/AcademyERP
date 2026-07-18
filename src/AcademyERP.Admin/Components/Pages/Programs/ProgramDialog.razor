@@ -1,0 +1,127 @@
+@using AcademyERP.Application.DTOs.Programs
+@using AcademyERP.Admin.Services
+
+@inject ProgramApiService ProgramApi
+@inject ISnackbar Snackbar
+
+<MudDialog>
+
+    <TitleContent>
+        @if (IsEdit)
+        {
+            <MudText Typo="Typo.h6">Edit Program</MudText>
+        }
+        else
+        {
+            <MudText Typo="Typo.h6">Add Program</MudText>
+        }
+    </TitleContent>
+
+    <DialogContent>
+
+        <MudTextField T="string" Label="Program Code" @bind-Value="_model.ProgramCode" Required="true"
+                      Variant="Variant.Outlined" />
+
+        <MudTextField T="string" Label="Program Name" @bind-Value="_model.ProgramName" Required="true"
+                      Variant="Variant.Outlined" Class="mt-3" />
+
+        <MudTextField T="string" Label="Description" @bind-Value="_model.Description" Lines="3"
+                      Variant="Variant.Outlined" Class="mt-3" />
+
+        <MudNumericField T="int" Label="Default Duration (Minutes)" @bind-Value="_model.DefaultDurationMinutes"
+                         Variant="Variant.Outlined" Class="mt-3" />
+
+        <MudNumericField T="int" Label="Display Order" @bind-Value="_model.DisplayOrder" Variant="Variant.Outlined"
+                         Class="mt-3" />
+
+        <MudSwitch T="bool" Label="Active" @bind-Value="_model.IsActive" Class="mt-3" />
+
+    </DialogContent>
+
+    <DialogActions>
+
+        <MudButton Variant="Variant.Text" OnClick="Cancel">
+
+            Cancel
+
+        </MudButton>
+
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Save">
+
+            Save
+
+        </MudButton>
+
+    </DialogActions>
+
+</MudDialog>
+
+@code
+{
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public bool IsEdit { get; set; }
+
+    [Parameter]
+    public ProgramResponse? Program { get; set; }
+
+    private CreateProgramRequest _model = new();
+
+    protected override void OnInitialized()
+    {
+        if (IsEdit && Program is not null)
+        {
+            _model.ProgramCode = Program.ProgramCode;
+            _model.ProgramName = Program.ProgramName;
+            _model.Description = Program.Description;
+            _model.DefaultDurationMinutes = Program.DefaultDurationMinutes;
+            _model.DisplayOrder = Program.DisplayOrder;
+            _model.IsActive = Program.IsActive;
+        }
+    }
+
+    private async Task Save()
+    {
+        bool success;
+
+        if (IsEdit && Program is not null)
+        {
+            var request = new UpdateProgramRequest
+            {
+                ProgramCode = _model.ProgramCode,
+                ProgramName = _model.ProgramName,
+                Description = _model.Description,
+                DefaultDurationMinutes = _model.DefaultDurationMinutes,
+                DisplayOrder = _model.DisplayOrder,
+                IsActive = _model.IsActive
+            };
+
+            success = await ProgramApi.UpdateAsync(Program.Id, request);
+        }
+        else
+        {
+            success = await ProgramApi.CreateAsync(_model);
+        }
+
+        if (success)
+        {
+            Snackbar.Add(
+                IsEdit ? "Program updated successfully."
+                       : "Program created successfully.",
+                Severity.Success);
+
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        else
+        {
+            Snackbar.Add("Operation failed.", Severity.Error);
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}

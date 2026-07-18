@@ -9,6 +9,11 @@
 
   <ItemGroup>
     <PackageReference Include="MudBlazor" Version="9.6.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.19.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AcademyERP.Application\AcademyERP.Application.csproj" />
   </ItemGroup>
 
 </Project>

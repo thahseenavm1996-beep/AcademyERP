@@ -1,0 +1,299 @@
+@page "/students/{Id:guid}"
+@attribute [Authorize]
+
+@using Microsoft.AspNetCore.Authorization
+@using AcademyERP.Admin.Models
+@using AcademyERP.Admin.Services
+
+@inject StudentApiService StudentApi
+
+<PageTitle>Student Profile</PageTitle>
+
+@if (_student == null)
+{
+    <MudPaper Class="pa-10 d-flex justify-center">
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
+    </MudPaper>
+}
+else
+{
+    <!-- ================= HERO ================= -->
+
+    <MudPaper Class="pa-6 mb-5 elevation-3">
+
+        <MudGrid AlignItems="AlignItems.Center">
+
+            <MudItem xs="12" md="8">
+
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+
+                    <MudAvatar Size="Size.Large" Color="Color.Primary">
+
+                        @GetInitials(_student.FullName)
+
+                    </MudAvatar>
+
+                    <MudStack Spacing="0">
+
+                        <MudText Typo="Typo.h4">
+                            @_student.FullName
+                        </MudText>
+
+                        <MudText Color="Color.Secondary">
+                            Admission No:
+                            <b>@_student.AdmissionNumber</b>
+                        </MudText>
+
+                        <MudStack Row="true" Spacing="2" Class="mt-2">
+
+                            <MudChip T="string" Color="Color.Success">
+
+                                @_student.Status
+
+                            </MudChip>
+
+                            <MudChip T="string" Color="Color.Info">
+
+                                @_student.Gender
+
+                            </MudChip>
+
+                            <MudChip T="string" Color="Color.Primary">
+
+                                Student
+
+                            </MudChip>
+
+                        </MudStack>
+
+                    </MudStack>
+
+                </MudStack>
+
+            </MudItem>
+
+            <MudItem xs="12" md="4">
+
+                <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2">
+
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit">
+
+                        Edit
+
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Outlined" Color="Color.Warning"
+                               StartIcon="@Icons.Material.Filled.LockReset">
+
+                        Reset Password
+
+                    </MudButton>
+
+                </MudStack>
+
+            </MudItem>
+
+        </MudGrid>
+
+    </MudPaper>
+
+    <!-- ================= SUMMARY ================= -->
+
+    <MudGrid Class="mb-5">
+
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudPaper Class="pa-4 text-center">
+
+                <MudIcon Icon="@Icons.Material.Filled.School" Size="Size.Large" Color="Color.Primary" />
+
+                <MudText Typo="Typo.h5">
+                    3
+                </MudText>
+
+                <MudText>
+                    Programs
+                </MudText>
+
+            </MudPaper>
+
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudPaper Class="pa-4 text-center">
+
+                <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Large" Color="Color.Success" />
+
+                <MudText Typo="Typo.h5">
+                    2
+                </MudText>
+
+                <MudText>
+                    Teachers
+                </MudText>
+
+            </MudPaper>
+
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudPaper Class="pa-4 text-center">
+
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Large" Color="Color.Info" />
+
+                <MudText Typo="Typo.h5">
+                    100%
+                </MudText>
+
+                <MudText>
+                    Attendance
+                </MudText>
+
+            </MudPaper>
+
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudPaper Class="pa-4 text-center">
+
+                <MudIcon Icon="@Icons.Material.Filled.AccountBalanceWallet" Size="Size.Large" Color="Color.Warning" />
+
+                <MudText Typo="Typo.h5">
+                    ₹0
+                </MudText>
+
+                <MudText>
+                    Outstanding Fees
+                </MudText>
+
+            </MudPaper>
+
+        </MudItem>
+
+    </MudGrid>
+
+    <!-- ================= DETAILS ================= -->
+
+    <MudGrid>
+
+        <MudItem xs="12" md="6">
+
+            <MudPaper Class="pa-5">
+
+                <MudText Typo="Typo.h6">
+                    Personal Information
+                </MudText>
+
+                <MudDivider Class="my-3" />
+
+                <MudText><b>Admission Number:</b> @_student.AdmissionNumber</MudText>
+
+                <MudText><b>Full Name:</b> @_student.FullName</MudText>
+
+                <MudText><b>Gender:</b> @_student.Gender</MudText>
+
+                <MudText><b>Date of Birth:</b> @_student.DateOfBirth.ToString("dd MMM yyyy")</MudText>
+
+                <MudText><b>Age:</b> @GetAge(_student.DateOfBirth) Years</MudText>
+
+                <MudText><b>Admission Date:</b> @_student.AdmissionDate.ToString("dd MMM yyyy")</MudText>
+
+            </MudPaper>
+
+        </MudItem>
+
+        <MudItem xs="12" md="6">
+
+            <MudPaper Class="pa-5">
+
+                <MudText Typo="Typo.h6">
+                    Contact Information
+                </MudText>
+
+                <MudDivider Class="my-3" />
+
+                <MudText><b>Email:</b> @_student.Email</MudText>
+
+                <MudText><b>Phone:</b> @_student.PhoneNumber</MudText>
+
+                <MudText><b>Country:</b> @_student.Country</MudText>
+
+                <MudText><b>Time Zone:</b> @_student.TimeZone</MudText>
+
+            </MudPaper>
+
+        </MudItem>
+
+        <MudItem xs="12">
+
+            <MudPaper Class="pa-5 mt-4">
+
+                <MudText Typo="Typo.h6">
+                    Academic Information
+                </MudText>
+
+                <MudDivider Class="my-3" />
+
+                <MudChip T="string" Color="Color.Success">
+
+                    @_student.Status
+
+                </MudChip>
+
+                <MudText Class="mt-4">
+
+                    <b>Remarks</b>
+
+                </MudText>
+
+                <MudText>
+
+                    @_student.Remarks
+
+                </MudText>
+
+            </MudPaper>
+
+        </MudItem>
+
+    </MudGrid>
+}
+
+@code
+{
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private StudentResponse? _student;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _student = await StudentApi.GetStudentAsync(Id);
+    }
+
+    private string GetInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return "?";
+
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        if (parts.Length == 1)
+            return parts[0].Substring(0, 1).ToUpper();
+
+        return (parts[0].Substring(0, 1) + parts[^1].Substring(0, 1)).ToUpper();
+    }
+
+    private int GetAge(DateTime dob)
+    {
+        var age = DateTime.Today.Year - dob.Year;
+
+        if (dob.Date > DateTime.Today.AddYears(-age))
+            age--;
+
+        return age;
+    }
+}

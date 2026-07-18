@@ -1,0 +1,49 @@
+@using MudBlazor
+
+<MudDialog>
+
+    <DialogContent>
+
+        <MudText Typo="Typo.h5" Class="mb-4">
+            Create Teaching Schedule
+        </MudText>
+
+        <MudSelect T="string" Label="Enrollment">
+
+        </MudSelect>
+
+        <MudSelect T="string" Label="Teacher" Class="mt-3">
+
+        </MudSelect>
+
+        <MudSelect T="DayOfWeek" Label="Day of Week">
+
+            <MudSelectItem Value="@DayOfWeek.Sunday">Sunday</MudSelectItem>
+            <MudSelectItem Value="@DayOfWeek.Monday">Monday</MudSelectItem>
+            <MudSelectItem Value="@DayOfWeek.Tuesday">Tuesday</MudSelectItem>
+            <MudSelectItem Value="@DayOfWeek.Wednesday">Wednesday</MudSelectItem>
+            <MudSelectItem Value="@DayOfWeek.Thursday">Thursday</MudSelectItem>
+            <MudSelectItem Value="@DayOfWeek.Friday">Friday</MudSelectItem>
+            <MudSelectItem Value="@DayOfWeek.Saturday">Saturday</MudSelectItem>
+
+        </MudSelect>
+
+        <MudTimePicker Label="Start Time" Class="mt-3" />
+
+    </DialogContent>
+
+    <DialogActions>
+
+        <MudButton Color="Color.Default">
+            Cancel
+        </MudButton>
+
+        <MudButton Color="Color.Primary" Variant="Variant.Filled">
+
+            Save
+
+        </MudButton>
+
+    </DialogActions>
+
+</MudDialog>

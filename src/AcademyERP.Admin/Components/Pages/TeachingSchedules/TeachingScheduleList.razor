@@ -1,0 +1,37 @@
+@page "/teachingschedules"
+
+@attribute [Authorize]
+
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+
+<PageTitle>Teaching Schedule</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">
+    Teaching Schedule
+</MudText>
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add">
+
+    Create Schedule
+
+</MudButton>
+
+<MudPaper Class="pa-4 mt-4">
+
+    <MudTable T="string" Dense="true" Items="new List<string>()">
+
+        <HeaderContent>
+
+            <MudTh>Student</MudTh>
+            <MudTh>Teacher</MudTh>
+            <MudTh>Course</MudTh>
+            <MudTh>Day</MudTh>
+            <MudTh>Time</MudTh>
+            <MudTh></MudTh>
+
+        </HeaderContent>
+
+    </MudTable>
+
+</MudPaper>

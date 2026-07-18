@@ -10,6 +10,7 @@ public interface IStudentService
 
     Task<StudentResponse?> GetByIdAsync(Guid id);
 
+
     Task<StudentResponse?> UpdateAsync(Guid id, UpdateStudentRequest request);
     Task<bool> DeleteAsync(Guid id);
     Task<bool> ResetPasswordAsync(Guid id, string newPassword);

@@ -1,17 +1,44 @@
 using AcademyERP.Admin.Components;
 using MudBlazor.Services;
 using AcademyERP.Admin.Services;
+using Microsoft.AspNetCore.Components.Authorization;
+using AcademyERP.Admin.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddMudServices();
+builder.Services.AddTransient<JwtAuthorizationMessageHandler>();
+
 builder.Services.AddScoped(sp =>
-    new HttpClient
+{
+    var handler = sp.GetRequiredService<JwtAuthorizationMessageHandler>();
+
+    handler.InnerHandler = new HttpClientHandler();
+
+    return new HttpClient(handler)
     {
         BaseAddress = new Uri("http://localhost:5235/")
-    });
+    };
+});
 builder.Services.AddScoped<StudentApiService>();
 builder.Services.AddScoped<TeacherApiService>();
 builder.Services.AddScoped<ParentApiService>();
+builder.Services.AddScoped<ProgramApiService>();
+builder.Services.AddScoped<AuthApiService>();
+builder.Services.AddScoped<TeacherDashboardApiService>();
+builder.Services.AddScoped<CourseApiService>();
+builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<AuthStateService>();
+builder.Services.AddScoped<AuthenticationStateProvider,
+    JwtAuthenticationStateProvider>();
+builder.Services
+.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+.AddCookie();
+
+builder.Services.AddAuthorization();
+
+builder.Services.AddScoped<AuthenticationStateProvider,
+    JwtAuthenticationStateProvider>();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -28,10 +55,17 @@ if (!app.Environment.IsDevelopment())
 }
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
+app.UseStaticFiles();
+
+app.UseRouting();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseAntiforgery();
 
 app.MapStaticAssets();
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
