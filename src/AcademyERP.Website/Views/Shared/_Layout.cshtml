@@ -1,50 +1,249 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - AcademyERP.Website</title>
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/AcademyERP.Website.styles.css" asp-append-version="true" />
+
+    <title>@ViewData["Title"] | MS International Academy</title>
+
+    <meta name="description"
+          content="MS International Academy offers quality online Quran, Islamic Studies and educational programs for students worldwide." />
+
+    <link rel="stylesheet"
+          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <link rel="stylesheet"
+          href="~/css/site.css"
+          asp-append-version="true" />
+
 </head>
+
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">AcademyERP.Website</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
+
+<header class="site-header">
+
+    <nav class="navbar navbar-expand-lg">
+
+        <div class="container">
+
+            <a class="navbar-brand"
+               asp-controller="Home"
+               asp-action="Index">
+
+                <img src="~/images/Clogo.png"
+     alt="MS Academy"
+     class="brand-logo" />
+
+<div class="brand-text">
+    <span class="brand-name">
+        MS International Academy
+    </span>
+
+    <span class="brand-tagline">
+        Mueenu Ssalik
+    </span>
+</div>
+
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#mainNavbar"
+                    aria-controls="mainNavbar"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+
+                <span class="navbar-toggler-icon"></span>
+
+            </button>
+
+            <div class="collapse navbar-collapse"
+                 id="mainNavbar">
+
+                <ul class="navbar-nav ms-auto align-items-lg-center">
+
+                    <li class="nav-item">
+                        <a class="nav-link"
+                           href="#home">
+                            Home
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link"
+                           href="#about">
+                            About
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link"
+                           href="#programs">
+                            Programs
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link"
+                           href="#why-us">
+                            Why Us
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link"
+                           href="#contact">
+                            Contact
+                        </a>
+                    </li>
+
+                    <li class="nav-item ms-lg-3">
+                        <a class="btn btn-outline-brand"
+                           href="#">
+                            Login
+                        </a>
+                    </li>
+
+                    <li class="nav-item ms-lg-2">
+                        <a class="btn btn-brand"
+                           href="#demo">
+                            Free Demo
+                        </a>
+                    </li>
+
+                </ul>
+
             </div>
-        </nav>
-    </header>
+
+        </div>
+
+    </nav>
+
+</header>
+
+
+<main role="main">
+
+    @RenderBody()
+
+</main>
+
+
+<footer class="site-footer">
+
     <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+
+        <div class="row g-5">
+
+            <!-- BRAND -->
+
+            <div class="col-lg-5">
+
+                <div class="footer-brand">
+
+                    <h4>
+                        MS International Academy
+                    </h4>
+
+                    <p>
+                        Providing accessible, personalized and high-quality
+                        online education for students around the world.
+                    </p>
+
+                    <div class="footer-highlight">
+                        <strong>40,000+</strong>
+                        <span>Graduates Worldwide</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- QUICK LINKS -->
+
+            <div class="col-lg-3">
+
+                <div class="footer-links">
+
+                    <h5>
+                        Quick Links
+                    </h5>
+
+                    <a href="#home">Home</a>
+                    <a href="#about">About Us</a>
+                    <a href="#programs">Programs</a>
+                    <a href="#why-us">Why Choose Us</a>
+                    <a href="#contact">Contact</a>
+
+                </div>
+
+            </div>
+
+
+            <!-- CTA -->
+
+            <div class="col-lg-4">
+
+                <div class="footer-cta">
+
+                    <span class="footer-label">
+                        START YOUR JOURNEY
+                    </span>
+
+                    <h5>
+                        Ready to start learning?
+                    </h5>
+
+                    <p>
+                        Connect with our admissions team to explore
+                        programs and book your 3-day free demo.
+                    </p>
+
+                    <a href="#demo"
+                       class="btn btn-brand footer-demo-btn">
+
+                        Book Your Free Demo
+                        <span>→</span>
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="footer-bottom">
+
+            <span>
+                © @DateTime.Now.Year MS International Academy.
+                All rights reserved.
+            </span>
+
+            <span class="footer-bottom-text">
+                Learn • Grow • Succeed
+            </span>
+
+        </div>
+
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - AcademyERP.Website - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+</footer>
+
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+<script src="~/js/site.js"
+        asp-append-version="true"></script>
+
+@await RenderSectionAsync("Scripts", required: false)
+
 </body>
+
 </html>

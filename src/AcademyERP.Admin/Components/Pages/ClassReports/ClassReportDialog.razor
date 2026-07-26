@@ -1,0 +1,294 @@
+@using AcademyERP.Admin.Models.ClassReports
+@using AcademyERP.Admin.Models.Enrollments
+@using AcademyERP.Admin.Services
+@using AcademyERP.Domain.Enums
+@using MudBlazor
+
+@inject EnrollmentApiService EnrollmentApi
+@inject ISnackbar Snackbar
+
+<MudDialog>
+
+    <DialogContent>
+
+        <MudForm @ref="_form">
+
+            <MudSelect T="Guid" Label="Enrollment" Value="_model.EnrollmentId" ValueChanged="OnEnrollmentChanged"
+                       Required="true" RequiredError="Please select an enrollment.">
+
+                @foreach (var enrollment in _enrollments)
+                {
+                    <MudSelectItem T="Guid" Value="@enrollment.Id">
+                        @($"{enrollment.StudentName} - {enrollment.CourseName} - {enrollment.TeacherName}")
+                    </MudSelectItem>
+                }
+
+            </MudSelect>
+
+
+            <MudTextField T="string" Label="Student" Value="@_selectedStudentName" ReadOnly="true" Class="mt-3" />
+
+
+            <MudTextField T="string" Label="Teacher" Value="@_selectedTeacherName" ReadOnly="true" Class="mt-3" />
+
+
+            <MudTextField T="string" Label="Course" Value="@_selectedCourseName" ReadOnly="true" Class="mt-3" />
+            <MudDatePicker Label="Class Date" Class="mt-3" @bind-Date="_reportDate" Required="true"
+                           RequiredError="Please select the class date." />
+
+
+            <MudSelect T="AttendanceStatus" Label="Attendance" Class="mt-3" @bind-Value="_model.AttendanceStatus">
+
+                @foreach (AttendanceStatus item in Enum.GetValues<AttendanceStatus>())
+                {
+                    <MudSelectItem T="AttendanceStatus" Value="@item">
+                        @item
+                    </MudSelectItem>
+                }
+
+            </MudSelect>
+
+
+            <MudSelect T="PerformanceRating" Label="Performance" Class="mt-3" @bind-Value="_model.PerformanceRating">
+
+                @foreach (PerformanceRating item in Enum.GetValues<PerformanceRating>())
+                {
+                    <MudSelectItem T="PerformanceRating" Value="@item">
+                        @item
+                    </MudSelectItem>
+                }
+
+            </MudSelect>
+
+
+            <MudSelect T="HomeworkStatus" Label="Homework" Class="mt-3" @bind-Value="_model.HomeworkStatus">
+
+                @foreach (HomeworkStatus item in Enum.GetValues<HomeworkStatus>())
+                {
+                    <MudSelectItem T="HomeworkStatus" Value="@item">
+                        @item
+                    </MudSelectItem>
+                }
+
+            </MudSelect>
+
+
+            <MudSelect T="BehaviourRating" Label="Behaviour" Class="mt-3" @bind-Value="_model.BehaviourRating">
+
+                @foreach (BehaviourRating item in Enum.GetValues<BehaviourRating>())
+                {
+                    <MudSelectItem T="BehaviourRating" Value="@item">
+                        @item
+                    </MudSelectItem>
+                }
+
+            </MudSelect>
+
+
+            <MudSelect T="ClassOutcome" Label="Outcome" Class="mt-3" @bind-Value="_model.ClassOutcome">
+
+                @foreach (ClassOutcome item in Enum.GetValues<ClassOutcome>())
+                {
+                    <MudSelectItem T="ClassOutcome" Value="@item">
+                        @item
+                    </MudSelectItem>
+                }
+
+            </MudSelect>
+
+
+            <MudTextField T="string" Label="Lesson Taken" Lines="3" Class="mt-3" Required="true"
+                          RequiredError="Please enter the lesson taken." @bind-Value="_model.LessonTaken" />
+
+
+            <MudTextField T="string" Label="Next Homework" Lines="3" Class="mt-3" @bind-Value="_model.NextHomework" />
+
+
+            <MudTextField T="string" Label="Teacher Remarks" Lines="3" Class="mt-3"
+                          @bind-Value="_model.TeacherRemarks" />
+
+
+            <MudNumericField T="int" Label="Duration (Minutes)" Class="mt-3" Min="1" Max="300"
+                             @bind-Value="_model.ActualDurationMinutes" />
+
+        </MudForm>
+
+    </DialogContent>
+
+
+    <DialogActions>
+
+        <MudButton OnClick="Cancel">
+            Cancel
+        </MudButton>
+
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save">
+            Save
+        </MudButton>
+
+    </DialogActions>
+
+</MudDialog>
+
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+
+    [Parameter]
+    public CreateClassReportRequest Model { get; set; } = new();
+
+
+    private MudForm? _form;
+
+    private CreateClassReportRequest _model = new();
+
+    private List<EnrollmentResponse> _enrollments = new();
+
+    private string _selectedStudentName = string.Empty;
+
+    private string _selectedTeacherName = string.Empty;
+
+    private string _selectedCourseName = string.Empty;
+    private DateTime? _reportDate = DateTime.Today;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _model = Model;
+
+        try
+        {
+            _enrollments = await EnrollmentApi.GetAllAsync();
+
+            // If opening with an existing enrollment selected
+            if (_model.EnrollmentId != Guid.Empty)
+            {
+                SetSelectedEnrollment(_model.EnrollmentId);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to load enrollments: {ex.Message}",
+                Severity.Error);
+        }
+    }
+
+
+    private Task OnEnrollmentChanged(Guid enrollmentId)
+    {
+        _model.EnrollmentId = enrollmentId;
+
+        SetSelectedEnrollment(enrollmentId);
+
+        return Task.CompletedTask;
+    }
+
+
+    private void SetSelectedEnrollment(Guid enrollmentId)
+    {
+        var enrollment = _enrollments
+            .FirstOrDefault(x => x.Id == enrollmentId);
+
+        if (enrollment == null)
+        {
+            _model.StudentId = Guid.Empty;
+            _model.TeacherId = Guid.Empty;
+
+            _selectedStudentName = string.Empty;
+            _selectedTeacherName = string.Empty;
+            _selectedCourseName = string.Empty;
+
+            return;
+        }
+
+        _model.StudentId = enrollment.StudentId;
+
+        _selectedStudentName =
+            enrollment.StudentName;
+
+        _selectedCourseName =
+            enrollment.CourseName;
+
+
+        if (enrollment.TeacherId.HasValue)
+        {
+            _model.TeacherId =
+                enrollment.TeacherId.Value;
+
+            _selectedTeacherName =
+                enrollment.TeacherName ?? string.Empty;
+        }
+        else
+        {
+            _model.TeacherId = Guid.Empty;
+
+            _selectedTeacherName =
+                "No teacher assigned";
+        }
+    }
+
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+
+    private async Task Save()
+    {
+        if (_form == null)
+            return;
+
+        await _form.ValidateAsync();
+
+        if (!_form.IsValid)
+            return;
+
+
+        if (_model.EnrollmentId == Guid.Empty)
+        {
+            Snackbar.Add(
+                "Please select an enrollment.",
+                Severity.Warning);
+
+            return;
+        }
+
+
+        if (_model.StudentId == Guid.Empty)
+        {
+            Snackbar.Add(
+                "The selected enrollment does not have a valid student.",
+                Severity.Warning);
+
+            return;
+        }
+
+
+        if (_model.TeacherId == Guid.Empty)
+        {
+            Snackbar.Add(
+                "The selected enrollment does not have a teacher assigned.",
+                Severity.Warning);
+
+            return;
+        }
+
+        if (!_reportDate.HasValue)
+        {
+            Snackbar.Add(
+                "Please select the class date.",
+                Severity.Warning);
+
+            return;
+        }
+
+        _model.ReportDate = _reportDate.Value;
+        MudDialog.Close(
+            DialogResult.Ok(_model));
+    }
+
+}

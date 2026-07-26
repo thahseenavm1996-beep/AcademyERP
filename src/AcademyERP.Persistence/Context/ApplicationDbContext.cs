@@ -16,6 +16,7 @@ using AcademyERP.Domain.Entities.Programs;
 using AcademyERP.Domain.Entities.ClassReports;
 using AcademyERP.Domain.Entities.TeachingSchedules;
 using AcademyERP.Domain.Entities.ScheduledClasses;
+using AcademyERP.Domain.Entities.Admissions;
 
 namespace AcademyERP.Persistence.Context;
 
@@ -41,6 +42,8 @@ public class ApplicationDbContext
     public DbSet<TimeSlot> TimeSlots => Set<TimeSlot>();
     public DbSet<TeacherCourse> TeacherCourses => Set<TeacherCourse>();
     public DbSet<TeacherAvailability> TeacherAvailabilities => Set<TeacherAvailability>();
+    public DbSet<AdmissionApplication> AdmissionApplications =>
+    Set<AdmissionApplication>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

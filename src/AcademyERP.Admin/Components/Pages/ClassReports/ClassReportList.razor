@@ -1,0 +1,206 @@
+@page "/classreports"
+
+@attribute [Authorize]
+
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using AcademyERP.Admin.Models.ClassReports
+@using AcademyERP.Admin.Services
+
+@inject ClassReportApiService ClassReportApi
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>Class Reports</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">
+    Class Reports
+</MudText>
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+           OnClick="OpenCreateDialog">
+    Create Class Report
+</MudButton>
+
+<MudPaper Class="pa-4 mt-4">
+
+    @if (_loading)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+    }
+    else if (_reports.Count == 0)
+    {
+        <MudText Typo="Typo.body1">
+            No class reports found.
+        </MudText>
+    }
+    else
+    {
+        <MudTable Items="_reports" Hover="true" Dense="true" Striped="true">
+
+            <HeaderContent>
+                <MudTh>Date</MudTh>
+                <MudTh>Student</MudTh>
+                <MudTh>Teacher</MudTh>
+                <MudTh>Course</MudTh>
+                <MudTh>Attendance</MudTh>
+                <MudTh>Performance</MudTh>
+                <MudTh>Outcome</MudTh>
+                <MudTh>Duration</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd DataLabel="Date">
+                    @context.ReportDate.ToString("dd MMM yyyy")
+                </MudTd>
+
+                <MudTd DataLabel="Student">
+                    @context.StudentName
+                </MudTd>
+
+                <MudTd DataLabel="Teacher">
+                    @context.TeacherName
+                </MudTd>
+
+                <MudTd DataLabel="Course">
+                    @context.CourseName
+                </MudTd>
+
+                <MudTd DataLabel="Attendance">
+                    @context.AttendanceStatus
+                </MudTd>
+
+                <MudTd DataLabel="Performance">
+                    @context.PerformanceRating
+                </MudTd>
+
+                <MudTd DataLabel="Outcome">
+                    @context.ClassOutcome
+                </MudTd>
+
+                <MudTd DataLabel="Duration">
+                    @context.ActualDurationMinutes min
+                </MudTd>
+
+                <MudTd DataLabel="Actions">
+
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                                   OnClick="@(() => DeleteReport(context.Id))" />
+
+                </MudTd>
+
+            </RowTemplate>
+
+        </MudTable>
+    }
+
+</MudPaper>
+
+@code {
+
+    private List<ClassReportResponse> _reports = new();
+
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadReports();
+    }
+
+    private async Task LoadReports()
+    {
+        try
+        {
+            _loading = true;
+
+            var request = new ClassReportQueryRequest
+            {
+                Page = 1,
+                PageSize = 100
+            };
+
+            var result = await ClassReportApi.GetAllAsync(request);
+
+            _reports = result?.Items?.ToList()
+                       ?? new List<ClassReportResponse>();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to load class reports: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task OpenCreateDialog()
+    {
+        var parameters = new DialogParameters<ClassReportDialog>
+        {
+            {
+                x => x.Model,
+                new CreateClassReportRequest()
+            }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<ClassReportDialog>(
+            "Create Class Report",
+            parameters,
+            options);
+
+        var result = await dialog.Result;
+
+        if (result is not null &&
+            !result.Canceled &&
+            result.Data is CreateClassReportRequest request)
+        {
+            try
+            {
+                await ClassReportApi.CreateAsync(request);
+
+                Snackbar.Add(
+                    "Class report created successfully.",
+                    Severity.Success);
+
+                await LoadReports();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(
+                    $"Unable to create class report: {ex.Message}",
+                    Severity.Error);
+            }
+        }
+    }
+
+    private async Task DeleteReport(Guid id)
+    {
+        try
+        {
+            await ClassReportApi.DeleteAsync(id);
+
+            Snackbar.Add(
+                "Class report deleted successfully.",
+                Severity.Success);
+
+            await LoadReports();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to delete class report: {ex.Message}",
+                Severity.Error);
+        }
+    }
+}

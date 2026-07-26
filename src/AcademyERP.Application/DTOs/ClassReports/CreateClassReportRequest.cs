@@ -13,7 +13,8 @@ public class CreateClassReportRequest
 
     [Required]
     public Guid EnrollmentId { get; set; }
-
+    [Required]
+    public DateTime ReportDate { get; set; } = DateTime.Today;
     [Required]
     public AttendanceStatus AttendanceStatus { get; set; }
 

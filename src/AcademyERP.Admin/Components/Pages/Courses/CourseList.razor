@@ -1,8 +1,10 @@
 @page "/courses"
 @attribute [Authorize]
+
 @using Microsoft.AspNetCore.Authorization
 @using AcademyERP.Admin.Models.Courses
 @using AcademyERP.Admin.Services
+
 @inject IDialogService DialogService
 @inject CourseApiService CourseApi
 @inject ISnackbar Snackbar
@@ -23,10 +25,9 @@
 
         <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
                    OnClick="OpenAddCourseDialog">
-
             Add Course
-
         </MudButton>
+
     </MudStack>
 
 </MudPaper>
@@ -41,6 +42,7 @@
         <MudTh>Fee</MudTh>
         <MudTh>Group</MudTh>
         <MudTh>Status</MudTh>
+        <MudTh>Actions</MudTh>
 
     </HeaderContent>
 
@@ -55,14 +57,20 @@
         <MudTd>@context.StandardMonthlyFee</MudTd>
 
         <MudTd>
-
             @(context.IsGroupClassAllowed ? "Yes" : "No")
+        </MudTd>
 
+        <MudTd>
+            @(context.IsActive ? "Active" : "Inactive")
         </MudTd>
 
         <MudTd>
 
-            @(context.IsActive ? "Active" : "Inactive")
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small"
+                           OnClick="@(() => OpenEditCourseDialog(context))" />
+
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                           OnClick="@(() => DeleteCourse(context))" />
 
         </MudTd>
 
@@ -73,9 +81,7 @@
 @if (!_loading && !_courses.Any())
 {
     <MudAlert Severity="Severity.Info">
-
         No courses found.
-
     </MudAlert>
 }
 
@@ -107,6 +113,7 @@
             _loading = false;
         }
     }
+
     private async Task OpenAddCourseDialog()
     {
         var options = new DialogOptions
@@ -125,6 +132,51 @@
         if (result is not null && !result.Canceled)
         {
             await LoadCoursesAsync();
+        }
+    }
+
+    private async Task OpenEditCourseDialog(CourseResponse course)
+    {
+        var parameters = new DialogParameters<CourseDialog>
+        {
+            { x => x.IsEdit, true },
+            { x => x.Course, course }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            FullWidth = true,
+            MaxWidth = MaxWidth.Medium
+        };
+
+        var dialog = await DialogService.ShowAsync<CourseDialog>(
+            "Edit Course",
+            parameters,
+            options);
+
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            await LoadCoursesAsync();
+        }
+    }
+    private async Task DeleteCourse(CourseResponse course)
+    {
+        try
+        {
+            await CourseApi.DeleteAsync(course.Id);
+
+            Snackbar.Add(
+                $"{course.CourseName} deleted successfully.",
+                Severity.Success);
+
+            await LoadCoursesAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
         }
     }
 }

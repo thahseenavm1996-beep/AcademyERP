@@ -42,6 +42,16 @@ builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("WebsitePolicy", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:5007")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
 
 builder.Services.AddSwaggerGen();
@@ -66,10 +76,14 @@ builder.Services.AddScoped<IStudentService, StudentService>();
 builder.Services.AddScoped<ITeacherService, TeacherService>();
 builder.Services.AddScoped<IParentService, ParentService>();
 builder.Services.AddScoped<IProgramService, ProgramService>();
+builder.Services.AddScoped<IAdmissionApplicationService, AdmissionApplicationService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<ITeacherDashboardService, TeacherDashboardService>();
 builder.Services.AddScoped<ITeachingScheduleService, TeachingScheduleService>();
 builder.Services.AddScoped<ICourseService, CourseService>();
+builder.Services.AddScoped<IClassReportService, ClassReportService>();
+builder.Services.AddScoped<IAdmissionConversionService, AdmissionConversionService>();
+builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
 
 builder.Services.AddAutoMapper(typeof(ProgramMappingProfile).Assembly);
 builder.Services.AddAuthentication(options =>
@@ -115,16 +129,24 @@ var app = builder.Build();
 Console.WriteLine("After Build");
 
 
-/*using (var scope = app.Services.CreateScope())
+using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
 
-    var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+    var context =
+        services.GetRequiredService<ApplicationDbContext>();
 
-    var roleManager = services.GetRequiredService<RoleManager<ApplicationRole>>();
+    var userManager =
+        services.GetRequiredService<UserManager<ApplicationUser>>();
 
-    await DbInitializer.SeedAsync(userManager, roleManager);
-}*/
+    var roleManager =
+        services.GetRequiredService<RoleManager<ApplicationRole>>();
+
+    await DbInitializer.SeedAsync(
+        context,
+        userManager,
+        roleManager);
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -134,9 +156,14 @@ if (app.Environment.IsDevelopment())
 }
 app.UseMiddleware<ExceptionMiddleware>();
 app.UseSerilogRequestLogging();
+
 app.UseHttpsRedirection();
+
+app.UseCors("WebsitePolicy");
+
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
 Console.WriteLine("Before app.Run()");
 Console.WriteLine("Environment: " + app.Environment.EnvironmentName);

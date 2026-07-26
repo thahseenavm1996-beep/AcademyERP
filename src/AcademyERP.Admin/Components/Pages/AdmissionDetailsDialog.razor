@@ -1,0 +1,222 @@
+@using AcademyERP.Admin.Models.Admissions
+@using AcademyERP.Admin.Services
+
+@inject AdmissionApplicationApiService AdmissionApi
+@inject ISnackbar Snackbar
+
+<MudDialog>
+
+    <DialogContent>
+
+        <MudStack Spacing="3">
+
+            <MudText Typo="Typo.h6">
+                @Application.StudentName
+            </MudText>
+
+            <MudDivider />
+
+            <MudGrid>
+
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.caption">Student Name</MudText>
+                    <MudText>@Application.StudentName</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.caption">Age</MudText>
+                    <MudText>@Application.Age</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.caption">Gender</MudText>
+                    <MudText>@GetGenderText(Application.Gender)</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.caption">Country</MudText>
+                    <MudText>@Application.Country</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.caption">City</MudText>
+                    <MudText>@(Application.City ?? "-")</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.caption">WhatsApp</MudText>
+                    <MudText>@Application.WhatsAppNumber</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.caption">Email</MudText>
+                    <MudText>@(Application.Email ?? "-")</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.caption">Preferred Timing</MudText>
+                    <MudText>@(Application.PreferredTiming ?? "-")</MudText>
+                </MudItem>
+
+            </MudGrid>
+
+            <MudDivider />
+
+            <MudGrid>
+
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.caption">Program</MudText>
+                    <MudText Typo="Typo.body1">
+                        @Application.ProgramName
+                    </MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.caption">Course</MudText>
+                    <MudText Typo="Typo.body1">
+                        @(Application.CourseName ?? "Not assigned")
+                    </MudText>
+                </MudItem>
+
+            </MudGrid>
+
+            <MudDivider />
+
+            <div>
+                <MudText Typo="Typo.caption">
+                    Additional Information
+                </MudText>
+
+                <MudText Typo="Typo.body1">
+                    @(Application.Message ?? "No additional information provided.")
+                </MudText>
+            </div>
+
+            <div>
+                <MudText Typo="Typo.caption">
+                    Submitted
+                </MudText>
+
+                <MudText>
+                    @Application.CreatedAt.ToLocalTime()
+                    .ToString("dd MMM yyyy, hh:mm tt")
+                </MudText>
+            </div>
+
+            <MudDivider />
+
+            <MudSelect T="int" Label="Admission Status" @bind-Value="_selectedStatus">
+
+                <MudSelectItem T="int" Value="1">
+                    New
+                </MudSelectItem>
+
+                <MudSelectItem T="int" Value="2">
+                    Contacted
+                </MudSelectItem>
+
+                <MudSelectItem T="int" Value="3">
+                    Demo Scheduled
+                </MudSelectItem>
+
+                <MudSelectItem T="int" Value="4">
+                    Demo Completed
+                </MudSelectItem>
+
+                <MudSelectItem T="int" Value="5">
+                    Approved
+                </MudSelectItem>
+
+                <MudSelectItem T="int" Value="6">
+                    Rejected
+                </MudSelectItem>
+
+                <MudSelectItem T="int" Value="7">
+                    Cancelled
+                </MudSelectItem>
+
+            </MudSelect>
+
+        </MudStack>
+
+    </DialogContent>
+
+    <DialogActions>
+
+        <MudButton OnClick="Cancel">
+            Close
+        </MudButton>
+
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="_saving" OnClick="SaveStatus">
+
+            @(_saving ? "Saving..." : "Update Status")
+
+        </MudButton>
+
+    </DialogActions>
+
+</MudDialog>
+
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public AdmissionApplicationResponse Application { get; set; }
+        = default!;
+
+    private int _selectedStatus;
+
+    private bool _saving;
+
+    protected override void OnInitialized()
+    {
+        _selectedStatus = Application.Status;
+    }
+
+    private async Task SaveStatus()
+    {
+        try
+        {
+            _saving = true;
+
+            await AdmissionApi.UpdateStatusAsync(
+                Application.Id,
+                _selectedStatus);
+
+            Snackbar.Add(
+                "Admission status updated successfully.",
+                Severity.Success);
+
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                ex.Message,
+                Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private static string GetGenderText(int gender)
+    {
+        return gender switch
+        {
+            1 => "Male",
+            2 => "Female",
+            3 => "Other",
+            _ => "-"
+        };
+    }
+}

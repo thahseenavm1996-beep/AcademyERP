@@ -28,18 +28,28 @@ builder.Services.AddScoped<AuthApiService>();
 builder.Services.AddScoped<TeacherDashboardApiService>();
 builder.Services.AddScoped<CourseApiService>();
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<DashboardApiService>();
+builder.Services.AddScoped<ClassReportApiService>();
+builder.Services.AddScoped<EnrollmentApiService>();
+builder.Services.AddScoped<LookupApiService>();
+builder.Services.AddScoped<AdmissionApplicationApiService>();
 builder.Services.AddScoped<AuthStateService>();
 builder.Services.AddScoped<AuthenticationStateProvider,
     JwtAuthenticationStateProvider>();
-builder.Services
+/*builder.Services
 .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-.AddCookie();
+.AddCookie();*/
+builder.Services
+    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/login";
+        options.AccessDeniedPath = "/login";
+    });
 
 builder.Services.AddAuthorization();
 
-builder.Services.AddScoped<AuthenticationStateProvider,
-    JwtAuthenticationStateProvider>();
-
+builder.Services.AddCascadingAuthenticationState();
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
@@ -53,7 +63,7 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
-app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+//app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 

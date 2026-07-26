@@ -12,7 +12,7 @@ public class StudentResponse
 
     public DateTime DateOfBirth { get; set; }
 
-    public int Gender { get; set; }
+    public string Gender { get; set; } = string.Empty;
 
     public string Country { get; set; } = string.Empty;
 

@@ -1,0 +1,201 @@
+@page "/admissions"
+@attribute [Authorize]
+
+@using Microsoft.AspNetCore.Authorization
+@using AcademyERP.Admin.Models.Admissions
+@using AcademyERP.Admin.Services
+
+@inject AdmissionApplicationApiService AdmissionApi
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<PageTitle>Admission Applications</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">
+    Admission Applications
+</MudText>
+
+<MudPaper Class="pa-4 mb-4">
+
+    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+
+        <div>
+            <MudText Typo="Typo.h6">
+                Applications
+            </MudText>
+
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                Applications submitted through the academy website.
+            </MudText>
+        </div>
+
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh"
+                   OnClick="LoadApplicationsAsync">
+            Refresh
+        </MudButton>
+
+    </MudStack>
+
+</MudPaper>
+
+
+<MudTable T="AdmissionApplicationResponse" Items="_applications" Loading="_loading" Hover="true" Dense="true"
+          Striped="true">
+
+    <HeaderContent>
+
+        <MudTh>Student</MudTh>
+        <MudTh>Program</MudTh>
+        <MudTh>Course</MudTh>
+        <MudTh>WhatsApp</MudTh>
+        <MudTh>Country</MudTh>
+        <MudTh>Status</MudTh>
+        <MudTh>Submitted</MudTh>
+        <MudTh>Actions</MudTh>
+
+    </HeaderContent>
+
+    <RowTemplate>
+
+        <MudTd DataLabel="Student">
+            @context.StudentName
+        </MudTd>
+
+        <MudTd DataLabel="Program">
+            @context.ProgramName
+        </MudTd>
+
+        <MudTd DataLabel="Course">
+            @(context.CourseName ?? "Not assigned")
+        </MudTd>
+
+        <MudTd DataLabel="WhatsApp">
+            @context.WhatsAppNumber
+        </MudTd>
+
+        <MudTd DataLabel="Country">
+            @context.Country
+        </MudTd>
+
+        <MudTd DataLabel="Status">
+
+            <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)">
+                @GetStatusText(context.Status)
+            </MudChip>
+
+        </MudTd>
+
+        <MudTd DataLabel="Submitted">
+            @context.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")
+        </MudTd>
+        <MudTd DataLabel="Actions">
+
+            <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Primary" Size="Size.Small"
+                           OnClick="@(() => OpenDetailsDialog(context))" />
+
+        </MudTd>
+
+    </RowTemplate>
+
+</MudTable>
+
+
+@if (!_loading && !_applications.Any())
+{
+    <MudAlert Severity="Severity.Info" Class="mt-4">
+        No admission applications found.
+    </MudAlert>
+}
+
+
+@code
+{
+    private List<AdmissionApplicationResponse> _applications = new();
+
+    private bool _loading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadApplicationsAsync();
+    }
+
+    private async Task LoadApplicationsAsync()
+    {
+        try
+        {
+            _loading = true;
+
+            _applications =
+                await AdmissionApi.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                ex.Message,
+                Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static string GetStatusText(int status)
+    {
+        return status switch
+        {
+            1 => "New",
+            2 => "Contacted",
+            3 => "Demo Scheduled",
+            4 => "Demo Completed",
+            5 => "Approved",
+            6 => "Rejected",
+            7 => "Cancelled",
+            _ => "Unknown"
+        };
+    }
+
+    private static Color GetStatusColor(int status)
+    {
+        return status switch
+        {
+            1 => Color.Info,
+            2 => Color.Primary,
+            3 => Color.Warning,
+            4 => Color.Secondary,
+            5 => Color.Success,
+            6 => Color.Error,
+            7 => Color.Default,
+            _ => Color.Default
+        };
+    }
+    private async Task OpenDetailsDialog(
+    AdmissionApplicationResponse application)
+    {
+        var parameters =
+            new DialogParameters<AdmissionDetailsDialog>
+            {
+            { x => x.Application, application }
+            };
+
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            FullWidth = true,
+            MaxWidth = MaxWidth.Medium
+        };
+
+        var dialog =
+            await DialogService.ShowAsync<AdmissionDetailsDialog>(
+                "Admission Application Details",
+                parameters,
+                options);
+
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            await LoadApplicationsAsync();
+        }
+    }
+}

@@ -1,0 +1,225 @@
+@page "/enrollments"
+
+@attribute [Authorize]
+
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using AcademyERP.Admin.Models.Enrollments
+@using AcademyERP.Admin.Services
+
+@inject EnrollmentApiService EnrollmentApi
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>Enrollments</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">
+    Enrollments
+</MudText>
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+           OnClick="OpenCreateDialog">
+    Create Enrollment
+</MudButton>
+
+<MudPaper Class="pa-4 mt-4">
+
+    @if (_loading)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+    }
+    else if (_enrollments.Count == 0)
+    {
+        <MudText Typo="Typo.body1">
+            No enrollments found.
+        </MudText>
+    }
+    else
+    {
+        <MudTable Items="_enrollments" Hover="true" Dense="true" Striped="true">
+
+            <HeaderContent>
+                <MudTh>Student</MudTh>
+                <MudTh>Course</MudTh>
+                <MudTh>Teacher</MudTh>
+                <MudTh>Time Slot</MudTh>
+                <MudTh>Duration</MudTh>
+                <MudTh>Start Date</MudTh>
+                <MudTh>Monthly Fee</MudTh>
+                <MudTh>Final Fee</MudTh>
+                <MudTh>Next Billing</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd DataLabel="Student">
+                    @context.StudentName
+                </MudTd>
+
+                <MudTd DataLabel="Course">
+                    @context.CourseName
+                </MudTd>
+
+                <MudTd DataLabel="Teacher">
+                    @(string.IsNullOrWhiteSpace(context.TeacherName)
+                        ? "Not Assigned"
+                        : context.TeacherName)
+                </MudTd>
+
+                <MudTd DataLabel="Time Slot">
+                    @context.TimeSlotName
+                </MudTd>
+
+                <MudTd DataLabel="Duration">
+                    @context.ClassDurationName
+                </MudTd>
+
+                <MudTd DataLabel="Start Date">
+                    @context.StartDate.ToString("dd MMM yyyy")
+                </MudTd>
+
+                <MudTd DataLabel="Monthly Fee">
+                    @context.MonthlyFee.ToString("0.00")
+                </MudTd>
+
+                <MudTd DataLabel="Final Fee">
+                    @context.FinalMonthlyFee.ToString("0.00")
+                </MudTd>
+
+                <MudTd DataLabel="Next Billing">
+                    @context.NextBillingDate.ToString("dd MMM yyyy")
+                </MudTd>
+
+                <MudTd DataLabel="Status">
+                    @context.Status
+                </MudTd>
+
+                <MudTd DataLabel="Actions">
+
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small"
+                                   OnClick="@(() => OpenEditDialog(context))" />
+
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                                   OnClick="@(() => DeleteEnrollment(context))" />
+
+                </MudTd>
+
+            </RowTemplate>
+
+        </MudTable>
+    }
+
+</MudPaper>
+
+@code {
+
+    private List<EnrollmentResponse> _enrollments = new();
+
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEnrollments();
+    }
+
+    private async Task LoadEnrollments()
+    {
+        try
+        {
+            _loading = true;
+
+            _enrollments = await EnrollmentApi.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to load enrollments: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task OpenCreateDialog()
+    {
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            CloseOnEscapeKey = true
+        };
+
+        var dialog = await DialogService.ShowAsync<EnrollmentDialog>(
+            "Create Enrollment",
+            options);
+
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            await LoadEnrollments();
+        }
+    }
+
+    private async Task OpenEditDialog(
+        EnrollmentResponse enrollment)
+    {
+        var parameters = new DialogParameters
+        {
+            ["Enrollment"] = enrollment
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            CloseOnEscapeKey = true
+        };
+
+        var dialog = await DialogService.ShowAsync<EnrollmentDialog>(
+            "Edit Enrollment",
+            parameters,
+            options);
+
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            await LoadEnrollments();
+        }
+    }
+
+    private async Task DeleteEnrollment(
+        EnrollmentResponse enrollment)
+    {
+        try
+        {
+            var deleted =
+                await EnrollmentApi.DeleteAsync(enrollment.Id);
+
+            if (deleted)
+            {
+                Snackbar.Add(
+                    "Enrollment deleted successfully.",
+                    Severity.Success);
+
+                await LoadEnrollments();
+            }
+            else
+            {
+                Snackbar.Add(
+                    "Enrollment not found.",
+                    Severity.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to delete enrollment: {ex.Message}",
+                Severity.Error);
+        }
+    }
+}

@@ -4,5 +4,6 @@ public enum AttendanceStatus
 {
     Present = 1,
     Absent = 2,
-    Leave = 3
+    Late = 3,
+    Excused = 4
 }

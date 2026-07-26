@@ -6,7 +6,6 @@
 @inject CourseApiService CourseApi
 @inject ISnackbar Snackbar
 
-
 <MudDialog>
 
     <DialogContent>
@@ -18,6 +17,17 @@
             <MudTextField Label="Course Name" @bind-Value="_model.CourseName" Required="true" />
 
             <MudTextField Label="Description" @bind-Value="_model.Description" Lines="3" />
+
+            <MudSelect T="Guid" Label="Program" @bind-Value="_model.ProgramId" Required="true">
+
+                @foreach (var program in _programs)
+                {
+                    <MudSelectItem T="Guid" Value="@program.Id">
+                        @($"{program.ProgramCode} - {program.ProgramName}")
+                    </MudSelectItem>
+                }
+
+            </MudSelect>
 
             <MudNumericField T="decimal" Label="Monthly Fee" @bind-Value="_model.StandardMonthlyFee" />
 
@@ -36,28 +46,18 @@
         </MudButton>
 
         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save">
-
             Save
-
         </MudButton>
 
     </DialogActions>
 
 </MudDialog>
-<MudSelect T="Guid" Label="Program" @bind-Value="_model.ProgramId" Required="true">
 
-    @foreach (var program in _programs)
-    {
-        <MudSelectItem Value="@program.Id">
-            @($"{program.ProgramCode} - {program.ProgramName}")
-        </MudSelectItem>
-    }
-
-</MudSelect>
 @code
 {
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = default!;
+
     [Parameter]
     public bool IsEdit { get; set; }
 
@@ -65,7 +65,9 @@
     public CourseResponse? Course { get; set; }
 
     private CreateCourseRequest _model = new();
+
     private List<ProgramResponse> _programs = new();
+
     protected override async Task OnInitializedAsync()
     {
         _programs = await ProgramApi.GetAllAsync();
@@ -101,13 +103,17 @@
 
                 await CourseApi.UpdateAsync(Course.Id, update);
 
-                Snackbar.Add("Course updated successfully.", Severity.Success);
+                Snackbar.Add(
+                    "Course updated successfully.",
+                    Severity.Success);
             }
             else
             {
                 await CourseApi.CreateAsync(_model);
 
-                Snackbar.Add("Course created successfully.", Severity.Success);
+                Snackbar.Add(
+                    "Course created successfully.",
+                    Severity.Success);
             }
 
             MudDialog.Close(DialogResult.Ok(true));

@@ -9,7 +9,7 @@ namespace AcademyERP.Domain.Entities.Students;
 public class Student : BaseEntity
 {
     // Link to the login account (ASP.NET Core Identity)
-    public Guid ApplicationUserId { get; set; }
+    public Guid? ApplicationUserId { get; set; }
 
     // Academy Student Information
     public string AdmissionNumber { get; set; } = string.Empty;

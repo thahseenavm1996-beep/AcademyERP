@@ -76,6 +76,20 @@
         await LoadParents();
     }
 
+    /* private async Task LoadParents()
+     {
+         var result = await ParentApi.GetParentsAsync(new ParentQueryRequest
+         {
+             Page = 1,
+             PageSize = 20,
+             Search = ""
+         });
+
+         if (result != null)
+         {
+             _parents = result.Data.Items;
+         }
+     }*/
     private async Task LoadParents()
     {
         var result = await ParentApi.GetParentsAsync(new ParentQueryRequest
@@ -85,10 +99,16 @@
             Search = ""
         });
 
-        if (result != null)
+        if (result == null)
         {
-            _parents = result.Data.Items;
+            Snackbar.Add("Result is NULL", Severity.Error);
+            return;
         }
+
+        Snackbar.Add($"Success = {result.Success}", Severity.Info);
+        Snackbar.Add($"Items = {result.Data.Items.Count}", Severity.Info);
+
+        _parents = result.Data.Items;
     }
 
     private async Task AddParent()

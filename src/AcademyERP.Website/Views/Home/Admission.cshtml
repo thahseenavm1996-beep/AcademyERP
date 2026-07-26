@@ -1,0 +1,559 @@
+@{
+    ViewData["Title"] = "Apply for Admission";
+
+    var selectedProgram = ViewBag.Program as string;
+}
+
+<section class="admission-page">
+
+    <div class="container">
+
+        <!-- PAGE HEADER -->
+
+        <div class="admission-header">
+
+            <span class="section-label">
+                Start Your Learning Journey
+            </span>
+
+            <h1>
+                Apply for
+                <span>Admission.</span>
+            </h1>
+
+            <p>
+                Complete the form below and our admissions team will
+                contact you to guide you through the next steps.
+            </p>
+
+        </div>
+
+
+        <div class="admission-layout">
+
+            <!-- LEFT INFORMATION PANEL -->
+
+            <div class="admission-info-panel">
+
+                <span class="admission-small-label">
+                    MS INTERNATIONAL ACADEMY
+                </span>
+
+                <h2>
+                    Begin your journey with confidence.
+                </h2>
+
+                <p>
+                    Our admissions team will help you find the right
+                    program, suitable class timing and learning plan
+                    based on your requirements.
+                </p>
+
+
+                <div class="admission-benefits">
+
+                    <div class="admission-benefit">
+
+                        <span>01</span>
+
+                        <div>
+                            <strong>Personalized Learning</strong>
+
+                            <p>
+                                Learning plans designed around
+                                individual student needs.
+                            </p>
+                        </div>
+
+                    </div>
+
+
+                    <div class="admission-benefit">
+
+                        <span>02</span>
+
+                        <div>
+                            <strong>Flexible Timings</strong>
+
+                            <p>
+                                Choose suitable class timings based
+                                on availability.
+                            </p>
+                        </div>
+
+                    </div>
+
+
+                    <div class="admission-benefit">
+
+                        <span>03</span>
+
+                        <div>
+                            <strong>Dedicated Guidance</strong>
+
+                            <p>
+                                Our team will guide you throughout
+                                the admission process.
+                            </p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="admission-help">
+
+                    <span>Need help?</span>
+
+                    <strong>
+                        Our admissions team is here to assist you.
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- APPLICATION FORM -->
+
+            <div class="admission-form-card">
+
+                <div class="admission-form-heading">
+
+                    <span>
+                        APPLICATION FORM
+                    </span>
+
+                    <h2>
+                        Student Information
+                    </h2>
+
+                    <p>
+                        Please provide the student's details below.
+                    </p>
+
+                </div>
+
+
+                <form id="admissionForm">
+
+                    <!-- PROGRAM -->
+
+                    <div class="form-group">
+
+                        <label for="ProgramId">
+                            Program
+                            <span>*</span>
+                        </label>
+
+                        <select id="ProgramId" name="ProgramId" class="form-control" required>
+
+                            <option value="">
+                                Select a program
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- COURSE -->
+
+                    <div class="form-group">
+
+                        <label for="CourseId">
+                            Course
+                            <span>*</span>
+                        </label>
+
+                        <select id="CourseId" name="CourseId" class="form-control" required disabled>
+
+                            <option value="">
+                                Select a program first
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- NAME -->
+
+                    <div class="form-group">
+
+                        <label for="StudentName">
+                            Student Name
+                            <span>*</span>
+                        </label>
+
+                        <input type="text" id="StudentName" name="StudentName" class="form-control"
+                               placeholder="Enter student's full name" required />
+
+                    </div>
+
+
+                    <!-- AGE + GENDER -->
+
+                    <div class="form-row">
+
+                        <div class="form-group">
+
+                            <label for="Age">
+                                Age
+                                <span>*</span>
+                            </label>
+
+                            <input type="number" id="Age" name="Age" class="form-control" placeholder="Age" min="3"
+                                   required />
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="Gender">
+                                Gender
+                                <span>*</span>
+                            </label>
+
+                            <select id="Gender" name="Gender" class="form-control" required>
+
+                                <option value="">
+                                    Select gender
+                                </option>
+
+                                <option value="Male">
+                                    Male
+                                </option>
+
+                                <option value="Female">
+                                    Female
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- COUNTRY + CITY -->
+
+                    <div class="form-row">
+
+                        <div class="form-group">
+
+                            <label for="Country">
+                                Country
+                                <span>*</span>
+                            </label>
+
+                            <input type="text" id="Country" name="Country" class="form-control" placeholder="Country"
+                                   required />
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="City">
+                                City / Place
+                            </label>
+
+                            <input type="text" id="City" name="City" class="form-control" placeholder="City or place" />
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- WHATSAPP -->
+
+                    <div class="form-group">
+
+                        <label for="WhatsAppNumber">
+                            WhatsApp Number with Country Code
+                            <span>*</span>
+                        </label>
+
+                        <input type="tel" id="WhatsAppNumber" name="WhatsAppNumber" class="form-control"
+                               placeholder="Example: +91 98765 43210" required />
+
+                    </div>
+
+
+                    <!-- EMAIL -->
+
+                    <div class="form-group">
+
+                        <label for="Email">
+                            Email Address
+                        </label>
+
+                        <input type="email" id="Email" name="Email" class="form-control"
+                               placeholder="Enter your email address" />
+
+                    </div>
+
+
+                    <!-- PREFERRED TIMING -->
+
+                    <div class="form-group">
+
+                        <label for="PreferredTiming">
+                            Preferred Class Timing
+                        </label>
+
+                        <input type="text" id="PreferredTiming" name="PreferredTiming" class="form-control"
+                               placeholder="Example: 6:00 PM – 8:00 PM" />
+
+                    </div>
+
+
+                    <!-- MESSAGE -->
+
+                    <div class="form-group">
+
+                        <label for="Message">
+                            Additional Information
+                        </label>
+
+                        <textarea id="Message" name="Message" class="form-control" rows="4"
+                                  placeholder="Tell us anything else we should know"></textarea>
+
+                    </div>
+
+
+                    <!-- SUBMIT -->
+
+                    <button type="submit" class="btn admission-submit-btn">
+
+                        Submit Application
+
+                        <span>→</span>
+
+                    </button>
+
+
+                    <p class="admission-form-note">
+                        By submitting this form, you agree to be contacted
+                        by the MS International Academy admissions team.
+                    </p>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+<script>
+    document.addEventListener("DOMContentLoaded", async function () {
+
+        const programSelect = document.getElementById("ProgramId");
+        const courseSelect = document.getElementById("CourseId");
+        const admissionForm = document.getElementById("admissionForm");
+        const submitButton = admissionForm.querySelector(
+            ".admission-submit-btn"
+        );
+
+        let catalog = [];
+
+        // -----------------------------------------
+        // LOAD PROGRAMS AND COURSES
+        // -----------------------------------------
+
+        try {
+
+            const response = await fetch(
+                "http://localhost:5235/api/public/catalog"
+            );
+
+            if (!response.ok) {
+                throw new Error("Unable to load programs.");
+            }
+
+            catalog = await response.json();
+
+            catalog.forEach(function (program) {
+
+                const option = document.createElement("option");
+
+                option.value = program.id;
+                option.textContent = program.programName;
+
+                programSelect.appendChild(option);
+
+            });
+
+        }
+        catch (error) {
+
+            console.error(error);
+
+            programSelect.innerHTML =
+                '<option value="">Unable to load programs</option>';
+        }
+
+
+        // -----------------------------------------
+        // LOAD COURSES WHEN PROGRAM CHANGES
+        // -----------------------------------------
+
+        programSelect.addEventListener("change", function () {
+
+            courseSelect.innerHTML =
+                '<option value="">Select a course</option>';
+
+            courseSelect.disabled = true;
+
+            const selectedProgram = catalog.find(
+                program => program.id === programSelect.value
+            );
+
+            if (!selectedProgram) {
+                return;
+            }
+
+            selectedProgram.courses.forEach(function (course) {
+
+                const option = document.createElement("option");
+
+                option.value = course.id;
+                option.textContent = course.courseName;
+
+                courseSelect.appendChild(option);
+
+            });
+
+            if (selectedProgram.courses.length > 0) {
+                courseSelect.disabled = false;
+            }
+
+        });
+
+
+        // -----------------------------------------
+        // SUBMIT ADMISSION APPLICATION
+        // -----------------------------------------
+
+        admissionForm.addEventListener("submit", async function (event) {
+
+            event.preventDefault();
+
+            const originalButtonHtml = submitButton.innerHTML;
+
+            submitButton.disabled = true;
+            submitButton.textContent = "Submitting...";
+
+            const genderValue =
+                document.getElementById("Gender").value;
+
+            const request = {
+
+                programId:
+                    programSelect.value,
+
+                courseId:
+                    courseSelect.value || null,
+
+                studentName:
+                    document.getElementById("StudentName").value,
+
+                age:
+                    parseInt(
+                        document.getElementById("Age").value
+                    ),
+
+                gender:
+                    genderValue === "Male" ? 1 :
+                        genderValue === "Female" ? 2 : 3,
+
+                country:
+                    document.getElementById("Country").value,
+
+                city:
+                    document.getElementById("City").value || null,
+
+                whatsAppNumber:
+                    document.getElementById(
+                        "WhatsAppNumber"
+                    ).value,
+
+                email:
+                    document.getElementById("Email").value || null,
+
+                preferredTiming:
+                    document.getElementById(
+                        "PreferredTiming"
+                    ).value || null,
+
+                message:
+                    document.getElementById("Message").value || null
+            };
+
+            try {
+
+                const response = await fetch(
+                    "http://localhost:5235/api/AdmissionApplications",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+
+                        body: JSON.stringify(request)
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(
+                        "Unable to submit your application."
+                    );
+                }
+
+                const result = await response.json();
+
+                console.log(
+                    "Admission application created:",
+                    result
+                );
+
+                alert(
+                    "Your application has been submitted successfully. " +
+                    "Our admissions team will contact you soon."
+                );
+
+                admissionForm.reset();
+
+                courseSelect.innerHTML =
+                    '<option value="">Select a program first</option>';
+
+                courseSelect.disabled = true;
+
+            }
+            catch (error) {
+
+                console.error(error);
+
+                alert(
+                    "We could not submit your application. " +
+                    "Please try again."
+                );
+
+            }
+            finally {
+
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalButtonHtml;
+
+            }
+
+        });
+
+    });
+</script>

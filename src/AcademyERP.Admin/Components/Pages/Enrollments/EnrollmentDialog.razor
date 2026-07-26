@@ -1,0 +1,455 @@
+@using MudBlazor
+@using AcademyERP.Admin.Models
+@using AcademyERP.Admin.Models.Courses
+@using AcademyERP.Admin.Models.Enrollments
+@using AcademyERP.Admin.Models.Lookups
+@using AcademyERP.Admin.Services
+@using AcademyERP.Domain.Enums
+
+@inject StudentApiService StudentApi
+@inject TeacherApiService TeacherApi
+@inject CourseApiService CourseApi
+@inject LookupApiService LookupApi
+@inject EnrollmentApiService EnrollmentApi
+@inject ISnackbar Snackbar
+
+<MudDialog>
+
+    <DialogContent>
+
+        @if (_loading)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+
+            <MudText Class="mt-3">
+                Loading enrollment data...
+            </MudText>
+        }
+        else
+        {
+            <MudForm @ref="_form">
+
+                <MudSelect T="Guid" Label="Student" @bind-Value="_model.StudentId" Required="true" Disabled="@IsEditMode"
+                           Class="mb-3">
+
+                    @foreach (var student in _students)
+                    {
+                        <MudSelectItem T="Guid" Value="@student.Id">
+                            @student.FullName
+                        </MudSelectItem>
+                    }
+
+                </MudSelect>
+
+                <MudSelect T="Guid" Label="Course" @bind-Value="_model.CourseId" Required="true" Disabled="@IsEditMode"
+                           Class="mb-3">
+
+                    @foreach (var course in _courses)
+                    {
+                        <MudSelectItem T="Guid" Value="@course.Id">
+                            @course.CourseName
+                        </MudSelectItem>
+                    }
+
+                </MudSelect>
+
+                <MudSelect T="Guid?" Label="Teacher" @bind-Value="_model.TeacherId" Clearable="true" Class="mb-3">
+
+                    @foreach (var teacher in _teachers)
+                    {
+                        <MudSelectItem T="Guid?" Value="@((Guid?)teacher.Id)">
+                            @teacher.FullName
+                        </MudSelectItem>
+                    }
+
+                </MudSelect>
+
+                <MudSelect T="Guid" Label="Time Slot" @bind-Value="_model.TimeSlotId" Required="true" Class="mb-3">
+
+                    @foreach (var slot in _timeSlots)
+                    {
+                        <MudSelectItem T="Guid" Value="@slot.Id">
+                            @slot.Name
+                        </MudSelectItem>
+                    }
+
+                </MudSelect>
+
+                <MudSelect T="Guid" Label="Class Duration" @bind-Value="_model.ClassDurationId" Required="true"
+                           Class="mb-3">
+
+                    @foreach (var duration in _classDurations)
+                    {
+                        <MudSelectItem T="Guid" Value="@duration.Id">
+                            @duration.Name (@duration.Minutes minutes)
+                        </MudSelectItem>
+                    }
+
+                </MudSelect>
+
+                <MudDatePicker Label="Start Date" @bind-Date="_startDate" Required="true" Class="mb-3" />
+
+                <MudDatePicker Label="End Date" @bind-Date="_endDate" Clearable="true" Class="mb-3" />
+
+                <MudNumericField T="decimal" Label="Monthly Fee" @bind-Value="_model.MonthlyFee" Min="0" Class="mb-3" />
+
+                <MudNumericField T="decimal" Label="Scholarship Amount" @bind-Value="_model.ScholarshipAmount" Min="0"
+                                 Class="mb-3" />
+
+                @if (_model.ScholarshipAmount > 0)
+                {
+                    <MudTextField T="string" Label="Scholarship Reason" @bind-Value="_model.ScholarshipReason" Class="mb-3" />
+                }
+
+                <MudNumericField T="decimal" Label="Discount Amount" @bind-Value="_model.DiscountAmount" Min="0"
+                                 Class="mb-3" />
+
+                @if (_model.DiscountAmount > 0)
+                {
+                    <MudTextField T="string" Label="Discount Reason" @bind-Value="_model.DiscountReason" Class="mb-3" />
+                }
+
+                <MudText Typo="Typo.subtitle1" Class="mb-3">
+                    Final Monthly Fee:
+                    @FinalMonthlyFee.ToString("0.00")
+                </MudText>
+
+                @if (IsEditMode)
+                {
+                    <MudSelect T="EnrollmentStatus" Label="Status" @bind-Value="_status" Class="mb-3">
+
+                        @foreach (EnrollmentStatus status in
+                            Enum.GetValues(typeof(EnrollmentStatus)))
+                        {
+                            <MudSelectItem T="EnrollmentStatus" Value="@status">
+                                @status
+                            </MudSelectItem>
+                        }
+
+                    </MudSelect>
+                }
+
+                <MudTextField T="string" Label="Remarks" @bind-Value="_model.Remarks" Lines="3" Class="mb-3" />
+
+            </MudForm>
+        }
+
+    </DialogContent>
+
+    <DialogActions>
+
+        <MudButton OnClick="Cancel" Disabled="@_saving">
+            Cancel
+        </MudButton>
+
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save" Disabled="@(_loading || _saving)">
+
+            @if (_saving)
+            {
+                <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2" />
+            }
+
+            Save
+
+        </MudButton>
+
+    </DialogActions>
+
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public EnrollmentResponse? Enrollment { get; set; }
+
+    private MudForm? _form;
+
+    private CreateEnrollmentRequest _model = new();
+
+    private List<StudentResponse> _students = new();
+
+    private List<TeacherResponse> _teachers = new();
+
+    private List<CourseResponse> _courses = new();
+
+    private List<TimeSlotResponse> _timeSlots = new();
+
+    private List<ClassDurationResponse> _classDurations = new();
+
+    private DateTime? _startDate = DateTime.Today;
+
+    private DateTime? _endDate;
+
+    private EnrollmentStatus _status = EnrollmentStatus.Active;
+
+    private bool _loading = true;
+
+    private bool _saving;
+
+    private bool IsEditMode => Enrollment != null;
+
+    private decimal FinalMonthlyFee =>
+        Math.Max(
+            0,
+            _model.MonthlyFee
+            - _model.ScholarshipAmount
+            - _model.DiscountAmount);
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _loading = true;
+
+            var studentRequest = new StudentQueryRequest
+            {
+                Page = 1,
+                PageSize = 100
+            };
+
+            var teacherRequest = new TeacherQueryRequest
+            {
+                Page = 1,
+                PageSize = 100
+            };
+
+            var studentsResult =
+                await StudentApi.GetStudentsAsync(studentRequest);
+
+            var teachersResult =
+                await TeacherApi.GetTeachersAsync(teacherRequest);
+
+            _courses =
+                await CourseApi.GetAllAsync();
+
+            _timeSlots =
+                await LookupApi.GetTimeSlotsAsync();
+
+            _classDurations =
+                await LookupApi.GetClassDurationsAsync();
+
+            if (studentsResult != null)
+                _students = studentsResult.Data.Items ?? new();
+
+            if (teachersResult != null)
+                _teachers = teachersResult.Data.Items ?? new();
+
+            if (Enrollment != null)
+            {
+                _model.StudentId =
+                    Enrollment.StudentId;
+
+                _model.CourseId =
+                    Enrollment.CourseId;
+
+                _model.TeacherId =
+                    Enrollment.TeacherId;
+
+                _model.TimeSlotId =
+                    Enrollment.TimeSlotId;
+
+                _model.ClassDurationId =
+                    Enrollment.ClassDurationId;
+
+                _model.StartDate =
+                    Enrollment.StartDate;
+
+                _model.EndDate =
+                    Enrollment.EndDate;
+
+                _model.MonthlyFee =
+                    Enrollment.MonthlyFee;
+
+                _model.ScholarshipAmount =
+                    Enrollment.ScholarshipAmount;
+
+                _model.ScholarshipReason =
+                    Enrollment.ScholarshipReason;
+
+                _model.DiscountAmount =
+                    Enrollment.DiscountAmount;
+
+                _model.DiscountReason =
+                    Enrollment.DiscountReason;
+
+                _model.Remarks =
+                    Enrollment.Remarks;
+
+                _startDate =
+                    Enrollment.StartDate;
+
+                _endDate =
+                    Enrollment.EndDate;
+
+                _status =
+                    Enrollment.Status;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to load enrollment data: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task Save()
+    {
+        await _form!.ValidateAsync();
+
+        if (!_form.IsValid)
+            return;
+
+        if (!_startDate.HasValue)
+        {
+            Snackbar.Add(
+                "Start date is required.",
+                Severity.Warning);
+
+            return;
+        }
+
+        if (_model.StudentId == Guid.Empty)
+        {
+            Snackbar.Add(
+                "Please select a student.",
+                Severity.Warning);
+
+            return;
+        }
+
+        if (_model.CourseId == Guid.Empty)
+        {
+            Snackbar.Add(
+                "Please select a course.",
+                Severity.Warning);
+
+            return;
+        }
+
+        if (_model.TimeSlotId == Guid.Empty)
+        {
+            Snackbar.Add(
+                "Please select a time slot.",
+                Severity.Warning);
+
+            return;
+        }
+
+        if (_model.ClassDurationId == Guid.Empty)
+        {
+            Snackbar.Add(
+                "Please select a class duration.",
+                Severity.Warning);
+
+            return;
+        }
+
+        if (_model.ScholarshipAmount
+            + _model.DiscountAmount
+            > _model.MonthlyFee)
+        {
+            Snackbar.Add(
+                "Scholarship and discount cannot exceed the monthly fee.",
+                Severity.Warning);
+
+            return;
+        }
+
+        try
+        {
+            _saving = true;
+
+            _model.StartDate =
+                _startDate.Value;
+
+            _model.EndDate =
+                _endDate;
+
+            if (Enrollment == null)
+            {
+                await EnrollmentApi.CreateAsync(
+                    _model);
+
+                Snackbar.Add(
+                    "Enrollment created successfully.",
+                    Severity.Success);
+            }
+            else
+            {
+                var request =
+                    new UpdateEnrollmentRequest
+                    {
+                        TeacherId =
+                            _model.TeacherId,
+
+                        TimeSlotId =
+                            _model.TimeSlotId,
+
+                        ClassDurationId =
+                            _model.ClassDurationId,
+
+                        StartDate =
+                            _startDate.Value,
+
+                        EndDate =
+                            _endDate,
+
+                        MonthlyFee =
+                            _model.MonthlyFee,
+
+                        ScholarshipAmount =
+                            _model.ScholarshipAmount,
+
+                        ScholarshipReason =
+                            _model.ScholarshipReason,
+
+                        DiscountAmount =
+                            _model.DiscountAmount,
+
+                        DiscountReason =
+                            _model.DiscountReason,
+
+                        Status =
+                            _status,
+
+                        Remarks =
+                            _model.Remarks
+                    };
+
+                await EnrollmentApi.UpdateAsync(
+                    Enrollment.Id,
+                    request);
+
+                Snackbar.Add(
+                    "Enrollment updated successfully.",
+                    Severity.Success);
+            }
+
+            MudDialog.Close(
+                DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to save enrollment: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+}

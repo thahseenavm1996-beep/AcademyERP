@@ -5,6 +5,10 @@ using AcademyERP.Application.Common;
 
 namespace AcademyERP.API.Controllers;
 
+using AcademyERP.Application.Constants;
+using Microsoft.AspNetCore.Authorization;
+
+[Authorize(Roles = Roles.SuperAdmin + "," + Roles.Administrator)]
 [ApiController]
 [Route("api/[controller]")]
 public class ParentsController : ControllerBase
