@@ -1,0 +1,109 @@
+@page "/fees"
+
+@using AcademyERP.Admin.Models
+@using AcademyERP.Admin.Services
+@using MudBlazor
+
+@inject FeeInvoiceApiService FeeInvoiceApi
+@inject IDialogService DialogService
+
+<PageTitle>Fee Invoices</PageTitle>
+
+<MudPaper Class="pa-4">
+
+    <MudStack Row="true" Justify="Justify.SpaceBetween" Class="mb-4">
+
+        <MudText Typo="Typo.h5">
+            Fee Invoices
+        </MudText>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="@CreateInvoice">
+            Create Invoice
+        </MudButton>
+
+    </MudStack>
+
+    <MudTable Items="_invoices"
+              Hover="true"
+              Dense="true"
+              Striped="true">
+
+        <HeaderContent>
+
+            <MudTh>Invoice No</MudTh>
+            <MudTh>Student</MudTh>
+            <MudTh>Course</MudTh>
+            <MudTh>Amount</MudTh>
+            <MudTh>Paid</MudTh>
+            <MudTh>Balance</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Invoice Date</MudTh>
+            <MudTh>Due Date</MudTh>
+            <MudTh>Actions</MudTh>
+
+        </HeaderContent>
+
+        <RowTemplate>
+
+            <MudTd>@context.InvoiceNumber</MudTd>
+
+            <MudTd>@context.StudentName</MudTd>
+
+            <MudTd>@context.CourseName</MudTd>
+
+            <MudTd>@context.Amount</MudTd>
+
+            <MudTd>@context.PaidAmount</MudTd>
+
+            <MudTd>@context.BalanceAmount</MudTd>
+
+            <MudTd>@context.Status</MudTd>
+
+            <MudTd>@context.InvoiceDate.ToShortDateString()</MudTd>
+
+            <MudTd>@context.DueDate.ToShortDateString()</MudTd>
+
+            <MudTd>
+
+                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                               Color="Color.Error"
+                               OnClick="@(() => Delete(context.Id))" />
+
+            </MudTd>
+
+        </RowTemplate>
+
+    </MudTable>
+
+</MudPaper>
+
+@code
+{
+    private List<FeeInvoiceResponse> _invoices = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _invoices = await FeeInvoiceApi.GetAllAsync();
+    }
+
+    private async Task Delete(Guid id)
+    {
+        await FeeInvoiceApi.DeleteAsync(id);
+
+        await LoadData();
+
+        StateHasChanged();
+    }
+
+    private async Task CreateInvoice()
+{
+}
+}

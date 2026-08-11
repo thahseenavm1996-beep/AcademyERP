@@ -27,8 +27,8 @@ public class FeeInvoiceConfiguration : IEntityTypeConfiguration<FeeInvoice>
             .HasPrecision(18, 2);
 
         builder.HasOne(x => x.Enrollment)
-            .WithMany()
-            .HasForeignKey(x => x.EnrollmentId)
-            .OnDelete(DeleteBehavior.Restrict);
+    .WithMany(x => x.FeeInvoices)
+    .HasForeignKey(x => x.EnrollmentId)
+    .OnDelete(DeleteBehavior.Restrict);
     }
 }

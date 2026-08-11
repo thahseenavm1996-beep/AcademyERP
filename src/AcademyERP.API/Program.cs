@@ -42,6 +42,8 @@ builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 builder.Services.AddEndpointsApiExplorer();
+
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("WebsitePolicy", policy =>
@@ -82,6 +84,7 @@ builder.Services.AddScoped<ITeacherDashboardService, TeacherDashboardService>();
 builder.Services.AddScoped<ITeachingScheduleService, TeachingScheduleService>();
 builder.Services.AddScoped<ICourseService, CourseService>();
 builder.Services.AddScoped<IClassReportService, ClassReportService>();
+builder.Services.AddScoped<IFeeInvoiceService, FeeInvoiceService>();
 builder.Services.AddScoped<IAdmissionConversionService, AdmissionConversionService>();
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
 builder.Services.AddScoped<

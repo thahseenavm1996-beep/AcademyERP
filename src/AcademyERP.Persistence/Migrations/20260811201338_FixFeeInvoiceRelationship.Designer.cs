@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AcademyERP.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260811191430_AddFeeInvoices")]
-    partial class AddFeeInvoices
+    [Migration("20260811201338_FixFeeInvoiceRelationship")]
+    partial class FixFeeInvoiceRelationship
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -447,9 +447,6 @@ namespace AcademyERP.Persistence.Migrations
                     b.Property<Guid>("EnrollmentId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("EnrollmentId1")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateTime>("InvoiceDate")
                         .HasColumnType("datetime2");
 
@@ -483,8 +480,6 @@ namespace AcademyERP.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("EnrollmentId");
-
-                    b.HasIndex("EnrollmentId1");
 
                     b.ToTable("FeeInvoices", (string)null);
                 });
@@ -1524,14 +1519,10 @@ namespace AcademyERP.Persistence.Migrations
             modelBuilder.Entity("AcademyERP.Domain.Entities.Finance.FeeInvoice", b =>
                 {
                     b.HasOne("AcademyERP.Domain.Entities.Enrollments.Enrollment", "Enrollment")
-                        .WithMany()
+                        .WithMany("FeeInvoices")
                         .HasForeignKey("EnrollmentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("AcademyERP.Domain.Entities.Enrollments.Enrollment", null)
-                        .WithMany("FeeInvoices")
-                        .HasForeignKey("EnrollmentId1");
 
                     b.Navigation("Enrollment");
                 });

@@ -38,6 +38,7 @@ builder.Services.AddScoped<AuthStateService>();
 builder.Services.AddScoped<TeachingScheduleApiService>();
 builder.Services.AddScoped<ScheduledClassApiService>();
 
+
 builder.Services.AddScoped<AuthenticationStateProvider,
     JwtAuthenticationStateProvider>();
 /*builder.Services
