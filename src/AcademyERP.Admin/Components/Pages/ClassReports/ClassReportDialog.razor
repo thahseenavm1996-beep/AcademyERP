@@ -33,7 +33,10 @@
 
 
             <MudTextField T="string" Label="Course" Value="@_selectedCourseName" ReadOnly="true" Class="mt-3" />
-            <MudDatePicker Label="Class Date" Class="mt-3" @bind-Date="_reportDate" Required="true"
+           <MudDatePicker Label="Class Date"
+               Class="mt-3"
+               Date="_reportDate"
+               DateChanged="OnDateChanged" Required="true"
                            RequiredError="Please select the class date." />
 
 
@@ -290,5 +293,15 @@
         MudDialog.Close(
             DialogResult.Ok(_model));
     }
+private Task OnDateChanged(DateTime? date)
+{
+    _reportDate = date;
 
+    if (date.HasValue)
+    {
+        _model.ReportDate = date.Value;
+    }
+
+    return Task.CompletedTask;
+}
 }

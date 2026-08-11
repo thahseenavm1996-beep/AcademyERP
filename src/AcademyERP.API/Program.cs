@@ -84,6 +84,9 @@ builder.Services.AddScoped<ICourseService, CourseService>();
 builder.Services.AddScoped<IClassReportService, ClassReportService>();
 builder.Services.AddScoped<IAdmissionConversionService, AdmissionConversionService>();
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
+builder.Services.AddScoped<
+    IScheduledClassService,
+    ScheduledClassService>();
 
 builder.Services.AddAutoMapper(typeof(ProgramMappingProfile).Assembly);
 builder.Services.AddAuthentication(options =>

@@ -14,6 +14,14 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AcademyERP.Application\AcademyERP.Application.csproj" />
+       <ProjectReference Include="..\AcademyERP.Infrastructure\AcademyERP.Infrastructure.csproj" />
   </ItemGroup>
-
+  <ItemGroup>
+<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.9" />
+<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.9" />
+</ItemGroup>
+<ItemGroup>
+    <ProjectReference Include="..\AcademyERP.Persistence\AcademyERP.Persistence.csproj" />
+    <ProjectReference Include="..\AcademyERP.Domain\AcademyERP.Domain.csproj" />
+</ItemGroup>
 </Project>

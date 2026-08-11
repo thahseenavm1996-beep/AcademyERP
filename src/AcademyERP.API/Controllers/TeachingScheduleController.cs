@@ -7,7 +7,7 @@ namespace AcademyERP.API.Controllers;
 
 [ApiController]
 [Route("api/teachingschedules")]
-[Authorize]
+//[Authorize]
 public class TeachingScheduleController : ControllerBase
 {
     private readonly ITeachingScheduleService _service;

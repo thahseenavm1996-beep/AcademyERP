@@ -13,4 +13,7 @@ public class DashboardSummaryResponse
     public int ActiveStudents { get; set; }
 
     public int ActiveTeachers { get; set; }
+
+    public List<RecentStudentDto> RecentStudents { get; set; }
+        = new();
 }

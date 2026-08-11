@@ -12,10 +12,26 @@ public class ParentApiService
         _httpClient = httpClient;
     }
 
+    /* public async Task<ParentListResponse?> GetParentsAsync(ParentQueryRequest request)
+     {
+         return await _httpClient.GetFromJsonAsync<ParentListResponse>(
+             $"api/Parents?page={request.Page}&pageSize={request.PageSize}&search={request.Search}");
+     }*/
     public async Task<ParentListResponse?> GetParentsAsync(ParentQueryRequest request)
     {
-        return await _httpClient.GetFromJsonAsync<ParentListResponse>(
+        var response = await _httpClient.GetAsync(
             $"api/Parents?page={request.Page}&pageSize={request.PageSize}&search={request.Search}");
+
+        Console.WriteLine($"Status Code: {response.StatusCode}");
+
+        var body = await response.Content.ReadAsStringAsync();
+
+        Console.WriteLine(body);
+
+        if (!response.IsSuccessStatusCode)
+            return null;
+
+        return await response.Content.ReadFromJsonAsync<ParentListResponse>();
     }
 
     public async Task<ApiResult<ParentResponse>> CreateParentAsync(CreateParentRequest request)

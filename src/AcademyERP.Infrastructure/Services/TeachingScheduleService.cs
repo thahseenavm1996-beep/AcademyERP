@@ -20,6 +20,7 @@ public class TeachingScheduleService : ITeachingScheduleService
     public async Task<List<TeachingScheduleResponse>> GetAllAsync()
     {
         return await _context.TeachingSchedules
+        .Include(x => x.Teacher)
             .Include(x => x.Enrollment)
                 .ThenInclude(e => e.Student)
             .Include(x => x.Enrollment)

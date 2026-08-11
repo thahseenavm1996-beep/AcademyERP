@@ -1,4 +1,14 @@
+@using AcademyERP.Admin.Models
+@using AcademyERP.Admin.Models.Enrollments
+@using AcademyERP.Admin.Models.Lookups
+@using AcademyERP.Admin.Services
 @using MudBlazor
+
+@inject EnrollmentApiService EnrollmentApi
+@inject TeacherApiService TeacherApi
+@inject LookupApiService LookupApi
+@inject TeachingScheduleApiService TeachingScheduleApi
+@inject ISnackbar Snackbar
 
 <MudDialog>
 
@@ -7,16 +17,48 @@
         <MudText Typo="Typo.h5" Class="mb-4">
             Create Teaching Schedule
         </MudText>
+<MudText>
+    Enrollments Loaded: @_enrollments.Count
+</MudText>
 
-        <MudSelect T="string" Label="Enrollment">
+<MudText>
+    Teachers Loaded: @_teachers.Count
+</MudText>
+
+<MudText>
+    Durations Loaded: @_durations.Count
+</MudText>
+        <MudSelect T="Guid"
+                   Label="Enrollment"
+                   @bind-Value="_model.EnrollmentId">
+
+            @foreach (var enrollment in _enrollments)
+            {
+                <MudSelectItem Value="@enrollment.Id">
+                    @($"{enrollment.StudentName} - {enrollment.CourseName}")
+                </MudSelectItem>
+            }
 
         </MudSelect>
 
-        <MudSelect T="string" Label="Teacher" Class="mt-3">
+        <MudSelect T="Guid"
+                   Label="Teacher"
+                   Class="mt-3"
+                   @bind-Value="_model.TeacherId">
+
+            @foreach (var teacher in _teachers)
+            {
+                <MudSelectItem Value="@teacher.Id">
+                    @teacher.FullName
+                </MudSelectItem>
+            }
 
         </MudSelect>
 
-        <MudSelect T="DayOfWeek" Label="Day of Week">
+        <MudSelect T="DayOfWeek"
+                   Label="Day Of Week"
+                   Class="mt-3"
+                   @bind-Value="_model.DayOfWeek">
 
             <MudSelectItem Value="@DayOfWeek.Sunday">Sunday</MudSelectItem>
             <MudSelectItem Value="@DayOfWeek.Monday">Monday</MudSelectItem>
@@ -28,22 +70,111 @@
 
         </MudSelect>
 
-        <MudTimePicker Label="Start Time" Class="mt-3" />
+        <MudSelect T="Guid"
+                   Label="Duration"
+                   Class="mt-3"
+                   @bind-Value="_model.ClassDurationId">
+
+            @foreach (var duration in _durations)
+            {
+                <MudSelectItem Value="@duration.Id">
+                    @duration.Name
+                </MudSelectItem>
+            }
+
+        </MudSelect>
+
+        <MudDatePicker Label="Effective From"
+                       Class="mt-3"
+                       @bind-Date="_effectiveFrom" />
+
+        <MudTimePicker Label="Start Time"
+                       Class="mt-3"
+                       @bind-Time="_startTime" />
 
     </DialogContent>
 
     <DialogActions>
 
-        <MudButton Color="Color.Default">
+        <MudButton Color="Color.Default"
+                   OnClick="Cancel">
             Cancel
         </MudButton>
 
-        <MudButton Color="Color.Primary" Variant="Variant.Filled">
-
+        <MudButton Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   OnClick="Save">
             Save
-
         </MudButton>
 
     </DialogActions>
 
 </MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private CreateTeachingScheduleRequest _model = new()
+    {
+        EffectiveFrom = DateTime.Today,
+        IsActive = true,
+        MaximumStudents = 1
+    };
+
+    private List<EnrollmentResponse> _enrollments = new();
+    private List<TeacherResponse> _teachers = new();
+    private List<ClassDurationResponse> _durations = new();
+
+    private DateTime? _effectiveFrom = DateTime.Today;
+    private TimeSpan? _startTime = TimeSpan.FromHours(9);
+
+   protected override async Task OnInitializedAsync()
+{
+    _enrollments = await EnrollmentApi.GetAllAsync();
+
+    var teacherResult = await TeacherApi.GetTeachersAsync(
+        new TeacherQueryRequest
+        {
+            Page = 1,
+            PageSize = 100,
+            Search = ""
+        });
+
+    _teachers = teacherResult?.Data?.Items ?? new();
+
+    _durations = await LookupApi.GetClassDurationsAsync();
+
+    Console.WriteLine($"Enrollments: {_enrollments.Count}");
+    Console.WriteLine($"Teachers: {_teachers.Count}");
+    Console.WriteLine($"Durations: {_durations.Count}");
+}
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task Save()
+    {
+        _model.EffectiveFrom =
+            _effectiveFrom ?? DateTime.Today;
+
+        _model.StartTime =
+            TimeOnly.FromTimeSpan(
+                _startTime ?? TimeSpan.Zero);
+
+        var result =
+            await TeachingScheduleApi.CreateAsync(_model);
+
+        if (result != null)
+        {
+            Snackbar.Add(
+                "Teaching Schedule created successfully.",
+                Severity.Success);
+
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+    }
+}

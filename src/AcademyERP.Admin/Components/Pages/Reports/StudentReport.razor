@@ -1,0 +1,56 @@
+@page "/reports/students"
+
+@using AcademyERP.Admin.Models.Enrollments
+@using AcademyERP.Admin.Services
+
+@inject EnrollmentApiService EnrollmentApi
+
+<PageTitle>Student Reports</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">
+    Student Reports
+</MudText>
+
+<MudPaper Class="pa-4">
+
+    <MudTable Items="_enrollments"
+              Hover="true"
+              Dense="true"
+              Striped="true">
+
+        <HeaderContent>
+
+            <MudTh>Student</MudTh>
+            <MudTh>Course</MudTh>
+            <MudTh>Teacher</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Start Date</MudTh>
+
+        </HeaderContent>
+
+        <RowTemplate>
+
+            <MudTd>@context.StudentName</MudTd>
+            <MudTd>@context.CourseName</MudTd>
+            <MudTd>@context.TeacherName</MudTd>
+            <MudTd>@context.Status</MudTd>
+            <MudTd>
+                @context.StartDate.ToString("dd MMM yyyy")
+            </MudTd>
+
+        </RowTemplate>
+
+    </MudTable>
+
+</MudPaper>
+
+@code {
+
+    private List<EnrollmentResponse> _enrollments = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _enrollments = await EnrollmentApi.GetAllAsync();
+    }
+
+}

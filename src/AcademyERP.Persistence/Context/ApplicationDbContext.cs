@@ -17,6 +17,7 @@ using AcademyERP.Domain.Entities.ClassReports;
 using AcademyERP.Domain.Entities.TeachingSchedules;
 using AcademyERP.Domain.Entities.ScheduledClasses;
 using AcademyERP.Domain.Entities.Admissions;
+using AcademyERP.Domain.Entities.Finance;
 
 namespace AcademyERP.Persistence.Context;
 
@@ -41,6 +42,7 @@ public class ApplicationDbContext
     public DbSet<ClassDuration> ClassDurations => Set<ClassDuration>();
     public DbSet<TimeSlot> TimeSlots => Set<TimeSlot>();
     public DbSet<TeacherCourse> TeacherCourses => Set<TeacherCourse>();
+    public DbSet<FeeInvoice> FeeInvoices => Set<FeeInvoice>();
     public DbSet<TeacherAvailability> TeacherAvailabilities => Set<TeacherAvailability>();
     public DbSet<AdmissionApplication> AdmissionApplications =>
     Set<AdmissionApplication>();

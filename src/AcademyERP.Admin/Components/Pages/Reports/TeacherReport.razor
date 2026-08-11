@@ -1,0 +1,107 @@
+@page "/reports/teachers"
+
+@using AcademyERP.Admin.Models
+@using AcademyERP.Admin.Services
+@using MudBlazor
+
+@inject TeacherApiService TeacherApi
+
+<PageTitle>Teacher Reports</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">
+    Teacher Reports
+</MudText>
+
+<MudGrid Class="mb-4">
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Class="pa-4">
+            <MudText Typo="Typo.subtitle2">
+                Total Teachers
+            </MudText>
+
+            <MudText Typo="Typo.h4">
+                @_teachers.Count
+            </MudText>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Class="pa-4">
+            <MudText Typo="Typo.subtitle2">
+                Active Teachers
+            </MudText>
+
+            <MudText Typo="Typo.h4">
+                @_teachers.Count(x => x.IsActive)
+            </MudText>
+        </MudPaper>
+    </MudItem>
+
+</MudGrid>
+
+<MudPaper Class="pa-4">
+
+    <MudTable Items="_teachers"
+              Hover="true"
+              Dense="true"
+              Striped="true">
+
+        <HeaderContent>
+
+            <MudTh>Employee Code</MudTh>
+            <MudTh>Name</MudTh>
+            <MudTh>Department</MudTh>
+            <MudTh>Qualification</MudTh>
+            <MudTh>Country</MudTh>
+            <MudTh>Status</MudTh>
+
+        </HeaderContent>
+
+        <RowTemplate>
+
+            <MudTd>@context.EmployeeCode</MudTd>
+            <MudTd>@context.FullName</MudTd>
+            <MudTd>@context.Department</MudTd>
+            <MudTd>@context.Qualification</MudTd>
+            <MudTd>@context.Country</MudTd>
+
+            <MudTd>
+
+                <MudChip T="string"
+                         Value="@(context.IsActive ? "Active" : "Inactive")"
+                         Color="@(context.IsActive ? Color.Success : Color.Error)"
+                         Size="Size.Small">
+
+                    @(context.IsActive ? "Active" : "Inactive")
+
+                </MudChip>
+
+            </MudTd>
+
+        </RowTemplate>
+
+    </MudTable>
+
+</MudPaper>
+
+@code
+{
+    private List<TeacherResponse> _teachers = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await TeacherApi.GetTeachersAsync(
+            new TeacherQueryRequest
+            {
+                Page = 1,
+                PageSize = 1000,
+                Search = ""
+            });
+
+        if (result?.Data?.Items != null)
+        {
+            _teachers = result.Data.Items;
+        }
+    }
+}

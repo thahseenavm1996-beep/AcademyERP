@@ -1,10 +1,10 @@
 @page "/parents"
-@attribute [Authorize]
+
 @using Microsoft.AspNetCore.Authorization
 @using AcademyERP.Admin.Services
 @using AcademyERP.Admin.Models
 @using MudBlazor
-
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ParentApiService ParentApi
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
@@ -46,8 +46,8 @@
             <MudTd>@context.Email</MudTd>
 
             <MudTd>
-                @(context.Status == 1 ? "Active" : "Inactive")
-            </MudTd>
+    @context.Status
+</MudTd>
 
             <MudTd Align="Align.Right">
 
@@ -70,26 +70,33 @@
 @code
 {
     private List<ParentResponse> _parents = new();
-
     protected override async Task OnInitializedAsync()
     {
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+        Console.WriteLine($"Authenticated: {state.User.Identity?.IsAuthenticated}");
+
         await LoadParents();
     }
-
-    /* private async Task LoadParents()
+    /* protected override async Task OnInitializedAsync()
      {
-         var result = await ParentApi.GetParentsAsync(new ParentQueryRequest
-         {
-             Page = 1,
-             PageSize = 20,
-             Search = ""
-         });
+         await LoadParents();
+     }
 
-         if (result != null)
-         {
-             _parents = result.Data.Items;
-         }
-     }*/
+     /* private async Task LoadParents()
+      {
+          var result = await ParentApi.GetParentsAsync(new ParentQueryRequest
+          {
+              Page = 1,
+              PageSize = 20,
+              Search = ""
+          });
+
+          if (result != null)
+          {
+              _parents = result.Data.Items;
+          }
+      }*/
     private async Task LoadParents()
     {
         var result = await ParentApi.GetParentsAsync(new ParentQueryRequest

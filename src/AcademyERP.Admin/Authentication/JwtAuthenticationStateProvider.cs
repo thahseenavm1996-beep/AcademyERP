@@ -19,7 +19,11 @@ public class JwtAuthenticationStateProvider
     {
         try
         {
+            
             var token = await _tokenService.GetTokenAsync();
+
+Console.WriteLine("TOKEN:");
+Console.WriteLine(token);
 
             if (string.IsNullOrWhiteSpace(token))
             {
@@ -30,10 +34,18 @@ public class JwtAuthenticationStateProvider
             var handler = new JwtSecurityTokenHandler();
 
             var jwt = handler.ReadJwtToken(token);
+            Console.WriteLine("CLAIMS:");
 
-            var identity = new ClaimsIdentity(
-                jwt.Claims,
-                "jwt");
+foreach (var claim in jwt.Claims)
+{
+    Console.WriteLine($"{claim.Type} = {claim.Value}");
+}
+
+           var identity = new ClaimsIdentity(
+    jwt.Claims,
+    "jwt",
+    ClaimTypes.Name,
+    ClaimTypes.Role);
 
             return new AuthenticationState(
                 new ClaimsPrincipal(identity));

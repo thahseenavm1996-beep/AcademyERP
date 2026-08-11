@@ -1,5 +1,6 @@
 @page "/login"
 @layout EmptyLayout
+
 @using AcademyERP.Admin.Components.Layout
 @using AcademyERP.Admin.Models
 @using AcademyERP.Admin.Services
@@ -22,11 +23,20 @@
         Administrator Login
     </MudText>
 
-    <MudTextField Label="Email" @bind-Value="_model.Email" Required="true" />
+    <MudTextField Label="Email"
+                  @bind-Value="_model.Email"
+                  Required="true" />
 
-    <MudTextField Label="Password" InputType="InputType.Password" @bind-Value="_model.Password" Required="true" />
+    <MudTextField Label="Password"
+                  InputType="InputType.Password"
+                  @bind-Value="_model.Password"
+                  Required="true" />
 
-    <MudButton FullWidth="true" Variant="Variant.Filled" Color="Color.Primary" OnClick="LoginUser" Class="mt-4">
+    <MudButton FullWidth="true"
+               Variant="Variant.Filled"
+               Color="Color.Primary"
+               OnClick="LoginUser"
+               Class="mt-4">
 
         Login
 
@@ -34,8 +44,8 @@
 
 </MudPaper>
 
-@code {
-
+@code
+{
     private LoginRequest _model = new();
 
     private async Task LoginUser()
@@ -48,17 +58,13 @@
             return;
         }
 
-        
         await TokenService.SaveTokenAsync(result.Token);
+
         ((JwtAuthenticationStateProvider)AuthenticationStateProvider)
             .NotifyUserAuthentication();
+
         Snackbar.Add("Login successful.", Severity.Success);
 
-        Navigation.NavigateTo("/");
-
-        
+        Navigation.NavigateTo("/", true);
     }
-
-   
-
 }

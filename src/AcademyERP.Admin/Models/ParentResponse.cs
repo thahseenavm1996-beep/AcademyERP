@@ -12,5 +12,5 @@ public class ParentResponse
 
     public string? Remarks { get; set; }
 
-    public int Status { get; set; }
+    public string Status { get; set; } = string.Empty;
 }

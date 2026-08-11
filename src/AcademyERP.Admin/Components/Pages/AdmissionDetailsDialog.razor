@@ -97,10 +97,9 @@
                     Submitted
                 </MudText>
 
-                <MudText>
-                    @Application.CreatedAt.ToLocalTime()
-                    .ToString("dd MMM yyyy, hh:mm tt")
-                </MudText>
+               <MudText>
+    @(Application.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, hh:mm tt"))
+</MudText>
             </div>
 
             <MudDivider />

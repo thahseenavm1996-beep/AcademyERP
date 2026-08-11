@@ -3,57 +3,120 @@
 
 <MudNavMenu>
 
-    <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">
+    <MudNavLink Href="/" Match="NavLinkMatch.All"
+                Icon="@Icons.Material.Filled.Dashboard">
         Dashboard
     </MudNavLink>
 
     <AuthorizeView Roles="@($"{Roles.SuperAdmin},{Roles.Administrator}")">
 
-        <MudNavLink Href="/students" Icon="@Icons.Material.Filled.People">
-            Students
-        </MudNavLink>
+        <MudNavGroup Title="Academics"
+                     Icon="@Icons.Material.Filled.School"
+                     Expanded="true">
 
-        <MudNavLink Href="/teachers" Icon="@Icons.Material.Filled.Person">
-            Teachers
-        </MudNavLink>
-        <MudNavLink Href="/teachingschedules" Icon="@Icons.Material.Filled.Schedule">
+            <MudNavLink Href="/students"
+                        Icon="@Icons.Material.Filled.People">
+                Students
+            </MudNavLink>
 
-            Teaching Schedule
+            <MudNavLink Href="/parents"
+                        Icon="@Icons.Material.Filled.Groups">
+                Parents
+            </MudNavLink>
 
-        </MudNavLink>
-        <MudNavLink Href="/parents" Icon="@Icons.Material.Filled.Groups">
-            Parents
-        </MudNavLink>
-        <MudNavLink Href="/admissions" Icon="@Icons.Material.Filled.HowToReg">
-            Admissions
-        </MudNavLink>
-        <MudNavLink Href="/programs" Icon="@Icons.Material.Filled.School">
+            <MudNavLink Href="/teachers"
+                        Icon="@Icons.Material.Filled.Person">
+                Teachers
+            </MudNavLink>
 
-            Programs
+            <MudNavLink Href="/admissions"
+                        Icon="@Icons.Material.Filled.HowToReg">
+                Admissions
+            </MudNavLink>
 
-        </MudNavLink>
+            <MudNavLink Href="/programs"
+                        Icon="@Icons.Material.Filled.School">
+                Programs
+            </MudNavLink>
 
-        <MudNavLink Href="/courses" Icon="@Icons.Material.Filled.MenuBook">
-            Courses
-        </MudNavLink>
+            <MudNavLink Href="/courses"
+                        Icon="@Icons.Material.Filled.MenuBook">
+                Courses
+            </MudNavLink>
 
-        <MudNavLink Href="/enrollments" Icon="@Icons.Material.Filled.Assignment">
-            Enrollments
-        </MudNavLink>
+            <MudNavLink Href="/enrollments"
+                        Icon="@Icons.Material.Filled.Assignment">
+                Enrollments
+            </MudNavLink>
 
-        <MudNavLink Href="/fees" Icon="@Icons.Material.Filled.Payments">
-            Fees
-        </MudNavLink>
+        </MudNavGroup>
 
-        <MudNavLink Href="classreports" Icon="@Icons.Material.Filled.Assessment">
-            Class Reports
-        </MudNavLink>
+        <MudNavGroup Title="Scheduling"
+                     Icon="@Icons.Material.Filled.Schedule">
+
+            <MudNavLink Href="/teachingschedules"
+                        Icon="@Icons.Material.Filled.Schedule">
+                Teaching Schedules
+            </MudNavLink>
+
+            <MudNavLink Href="/scheduledclasses"
+                        Icon="@Icons.Material.Filled.EventNote">
+                Scheduled Classes
+            </MudNavLink>
+
+        </MudNavGroup>
+
+        <MudNavGroup Title="Finance"
+                     Icon="@Icons.Material.Filled.Payments">
+
+            <MudNavLink Href="/fees"
+                        Icon="@Icons.Material.Filled.Payments">
+                Fees
+            </MudNavLink>
+
+        </MudNavGroup>
+
+        <MudNavGroup Title="Reports"
+                     Icon="@Icons.Material.Filled.Assessment">
+
+            <MudNavLink Href="/reports/students"
+                        Icon="@Icons.Material.Filled.People">
+                Student Reports
+            </MudNavLink>
+
+            <MudNavLink Href="/reports/teachers"
+                        Icon="@Icons.Material.Filled.Person">
+                Teacher Reports
+            </MudNavLink>
+
+            <MudNavLink Href="/reports/attendance"
+                        Icon="@Icons.Material.Filled.FactCheck">
+                Attendance Reports
+            </MudNavLink>
+
+            <MudNavLink Href="/reports/finance"
+                        Icon="@Icons.Material.Filled.AccountBalance">
+                Finance Reports
+            </MudNavLink>
+
+        </MudNavGroup>
+
+        <MudNavGroup Title="Academic Monitoring"
+                     Icon="@Icons.Material.Filled.Assessment">
+
+            <MudNavLink Href="/classreports"
+                        Icon="@Icons.Material.Filled.Description">
+                Class Reports
+            </MudNavLink>
+
+        </MudNavGroup>
 
     </AuthorizeView>
 
     <AuthorizeView Roles="@Roles.SuperAdmin">
 
-        <MudNavLink Href="/settings" Icon="@Icons.Material.Filled.Settings">
+        <MudNavLink Href="/settings"
+                    Icon="@Icons.Material.Filled.Settings">
             Settings
         </MudNavLink>
 

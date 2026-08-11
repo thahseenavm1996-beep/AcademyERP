@@ -1,121 +1,213 @@
-﻿@inject DashboardApiService DashboardApi
-@page "/"
-@attribute [Authorize]
-@using Microsoft.AspNetCore.Authorization
+﻿@page "/"
+
+@inject DashboardApiService DashboardApi
+
 @using Microsoft.AspNetCore.Components.Authorization
 @using AcademyERP.Admin.Models
 @using AcademyERP.Admin.Services
-@inject DashboardApiService DashboardApi
 @using MudBlazor
 
 <PageTitle>Dashboard</PageTitle>
 
-<h3 class="mb-4">Dashboard</h3>
+<MudText Typo="Typo.h3" Class="mb-4">
+    Dashboard
+</MudText>
+
 <AuthorizeView>
     <Authorized>
-        <MudAlert Severity="Severity.Success" Class="mb-4">
+        <MudAlert Severity="Severity.Success" Dense="true" Class="mb-4">
             Welcome, @context.User.Identity?.Name
         </MudAlert>
     </Authorized>
 
     <NotAuthorized>
-        <MudAlert Severity="Severity.Error" Class="mb-4">
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">
             You are not logged in.
         </MudAlert>
     </NotAuthorized>
 </AuthorizeView>
 
-<div class="row">
+<MudGrid Class="mb-4">
 
-    <div class="col-md-3 mb-3">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h6>Total Students</h6>
-                <h2 class="text-primary">@(Summary?.TotalStudents ?? 0)</h2>
-            </div>
-        </div>
-    </div>
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Class="pa-4">
+            <MudText Typo="Typo.subtitle2">
+                Total Students
+            </MudText>
 
-    <div class="col-md-3 mb-3">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h6>Total Parents</h6>
-                <h2 class="text-success">@(Summary?.TotalParents ?? 0)</h2>
-            </div>
-        </div>
-    </div>
+            <MudText Typo="Typo.h3" Color="Color.Primary">
+                @(Summary?.TotalStudents ?? 0)
+            </MudText>
+        </MudPaper>
+    </MudItem>
 
-    <div class="col-md-3 mb-3">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h6>Total Teachers</h6>
-                <h2 class="text-warning">@(Summary?.TotalTeachers ?? 0)</h2>
-            </div>
-        </div>
-    </div>
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Class="pa-4">
+            <MudText Typo="Typo.subtitle2">
+                Total Parents
+            </MudText>
 
-    <div class="col-md-3 mb-3">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h6>Courses</h6>
-                <h2 class="text-danger">@(Summary?.TotalPrograms ?? 0)</h2>
-            </div>
-        </div>
-    </div>
+            <MudText Typo="Typo.h3" Color="Color.Success">
+                @(Summary?.TotalParents ?? 0)
+            </MudText>
+        </MudPaper>
+    </MudItem>
 
-</div>
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Class="pa-4">
+            <MudText Typo="Typo.subtitle2">
+                Total Teachers
+            </MudText>
 
-<div class="card mt-4 shadow-sm">
-    <div class="card-header">
+            <MudText Typo="Typo.h3" Color="Color.Warning">
+                @(Summary?.TotalTeachers ?? 0)
+            </MudText>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Class="pa-4">
+            <MudText Typo="Typo.subtitle2">
+                Programs
+            </MudText>
+
+            <MudText Typo="Typo.h3" Color="Color.Error">
+                @(Summary?.TotalPrograms ?? 0)
+            </MudText>
+        </MudPaper>
+    </MudItem>
+
+</MudGrid>
+
+<MudGrid Class="mb-4">
+
+    <MudItem xs="12" sm="6" md="4">
+        <MudPaper Class="pa-4" Style="border-left:5px solid #2196F3;">
+            <MudText Typo="Typo.subtitle2">
+                Active Students
+            </MudText>
+
+            <MudText Typo="Typo.h4">
+                @(Summary?.ActiveStudents ?? 0)
+            </MudText>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="4">
+        <MudPaper Class="pa-4" Style="border-left:5px solid #4CAF50;">
+            <MudText Typo="Typo.subtitle2">
+                Active Teachers
+            </MudText>
+
+            <MudText Typo="Typo.h4">
+                @(Summary?.ActiveTeachers ?? 0)
+            </MudText>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="4">
+        <MudPaper Class="pa-4" Style="border-left:5px solid #FF9800;">
+            <MudText Typo="Typo.subtitle2">
+                Running Programs
+            </MudText>
+
+            <MudText Typo="Typo.h4">
+                @(Summary?.TotalPrograms ?? 0)
+            </MudText>
+        </MudPaper>
+    </MudItem>
+
+</MudGrid>
+
+<MudPaper Class="pa-4 mb-4">
+
+    <MudText Typo="Typo.h6" Class="mb-3">
+        Quick Actions
+    </MudText>
+
+    <MudButton Href="/students"
+               Variant="Variant.Filled"
+               Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.People"
+               Class="me-2 mb-2">
+        Students
+    </MudButton>
+
+    <MudButton Href="/teachers"
+               Variant="Variant.Filled"
+               Color="Color.Success"
+               StartIcon="@Icons.Material.Filled.Person"
+               Class="me-2 mb-2">
+        Teachers
+    </MudButton>
+
+    <MudButton Href="/scheduledclasses"
+               Variant="Variant.Filled"
+               Color="Color.Warning"
+               StartIcon="@Icons.Material.Filled.Schedule"
+               Class="me-2 mb-2">
+        Schedule
+    </MudButton>
+
+    <MudButton Href="/classreports"
+               Variant="Variant.Filled"
+               Color="Color.Info"
+               StartIcon="@Icons.Material.Filled.Assessment"
+               Class="me-2 mb-2">
+        Reports
+    </MudButton>
+
+    <MudButton Href="/fees"
+               Variant="Variant.Filled"
+               Color="Color.Secondary"
+               StartIcon="@Icons.Material.Filled.Payments"
+               Class="me-2 mb-2">
+        Fees
+    </MudButton>
+
+</MudPaper>
+
+<MudPaper Class="pa-4">
+
+    <MudText Typo="Typo.h6" Class="mb-3">
         Recent Students
-    </div>
+    </MudText>
 
-    <div class="card-body">
+    <MudTable Items="@(Summary?.RecentStudents ?? new List<RecentStudentDto>())"
+              Hover="true"
+              Dense="true"
+              Striped="true">
 
-        <table class="table table-hover">
+        <HeaderContent>
+            <MudTh>Admission No</MudTh>
+            <MudTh>Student Name</MudTh>
+            <MudTh>Country</MudTh>
+        </HeaderContent>
 
-            <thead>
-                <tr>
-                    <th>Admission No</th>
-                    <th>Name</th>
-                    <th>Country</th>
-                </tr>
-            </thead>
+        <RowTemplate>
+            <MudTd DataLabel="Admission No">
+                @context.AdmissionNumber
+            </MudTd>
 
-            <tbody>
+            <MudTd DataLabel="Student Name">
+                @context.FullName
+            </MudTd>
 
-                <tr>
-                    <td>ST001</td>
-                    <td>John Doe</td>
-                    <td>India</td>
-                </tr>
+            <MudTd DataLabel="Country">
+                @context.Country
+            </MudTd>
+        </RowTemplate>
 
-                <tr>
-                    <td>ST002</td>
-                    <td>Sarah Ali</td>
-                    <td>UAE</td>
-                </tr>
+    </MudTable>
 
-                <tr>
-                    <td>ST003</td>
-                    <td>Ahmed Khan</td>
-                    <td>Qatar</td>
-                </tr>
+</MudPaper>
 
-            </tbody>
-
-        </table>
-
-    </div>
-
-</div>
-@code {
-
+@code
+{
     private DashboardSummaryResponse? Summary;
 
     protected override async Task OnInitializedAsync()
     {
         Summary = await DashboardApi.GetSummaryAsync();
     }
-
 }

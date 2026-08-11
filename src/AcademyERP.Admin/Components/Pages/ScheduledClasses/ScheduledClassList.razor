@@ -1,0 +1,200 @@
+@page "/scheduledclasses"
+
+@using AcademyERP.Admin.Models
+@using AcademyERP.Admin.Services
+@using MudBlazor
+
+@inject ScheduledClassApiService ScheduledClassApi
+
+<PageTitle>Scheduled Classes</PageTitle>
+
+<MudText Typo="Typo.h3" Class="mb-4">
+    Scheduled Classes
+</MudText>
+<MudButton
+    Variant="Variant.Filled"
+    Color="Color.Primary"
+    StartIcon="@Icons.Material.Filled.Refresh">
+
+    Generate Classes
+
+</MudButton>
+
+<MudGrid Class="mb-4">
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Class="pa-4" Style="border-left:5px solid #1976d2;">
+            <MudText Typo="Typo.subtitle2">
+                Total Classes
+            </MudText>
+
+            <MudText Typo="Typo.h4">
+                @_classes.Count
+            </MudText>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Class="pa-4" Style="border-left:5px solid #2e7d32;">
+            <MudText Typo="Typo.subtitle2">
+                Scheduled
+            </MudText>
+
+            <MudText Typo="Typo.h4">
+                @_classes.Count(x => x.Status == "Scheduled")
+            </MudText>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Class="pa-4" Style="border-left:5px solid #ed6c02;">
+            <MudText Typo="Typo.subtitle2">
+                This Week
+            </MudText>
+
+            <MudText Typo="Typo.h4">
+                @_classes.Count(x =>
+                    x.ClassDate >= DateOnly.FromDateTime(DateTime.Today) &&
+                    x.ClassDate <= DateOnly.FromDateTime(DateTime.Today.AddDays(7)))
+            </MudText>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Class="pa-4" Style="border-left:5px solid #9c27b0;">
+            <MudText Typo="Typo.subtitle2">
+                Today's Classes
+            </MudText>
+
+            <MudText Typo="Typo.h4">
+                @_classes.Count(x =>
+                    x.ClassDate == DateOnly.FromDateTime(DateTime.Today))
+            </MudText>
+        </MudPaper>
+    </MudItem>
+
+</MudGrid>
+
+<MudPaper Class="pa-4">
+
+    <MudTextField T="string"
+                  Label="Search Student"
+                  Variant="Variant.Outlined"
+                  Adornment="Adornment.Start"
+                  AdornmentIcon="@Icons.Material.Filled.Search"
+                  Class="mb-4"
+                  @bind-Value="_searchText" />
+
+    <MudTable Items="@FilteredClasses"
+              Hover="true"
+              Dense="true"
+              Striped="true">
+
+        <HeaderContent>
+            <MudTh>Date</MudTh>
+            <MudTh>Student</MudTh>
+            <MudTh>Teacher</MudTh>
+            <MudTh>Course</MudTh>
+            <MudTh>Time</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Actions</MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+
+            <MudTd>
+                @context.ClassDate.ToString("dd MMM yyyy")
+            </MudTd>
+
+            <MudTd>
+                @context.StudentName
+            </MudTd>
+
+            <MudTd>
+                @context.TeacherName
+            </MudTd>
+
+            <MudTd>
+                @context.CourseName
+            </MudTd>
+
+            <MudTd>
+                @($"{context.StartTime:hh\\:mm} - {context.EndTime:hh\\:mm}")
+            </MudTd>
+
+            <MudTd>
+
+                @if (context.Status == "Scheduled")
+                {
+                    <MudChip T="string"
+                             Color="Color.Primary"
+                             Size="Size.Small">
+                        @context.Status
+                    </MudChip>
+                }
+                else if (context.Status == "Completed")
+                {
+                    <MudChip T="string"
+                             Color="Color.Success"
+                             Size="Size.Small">
+                        @context.Status
+                    </MudChip>
+                }
+                else if (context.Status == "Cancelled")
+                {
+                    <MudChip T="string"
+                             Color="Color.Error"
+                             Size="Size.Small">
+                        @context.Status
+                    </MudChip>
+                }
+                else
+                {
+                    <MudChip T="string"
+                             Color="Color.Default"
+                             Size="Size.Small">
+                        @context.Status
+                    </MudChip>
+                }
+
+            </MudTd>
+<MudTd>
+
+    <MudIconButton
+        Icon="@Icons.Material.Filled.Visibility"
+        Color="Color.Info"
+        Size="Size.Small" />
+
+    <MudIconButton
+        Icon="@Icons.Material.Filled.Edit"
+        Color="Color.Primary"
+        Size="Size.Small" />
+
+</MudTd>
+        </RowTemplate>
+
+    </MudTable>
+
+</MudPaper>
+
+@code
+{
+    private List<ScheduledClassResponse> _classes = new();
+
+    private string _searchText = "";
+
+    private IEnumerable<ScheduledClassResponse> FilteredClasses =>
+        string.IsNullOrWhiteSpace(_searchText)
+            ? _classes
+            : _classes.Where(x =>
+                x.StudentName.Contains(
+                    _searchText,
+                    StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await ScheduledClassApi.GetAllAsync();
+
+        _classes = result ?? new List<ScheduledClassResponse>();
+    }
+}

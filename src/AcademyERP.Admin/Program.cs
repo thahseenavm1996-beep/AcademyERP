@@ -3,7 +3,8 @@ using MudBlazor.Services;
 using AcademyERP.Admin.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using AcademyERP.Admin.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddMudServices();
@@ -34,20 +35,54 @@ builder.Services.AddScoped<EnrollmentApiService>();
 builder.Services.AddScoped<LookupApiService>();
 builder.Services.AddScoped<AdmissionApplicationApiService>();
 builder.Services.AddScoped<AuthStateService>();
+builder.Services.AddScoped<TeachingScheduleApiService>();
+builder.Services.AddScoped<ScheduledClassApiService>();
+
 builder.Services.AddScoped<AuthenticationStateProvider,
     JwtAuthenticationStateProvider>();
 /*builder.Services
 .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-.AddCookie();*/
+.AddCookie();
+builder.Services.AddControllersWithViews();*/
+/*builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services
+.AddIdentity<ApplicationUser, ApplicationRole>(options =>
+{
+    options.Password.RequiredLength = 6;
+    options.Password.RequireDigit = true;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireNonAlphanumeric = false;
+})
+.AddEntityFrameworkStores<ApplicationDbContext>()
+.AddDefaultTokenProviders();
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/login";
+    options.AccessDeniedPath = "/login";
+    options.LogoutPath = "/logout";
+    options.SlidingExpiration = true;
+    options.ExpireTimeSpan = TimeSpan.FromHours(8);
+});
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.LoginPath = "/login";
         options.AccessDeniedPath = "/login";
-    });
+    });*/
 
-builder.Services.AddAuthorization();
+
+
+
+
+builder.Services.AddAuthorizationCore();
+builder.Services.AddCascadingAuthenticationState();
+
+builder.Services.AddScoped<AuthenticationStateProvider,
+    JwtAuthenticationStateProvider>();
 
 builder.Services.AddCascadingAuthenticationState();
 // Add services to the container.
@@ -69,12 +104,12 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthentication();
-app.UseAuthorization();
+
 
 app.UseAntiforgery();
 
 app.MapStaticAssets();
+
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
