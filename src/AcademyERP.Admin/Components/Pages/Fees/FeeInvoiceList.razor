@@ -7,82 +7,110 @@
 @inject FeeInvoiceApiService FeeInvoiceApi
 @inject IDialogService DialogService
 
-<PageTitle>Fee Invoices</PageTitle>
+<PageTitle>Fees</PageTitle>
 
 <MudPaper Class="pa-4">
 
-    <MudStack Row="true" Justify="Justify.SpaceBetween" Class="mb-4">
+    <MudText Typo="Typo.h5" Class="mb-4">
+        Finance - Fees
+    </MudText>
 
-        <MudText Typo="Typo.h5">
-            Fee Invoices
-        </MudText>
+    <MudTabs Rounded="true"
+             Border="true"
+             Elevation="0">
 
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   StartIcon="@Icons.Material.Filled.Add"
-                   OnClick="@CreateInvoice">
-            Create Invoice
-        </MudButton>
+        <MudTabPanel Text="Invoices">
 
-    </MudStack>
+            <MudStack Row="true"
+                      Justify="Justify.SpaceBetween"
+                      Class="mb-4">
 
-    <MudTable Items="_invoices"
-              Hover="true"
-              Dense="true"
-              Striped="true">
+                <MudText Typo="Typo.h6">
+                    Fee Invoices
+                </MudText>
 
-        <HeaderContent>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="@CreateInvoice">
+                    Create Invoice
+                </MudButton>
 
-            <MudTh>Invoice No</MudTh>
-            <MudTh>Student</MudTh>
-            <MudTh>Course</MudTh>
-            <MudTh>Amount</MudTh>
-            <MudTh>Paid</MudTh>
-            <MudTh>Balance</MudTh>
-            <MudTh>Status</MudTh>
-            <MudTh>Invoice Date</MudTh>
-            <MudTh>Due Date</MudTh>
-            <MudTh>Actions</MudTh>
+            </MudStack>
 
-        </HeaderContent>
+            <MudTable Items="_invoices"
+                      Hover="true"
+                      Dense="true"
+                      Striped="true">
 
-        <RowTemplate>
+                <HeaderContent>
 
-            <MudTd>@context.InvoiceNumber</MudTd>
+                    <MudTh>Invoice No</MudTh>
+                    <MudTh>Student</MudTh>
+                    <MudTh>Course</MudTh>
+                    <MudTh>Amount</MudTh>
+                    <MudTh>Paid</MudTh>
+                    <MudTh>Balance</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh>Invoice Date</MudTh>
+                    <MudTh>Due Date</MudTh>
+                    <MudTh>Actions</MudTh>
 
-            <MudTd>@context.StudentName</MudTd>
+                </HeaderContent>
 
-            <MudTd>@context.CourseName</MudTd>
+                <RowTemplate>
 
-            <MudTd>@context.Amount</MudTd>
+                    <MudTd>@context.InvoiceNumber</MudTd>
 
-            <MudTd>@context.PaidAmount</MudTd>
+                    <MudTd>@context.StudentName</MudTd>
 
-            <MudTd>@context.BalanceAmount</MudTd>
+                    <MudTd>@context.CourseName</MudTd>
 
-            <MudTd>@GetStatusText(context.Status)</MudTd>
+                    <MudTd>@context.Amount</MudTd>
 
-            <MudTd>@context.InvoiceDate.ToShortDateString()</MudTd>
+                    <MudTd>@context.PaidAmount</MudTd>
 
-            <MudTd>@context.DueDate.ToShortDateString()</MudTd>
+                    <MudTd>@context.BalanceAmount</MudTd>
 
-            <MudTd>
+                    <MudTd>
+                        @GetStatusText(context.Status)
+                    </MudTd>
 
-               <MudIconButton
-    Icon="@Icons.Material.Filled.Edit"
-    Color="Color.Primary"
-    OnClick="@(() => Edit(context.Id))" />
+                    <MudTd>
+                        @context.InvoiceDate.ToShortDateString()
+                    </MudTd>
 
-<MudIconButton
-    Icon="@Icons.Material.Filled.Delete"
-    Color="Color.Error"
-    OnClick="@(() => Delete(context.Id))" />
+                    <MudTd>
+                        @context.DueDate.ToShortDateString()
+                    </MudTd>
 
-            </MudTd>
+                    <MudTd>
 
-        </RowTemplate>
+                        <MudIconButton
+                            Icon="@Icons.Material.Filled.Edit"
+                            Color="Color.Primary"
+                            OnClick="@(() => Edit(context.Id))" />
 
-    </MudTable>
+                        <MudIconButton
+                            Icon="@Icons.Material.Filled.Delete"
+                            Color="Color.Error"
+                            OnClick="@(() => Delete(context.Id))" />
+
+                    </MudTd>
+
+                </RowTemplate>
+
+            </MudTable>
+
+        </MudTabPanel>
+
+        <MudTabPanel Text="Payments">
+
+            <FeePaymentList />
+
+        </MudTabPanel>
+
+    </MudTabs>
 
 </MudPaper>
 
@@ -109,50 +137,54 @@
         StateHasChanged();
     }
 
-  private async Task CreateInvoice()
-{
-    var dialog =
-        await DialogService.ShowAsync<FeeInvoiceDialog>(
-            "Create Invoice");
-
-    var result = await dialog.Result;
-
-    if (result?.Canceled == true)
-        return;
-
-    var data =
-    (CreateFeeInvoiceDialogModel)result.Data!;
-
-    await FeeInvoiceApi.CreateAsync(
-        new CreateFeeInvoiceRequest
-        {
-            EnrollmentId =
-    data.EnrollmentId,
-
-           InvoiceDate = data.InvoiceDate ?? DateTime.Today,
-DueDate = data.DueDate ?? DateTime.Today.AddDays(7),
-
-            Remarks =
-                data.Remarks
-        });
-
-    await LoadData();
-
-    StateHasChanged();
-}
-private Task Edit(Guid id)
-{
-    return Task.CompletedTask;
-}
-private string GetStatusText(int status)
-{
-    return status switch
+    private async Task CreateInvoice()
     {
-        1 => "Pending",
-        2 => "Partially Paid",
-        3 => "Paid",
-        4 => "Overdue",
-        _ => "Unknown"
-    };
-}
+        var dialog =
+            await DialogService.ShowAsync<FeeInvoiceDialog>(
+                "Create Invoice");
+
+        var result = await dialog.Result;
+
+        if (result?.Canceled == true)
+            return;
+
+        var data =
+            (CreateFeeInvoiceDialogModel)result.Data!;
+
+        await FeeInvoiceApi.CreateAsync(
+            new CreateFeeInvoiceRequest
+            {
+                EnrollmentId = data.EnrollmentId,
+
+                InvoiceDate =
+                    data.InvoiceDate ?? DateTime.Today,
+
+                DueDate =
+                    data.DueDate ??
+                    DateTime.Today.AddDays(7),
+
+                Remarks = data.Remarks
+            });
+
+        await LoadData();
+
+        StateHasChanged();
+    }
+
+    private Task Edit(Guid id)
+    {
+        return Task.CompletedTask;
+    }
+
+    private string GetStatusText(int status)
+    {
+        return status switch
+        {
+            1 => "Pending",
+            2 => "Partially Paid",
+            3 => "Paid",
+            4 => "Overdue",
+            _ => "Unknown"
+        };
+    }
 }

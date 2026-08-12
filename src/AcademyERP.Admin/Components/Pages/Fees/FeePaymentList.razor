@@ -1,0 +1,98 @@
+@using AcademyERP.Admin.Models.Payments
+@using AcademyERP.Admin.Services
+@using MudBlazor
+
+@inject FeePaymentApiService FeePaymentApi
+@inject IDialogService DialogService
+<PageTitle>Fee Payments</PageTitle>
+
+<MudPaper Class="pa-4">
+
+    <MudStack Row="true"
+              Justify="Justify.SpaceBetween"
+              Class="mb-4">
+
+        <MudText Typo="Typo.h5">
+            Fee Payments
+        </MudText>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="CreatePayment">
+            Create Payment
+        </MudButton>
+
+    </MudStack>
+
+    <MudTable Items="_payments"
+              Hover="true"
+              Dense="true"
+              Striped="true">
+
+        <HeaderContent>
+            <MudTh>Invoice</MudTh>
+            <MudTh>Student</MudTh>
+            <MudTh>Amount</MudTh>
+            <MudTh>Payment Date</MudTh>
+            <MudTh>Method</MudTh>
+            <MudTh>Reference</MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+
+            <MudTd>@context.InvoiceNumber</MudTd>
+
+            <MudTd>@context.StudentName</MudTd>
+
+            <MudTd>@context.Amount</MudTd>
+
+            <MudTd>
+                @context.PaymentDate.ToShortDateString()
+            </MudTd>
+
+            <MudTd>@context.PaymentMethodName</MudTd>
+
+            <MudTd>@context.TransactionReference</MudTd>
+
+        </RowTemplate>
+
+    </MudTable>
+
+</MudPaper>
+
+@code
+{
+    private List<FeePaymentResponse> _payments = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _payments = await FeePaymentApi.GetAllAsync();
+    }
+
+    private async Task CreatePayment()
+{
+    var dialog =
+        await DialogService.ShowAsync<FeePaymentDialog>(
+            "Create Payment");
+
+    var result = await dialog.Result;
+
+    if (result?.Canceled == true)
+        return;
+
+    var request =
+        (CreateFeePaymentRequest)result.Data!;
+
+    await FeePaymentApi.CreateAsync(request);
+
+    await LoadData();
+
+    StateHasChanged();
+}
+}

@@ -29,4 +29,6 @@ public class FeeInvoice : BaseEntity
     public FeeStatus Status { get; set; }
 
     public string? Remarks { get; set; }
+    public ICollection<FeePayment> Payments { get; set; }
+    = new List<FeePayment>();
 }

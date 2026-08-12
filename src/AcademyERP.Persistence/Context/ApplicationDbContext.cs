@@ -46,6 +46,9 @@ public class ApplicationDbContext
     public DbSet<TeacherAvailability> TeacherAvailabilities => Set<TeacherAvailability>();
     public DbSet<AdmissionApplication> AdmissionApplications =>
     Set<AdmissionApplication>();
+    public DbSet<FeePayment> FeePayments { get; set; }
+
+public DbSet<PaymentMethod> PaymentMethods { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

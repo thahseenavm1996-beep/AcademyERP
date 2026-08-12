@@ -1,0 +1,130 @@
+@using AcademyERP.Admin.Models.Payments
+@using AcademyERP.Admin.Models
+@using AcademyERP.Admin.Services
+@using MudBlazor
+
+@inject FeeInvoiceApiService FeeInvoiceApi
+@inject PaymentMethodApiService PaymentMethodApi
+
+<MudDialog>
+
+    <DialogContent>
+
+        <MudText Typo="Typo.h6" Class="mb-4">
+            Record Payment
+        </MudText>
+
+        <MudSelect T="Guid"
+                   Label="Invoice"
+                   @bind-Value="_model.FeeInvoiceId"
+                   Variant="Variant.Outlined">
+
+            @foreach (var invoice in _invoices)
+            {
+                <MudSelectItem Value="@invoice.Id">
+                    @($"{invoice.InvoiceNumber} - {invoice.StudentName}")
+                </MudSelectItem>
+            }
+
+        </MudSelect>
+
+        <MudNumericField T="decimal"
+                         Label="Amount"
+                         @bind-Value="_model.Amount"
+                         Variant="Variant.Outlined"
+                         Class="mt-3" />
+
+        <MudDatePicker Label="Payment Date"
+               Date="_paymentDate"
+               DateChanged="OnPaymentDateChanged"
+               Class="mt-3" />
+
+        <MudSelect T="Guid"
+                   Label="Payment Method"
+                   @bind-Value="_model.PaymentMethodId"
+                   Variant="Variant.Outlined"
+                   Class="mt-3">
+
+            @foreach (var method in _paymentMethods)
+            {
+                <MudSelectItem Value="@method.Id">
+                    @method.Name
+                </MudSelectItem>
+            }
+
+        </MudSelect>
+
+        <MudTextField Label="Transaction Reference"
+                      @bind-Value="_model.TransactionReference"
+                      Variant="Variant.Outlined"
+                      Class="mt-3" />
+
+        <MudTextField Label="Remarks"
+                      @bind-Value="_model.Remarks"
+                      Lines="3"
+                      Class="mt-3" />
+
+    </DialogContent>
+
+    <DialogActions>
+
+        <MudButton OnClick="Cancel">
+            Cancel
+        </MudButton>
+
+        <MudButton Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   OnClick="Save">
+            Save
+        </MudButton>
+
+    </DialogActions>
+
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private CreateFeePaymentRequest _model = new()
+    {
+        PaymentDate = DateTime.Today
+    };
+
+    private List<FeeInvoiceResponse> _invoices = new();
+
+    private List<PaymentMethodResponse> _paymentMethods = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _invoices =
+            await FeeInvoiceApi.GetAllAsync();
+
+        _paymentMethods =
+            await PaymentMethodApi.GetAllAsync();
+    }
+
+    private void Save()
+    {
+        MudDialog.Close(DialogResult.Ok(_model));
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+    private DateTime? _paymentDate = DateTime.Today;
+
+private Task OnPaymentDateChanged(DateTime? value)
+{
+    _paymentDate = value;
+
+    if (value.HasValue)
+    {
+        _model.PaymentDate = value.Value;
+    }
+
+    return Task.CompletedTask;
+}
+}

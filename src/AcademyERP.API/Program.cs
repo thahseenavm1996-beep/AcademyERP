@@ -88,9 +88,14 @@ builder.Services.AddScoped<IFeeInvoiceService, FeeInvoiceService>();
 builder.Services.AddScoped<IAdmissionConversionService, AdmissionConversionService>();
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
 builder.Services.AddScoped<
+    IFeePaymentService,
+    FeePaymentService>();
+builder.Services.AddScoped<
     IScheduledClassService,
     ScheduledClassService>();
-
+builder.Services.AddScoped<
+    IPaymentMethodService,
+    PaymentMethodService>();
 builder.Services.AddAutoMapper(typeof(ProgramMappingProfile).Assembly);
 builder.Services.AddAuthentication(options =>
 {
