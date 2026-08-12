@@ -1,0 +1,83 @@
+@using AcademyERP.Admin.Models
+@using AcademyERP.Admin.Models.Enrollments
+@using AcademyERP.Admin.Services
+@using MudBlazor
+@inject EnrollmentApiService EnrollmentApi
+<MudDialog>
+
+    <DialogContent>
+
+        <MudText Typo="Typo.h6" Class="mb-4">
+            Create Fee Invoice
+        </MudText>
+
+       <MudSelect T="Guid"
+           Label="Enrollment"
+           @bind-Value="_model.EnrollmentId"
+           Variant="Variant.Outlined"
+           Required="true">
+
+    @foreach (var enrollment in _enrollments)
+    {
+        <MudSelectItem Value="@enrollment.Id">
+            @($"{enrollment.StudentName} - {enrollment.CourseName}")
+        </MudSelectItem>
+    }
+
+</MudSelect>
+
+        <MudDatePicker Label="Invoice Date"
+                       @bind-Date="_model.InvoiceDate" />
+
+        <MudDatePicker Label="Due Date"
+                       @bind-Date="_model.DueDate" />
+
+        <MudTextField Label="Remarks"
+                      Lines="3"
+                      @bind-Value="_model.Remarks" />
+
+    </DialogContent>
+
+    <DialogActions>
+
+        <MudButton OnClick="Cancel">
+            Cancel
+        </MudButton>
+
+        <MudButton Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   OnClick="@Save">
+            Save
+        </MudButton>
+
+    </DialogActions>
+
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private CreateFeeInvoiceDialogModel _model = new();
+    private List<EnrollmentResponse> _enrollments = new();
+
+   private void Save()
+{
+    Console.WriteLine("SAVE BUTTON CLICKED");
+
+    MudDialog.Close(DialogResult.Ok(_model));
+}
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+   
+    protected override async Task OnInitializedAsync()
+{
+    _enrollments =
+        await EnrollmentApi.GetAllAsync();
+}
+}

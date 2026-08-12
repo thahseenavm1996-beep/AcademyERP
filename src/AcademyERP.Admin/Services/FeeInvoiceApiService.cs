@@ -1,6 +1,6 @@
 using AcademyERP.Admin.Models;
 using System.Net.Http.Json;
-
+using AcademyERP.Admin.Models.ClassReports;
 namespace AcademyERP.Admin.Services;
 
 public class FeeInvoiceApiService
@@ -13,16 +13,15 @@ public class FeeInvoiceApiService
     }
 
     public async Task<List<FeeInvoiceResponse>> GetAllAsync()
-    {
-       var response =
-    await _httpClient.GetFromJsonAsync<
-        ApiResponse<List<FeeInvoiceResponse>>>(
-        "api/FeeInvoices");
+{
+    var response =
+        await _httpClient.GetFromJsonAsync<
+            ApiResponse<PagedResponse<FeeInvoiceResponse>>>(
+            "api/FeeInvoices");
 
-return response?.Data ??
-       new List<FeeInvoiceResponse>();
-    }
-
+    return response?.Data?.Items
+           ?? new List<FeeInvoiceResponse>();
+}
     public async Task CreateAsync(
         CreateFeeInvoiceRequest request)
     {

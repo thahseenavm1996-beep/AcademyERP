@@ -37,6 +37,7 @@ builder.Services.AddScoped<AdmissionApplicationApiService>();
 builder.Services.AddScoped<AuthStateService>();
 builder.Services.AddScoped<TeachingScheduleApiService>();
 builder.Services.AddScoped<ScheduledClassApiService>();
+builder.Services.AddScoped<FeeInvoiceApiService>();
 
 
 builder.Services.AddScoped<AuthenticationStateProvider,

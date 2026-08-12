@@ -60,7 +60,7 @@
 
             <MudTd>@context.BalanceAmount</MudTd>
 
-            <MudTd>@context.Status</MudTd>
+            <MudTd>@GetStatusText(context.Status)</MudTd>
 
             <MudTd>@context.InvoiceDate.ToShortDateString()</MudTd>
 
@@ -68,9 +68,15 @@
 
             <MudTd>
 
-                <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                               Color="Color.Error"
-                               OnClick="@(() => Delete(context.Id))" />
+               <MudIconButton
+    Icon="@Icons.Material.Filled.Edit"
+    Color="Color.Primary"
+    OnClick="@(() => Edit(context.Id))" />
+
+<MudIconButton
+    Icon="@Icons.Material.Filled.Delete"
+    Color="Color.Error"
+    OnClick="@(() => Delete(context.Id))" />
 
             </MudTd>
 
@@ -103,7 +109,50 @@
         StateHasChanged();
     }
 
-    private async Task CreateInvoice()
+  private async Task CreateInvoice()
 {
+    var dialog =
+        await DialogService.ShowAsync<FeeInvoiceDialog>(
+            "Create Invoice");
+
+    var result = await dialog.Result;
+
+    if (result?.Canceled == true)
+        return;
+
+    var data =
+    (CreateFeeInvoiceDialogModel)result.Data!;
+
+    await FeeInvoiceApi.CreateAsync(
+        new CreateFeeInvoiceRequest
+        {
+            EnrollmentId =
+    data.EnrollmentId,
+
+           InvoiceDate = data.InvoiceDate ?? DateTime.Today,
+DueDate = data.DueDate ?? DateTime.Today.AddDays(7),
+
+            Remarks =
+                data.Remarks
+        });
+
+    await LoadData();
+
+    StateHasChanged();
+}
+private Task Edit(Guid id)
+{
+    return Task.CompletedTask;
+}
+private string GetStatusText(int status)
+{
+    return status switch
+    {
+        1 => "Pending",
+        2 => "Partially Paid",
+        3 => "Paid",
+        4 => "Overdue",
+        _ => "Unknown"
+    };
 }
 }
