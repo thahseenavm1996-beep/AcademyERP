@@ -8,13 +8,15 @@ public class CreateEnrollmentRequest
 
     public Guid? TeacherId { get; set; }
 
-    public Guid TimeSlotId { get; set; }
 
-    public Guid ClassDurationId { get; set; }
+    // New: multiple weekly class schedules
+    
+
 
     public DateTime StartDate { get; set; } = DateTime.Today;
 
     public DateTime? EndDate { get; set; }
+
 
     public decimal MonthlyFee { get; set; }
 
@@ -22,9 +24,13 @@ public class CreateEnrollmentRequest
 
     public string? ScholarshipReason { get; set; }
 
+
     public decimal DiscountAmount { get; set; }
 
     public string? DiscountReason { get; set; }
 
+
     public string? Remarks { get; set; }
+    public List<EnrollmentScheduleRequest> Schedules { get; set; }
+    = new();
 }

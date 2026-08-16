@@ -1,0 +1,86 @@
+@using AcademyERP.Admin.Models.Payments
+@using MudBlazor
+
+<MudDialog>
+
+    <DialogContent>
+
+        <MudText Typo="Typo.h6">
+            Edit Payment
+        </MudText>
+
+        <MudNumericField T="decimal"
+                         Label="Amount"
+                         @bind-Value="_model.Amount"
+                         Class="mt-3" />
+
+        <MudDatePicker Label="Payment Date"
+                       @bind-Date="_paymentDate"
+                       Class="mt-3" />
+
+        <MudTextField Label="Transaction Reference"
+                      @bind-Value="_model.TransactionReference"
+                      Class="mt-3" />
+
+        <MudTextField Label="Remarks"
+                      @bind-Value="_model.Remarks"
+                      Lines="3"
+                      Class="mt-3" />
+
+    </DialogContent>
+
+    <DialogActions>
+
+        <MudButton OnClick="Cancel">
+            Cancel
+        </MudButton>
+
+        <MudButton Color="Color.Primary"
+                   OnClick="Save">
+            Save
+        </MudButton>
+
+    </DialogActions>
+
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public FeePaymentResponse Payment { get; set; } = default!;
+
+    private UpdateFeePaymentRequest _model = new();
+
+    private DateTime? _paymentDate;
+
+    protected override void OnInitialized()
+    {
+        _model.Amount = Payment.Amount;
+        _model.PaymentDate = Payment.PaymentDate;
+        _model.PaymentMethodId = Payment.PaymentMethodId;
+        _model.TransactionReference =
+            Payment.TransactionReference;
+        _model.Remarks = Payment.Remarks;
+
+        _paymentDate = Payment.PaymentDate;
+    }
+
+    private void Save()
+    {
+        if (_paymentDate.HasValue)
+        {
+            _model.PaymentDate =
+                _paymentDate.Value;
+        }
+
+        MudDialog.Close(DialogResult.Ok(_model));
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}

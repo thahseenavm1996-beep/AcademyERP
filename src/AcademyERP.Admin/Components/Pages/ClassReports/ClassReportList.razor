@@ -182,27 +182,30 @@
         }
     }
 
-    private async Task OpenCreateDialog()
-    {
-        var parameters =
-            new DialogParameters<ClassReportDialog>
+   
+private async Task OpenCreateDialog()
+{
+    var parameters =
+        new DialogParameters<ClassReportDialog>
+        {
             {
-                {
-                    x => x.Model,
-                    new CreateClassReportRequest()
-                }
-            };
+                x => x.Model,
+                new CreateClassReportRequest()
+            }
+        };
 
-        var dialog =
-            await DialogService.ShowAsync<ClassReportDialog>(
-                "Create Class Report",
-                parameters);
+    var dialog =
+        await DialogService.ShowAsync<ClassReportDialog>(
+            "Create Class Report",
+            parameters);
 
-        var result = await dialog.Result;
+    var result = await dialog.Result;
 
-        if (result is not null &&
-            !result.Canceled &&
-            result.Data is CreateClassReportRequest request)
+    if (result is not null &&
+        !result.Canceled &&
+        result.Data is CreateClassReportRequest request)
+    {
+        try
         {
             await ClassReportApi.CreateAsync(request);
 
@@ -212,7 +215,14 @@
 
             await LoadReports();
         }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                ex.Message,
+                Severity.Error);
+        }
     }
+}
 
     private async Task DeleteReport(Guid id)
     {

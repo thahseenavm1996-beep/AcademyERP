@@ -5,6 +5,7 @@
 @using MudBlazor
 
 @inject EnrollmentApiService EnrollmentApi
+@inject AttendanceApiService AttendanceApi
 @inject ISnackbar Snackbar
 
 <MudDialog>
@@ -40,16 +41,13 @@
                            RequiredError="Please select the class date." />
 
 
-            <MudSelect T="AttendanceStatus" Label="Attendance" Class="mt-3" @bind-Value="_model.AttendanceStatus">
+           <MudTextField T="string"
+              Label="Attendance (from attendance record)"
+              Value="@_attendanceStatusText"
+              ReadOnly="true"
+              Disabled="true"
+              Class="mt-3" />
 
-                @foreach (AttendanceStatus item in Enum.GetValues<AttendanceStatus>())
-                {
-                    <MudSelectItem T="AttendanceStatus" Value="@item">
-                        @item
-                    </MudSelectItem>
-                }
-
-            </MudSelect>
 
 
             <MudSelect T="PerformanceRating" Label="Performance" Class="mt-3" @bind-Value="_model.PerformanceRating">
@@ -180,14 +178,14 @@
     }
 
 
-    private Task OnEnrollmentChanged(Guid enrollmentId)
-    {
-        _model.EnrollmentId = enrollmentId;
+   private async Task OnEnrollmentChanged(Guid enrollmentId)
+{
+    _model.EnrollmentId = enrollmentId;
 
-        SetSelectedEnrollment(enrollmentId);
+    SetSelectedEnrollment(enrollmentId);
 
-        return Task.CompletedTask;
-    }
+    await LoadAttendance();
+}
 
 
     private void SetSelectedEnrollment(Guid enrollmentId)
@@ -293,15 +291,39 @@
         MudDialog.Close(
             DialogResult.Ok(_model));
     }
-private Task OnDateChanged(DateTime? date)
+private async Task OnDateChanged(DateTime? date)
 {
     _reportDate = date;
 
-    if (date.HasValue)
+    if (!date.HasValue)
+        return;
+
+    _model.ReportDate = date.Value;
+
+    await LoadAttendance();
+}
+private string _attendanceStatusText = "Not marked";
+private async Task LoadAttendance()
+{
+    if (_model.EnrollmentId == Guid.Empty)
+        return;
+
+    var attendance =
+        await AttendanceApi.GetByEnrollmentDateAsync(
+            _model.EnrollmentId,
+            _reportDate!.Value);
+
+
+    if (attendance == null)
     {
-        _model.ReportDate = date.Value;
+        _attendanceStatusText = "Not marked";
+        return;
     }
 
-    return Task.CompletedTask;
+
+    _model.AttendanceStatus = attendance.Status;
+
+    _attendanceStatusText =
+        attendance.Status.ToString();
 }
 }

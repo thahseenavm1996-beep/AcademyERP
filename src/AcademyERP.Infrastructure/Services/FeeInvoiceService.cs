@@ -103,6 +103,7 @@ public class FeeInvoiceService : IFeeInvoiceService
             DueDate = request.DueDate,
 
             Status = FeeStatus.Pending,
+            
             Remarks = request.Remarks
         };
 
@@ -134,19 +135,16 @@ public class FeeInvoiceService : IFeeInvoiceService
         if (invoice == null)
             return null;
 
-        invoice.PaidAmount = request.PaidAmount;
-
-        invoice.BalanceAmount =
-            invoice.Amount - invoice.PaidAmount;
-
         invoice.Status = request.Status;
 
-        invoice.PaidDate = request.PaidDate;
+invoice.PaidDate = request.PaidDate;
 
-        invoice.Remarks = request.Remarks;
+invoice.DueDate = request.DueDate;
 
+invoice.Remarks = request.Remarks;
         await _context.SaveChangesAsync();
-
+Console.WriteLine($"REQUEST DUE DATE: {request.DueDate}");
+Console.WriteLine($"ENTITY DUE DATE : {invoice.DueDate}");
         return MapToResponse(invoice);
     }
 
@@ -191,6 +189,7 @@ public class FeeInvoiceService : IFeeInvoiceService
             PaidDate = invoice.PaidDate,
 
             Status = invoice.Status,
+            
             Remarks = invoice.Remarks
         };
     }

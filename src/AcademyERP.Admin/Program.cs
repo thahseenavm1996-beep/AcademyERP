@@ -31,6 +31,7 @@ builder.Services.AddScoped<CourseApiService>();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<DashboardApiService>();
 builder.Services.AddScoped<ClassReportApiService>();
+builder.Services.AddScoped<AttendanceApiService>();
 builder.Services.AddScoped<EnrollmentApiService>();
 builder.Services.AddScoped<LookupApiService>();
 builder.Services.AddScoped<AdmissionApplicationApiService>();
@@ -38,6 +39,8 @@ builder.Services.AddScoped<AuthStateService>();
 builder.Services.AddScoped<TeachingScheduleApiService>();
 builder.Services.AddScoped<ScheduledClassApiService>();
 builder.Services.AddScoped<FeeInvoiceApiService>();
+builder.Services.AddScoped<
+    RegistrationRequestApiService>();
 builder.Services.AddScoped<
     PaymentMethodApiService>();
 

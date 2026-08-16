@@ -1,0 +1,164 @@
+@using AcademyERP.Admin.Models
+@using AcademyERP.Admin.Models.Payments
+@using AcademyERP.Admin.Services
+@using MudBlazor
+
+@inject FeePaymentApiService FeePaymentApi
+
+<MudDialog>
+
+    <DialogContent>
+
+        <MudText Typo="Typo.h5" Class="mb-4">
+            Invoice Details
+        </MudText>
+
+        <MudPaper Class="pa-3 mb-4">
+
+            <MudGrid>
+
+                <MudItem xs="12" md="6">
+                    <MudText>
+                        <b>Invoice Number:</b>
+                        @Invoice.InvoiceNumber
+                    </MudText>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudText>
+                        <b>Status:</b>
+                        @GetStatusText(Invoice.Status)
+                    </MudText>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudText>
+                        <b>Student:</b>
+                        @Invoice.StudentName
+                    </MudText>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudText>
+                        <b>Course:</b>
+                        @Invoice.CourseName
+                    </MudText>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudText>
+                        <b>Amount:</b>
+                        @Invoice.Amount
+                    </MudText>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudText>
+                        <b>Paid:</b>
+                        @Invoice.PaidAmount
+                    </MudText>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudText>
+                        <b>Balance:</b>
+                        @Invoice.BalanceAmount
+                    </MudText>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudText>
+                        <b>Due Date:</b>
+                        @Invoice.DueDate.ToShortDateString()
+                    </MudText>
+                </MudItem>
+
+            </MudGrid>
+
+        </MudPaper>
+
+        <MudText Typo="Typo.h6" Class="mb-2">
+            Payment History
+        </MudText>
+
+        <MudTable Items="_payments"
+                  Dense="true"
+                  Hover="true"
+                  Striped="true">
+
+            <HeaderContent>
+                <MudTh>Date</MudTh>
+                <MudTh>Method</MudTh>
+                <MudTh>Amount</MudTh>
+                <MudTh>Reference</MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+
+                <MudTd>
+                    @context.PaymentDate.ToShortDateString()
+                </MudTd>
+
+                <MudTd>
+                    @context.PaymentMethodName
+                </MudTd>
+
+                <MudTd>
+                    @context.Amount
+                </MudTd>
+
+                <MudTd>
+                    @context.TransactionReference
+                </MudTd>
+
+            </RowTemplate>
+
+        </MudTable>
+
+    </DialogContent>
+
+    <DialogActions>
+
+        <MudButton OnClick="Close">
+            Close
+        </MudButton>
+
+    </DialogActions>
+
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public FeeInvoiceResponse Invoice { get; set; } = default!;
+
+    private List<FeePaymentResponse> _payments = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _payments =
+            await FeePaymentApi
+                .GetByInvoiceAsync(
+                    Invoice.Id);
+    }
+
+    private void Close()
+    {
+        MudDialog.Cancel();
+    }
+
+    private string GetStatusText(int status)
+    {
+        return status switch
+        {
+            1 => "Pending",
+            2 => "Partially Paid",
+            3 => "Paid",
+            4 => "Overdue",
+            _ => "Unknown"
+        };
+    }
+}

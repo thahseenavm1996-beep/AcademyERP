@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using AcademyERP.Admin.Models.ClassReports;
+using System.Text.Json;
 
 namespace AcademyERP.Admin.Services;
 
@@ -31,15 +32,34 @@ public class ClassReportApiService
             $"api/ClassReport/{id}");
     }
 
-    public async Task CreateAsync(CreateClassReportRequest request)
-    {
-        var response =
-            await _httpClient.PostAsJsonAsync(
-                "api/ClassReport",
-                request);
+  public async Task CreateAsync(CreateClassReportRequest request)
+{
+    var response =
+        await _httpClient.PostAsJsonAsync(
+            "api/ClassReport",
+            request);
 
-        response.EnsureSuccessStatusCode();
+    if (!response.IsSuccessStatusCode)
+    {
+        var error =
+            await response.Content.ReadAsStringAsync();
+
+        try
+        {
+            var json =
+                JsonSerializer.Deserialize<JsonElement>(error);
+
+            if (json.TryGetProperty("message", out var message))
+            {
+                throw new Exception(message.GetString() ?? "Unable to create class report.");
+            }
+        }
+        catch (JsonException)
+        {
+            throw new Exception(error);
+        }
     }
+}
 
     public async Task UpdateAsync(
         Guid id,

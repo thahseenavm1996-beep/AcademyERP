@@ -1,0 +1,303 @@
+@using AcademyERP.Admin.Models.Registration
+@using AcademyERP.Admin.Services
+@using AcademyERP.Admin.Models.Courses
+@using AcademyERP.Admin.Models
+@using AcademyERP.Admin.Models.Lookups
+@using AcademyERP.Domain.Enums
+@using MudBlazor
+
+@inject RegistrationRequestApiService Api
+@inject CourseApiService CourseApi
+@inject TeacherApiService TeacherApi
+@inject LookupApiService LookupApi
+
+<MudDialog>
+
+    <DialogContent>
+
+        @if (_request != null)
+        {
+            <MudText Typo="Typo.h6">
+                Parent Information
+            </MudText>
+
+            <MudText>
+                Name: @_request.ParentName
+            </MudText>
+
+            <MudText>
+                Email: @_request.Email
+            </MudText>
+
+            <MudText>
+                Phone: @_request.PhoneNumber
+            </MudText>
+
+            <MudText>
+                Country: @_request.Country
+            </MudText>
+
+            <MudDivider Class="my-3" />
+
+            <MudText>
+                Status:
+                @(_request.Status switch
+                {
+                    1 => "Pending",
+                    2 => "Approved",
+                    3 => "Rejected",
+                    _ => "Unknown"
+                })
+            </MudText>
+
+            <MudText Typo="Typo.h6">
+                Students
+            </MudText>
+
+           @foreach (var student in _request.Students)
+{
+    var approval = _studentApprovals
+        .FirstOrDefault(x => x.RegistrationStudentId == student.Id);
+
+    if (approval == null)
+    {
+        continue;
+    }
+
+    <MudPaper Class="pa-3 mb-4">
+
+                    <MudText Typo="Typo.h6">
+                        @student.StudentName
+                    </MudText>
+
+                    <MudText>
+                        Program: @student.ProgramName
+                    </MudText>
+                    @if (!string.IsNullOrWhiteSpace(student.CourseName))
+{
+    <MudText>
+        Course: @student.CourseName
+    </MudText>
+}
+
+@if (!string.IsNullOrWhiteSpace(student.PreferredTime))
+{
+    <MudText>
+        Preferred Time: @student.PreferredTime
+    </MudText>
+}
+                    <MudText>
+    Preferred Time:
+    @(string.IsNullOrWhiteSpace(student.PreferredTime)
+        ? "Not specified"
+        : student.PreferredTime)
+</MudText>
+
+@if (!string.IsNullOrWhiteSpace(student.CourseName))
+{
+    <MudText>
+        Selected Course: @student.CourseName
+    </MudText>
+}
+
+
+                    <MudSelect T="Guid?"
+                               Label="Course"
+                               @bind-Value="approval.CourseId" Disabled="@(_request?.Status != 1)">
+
+                        @foreach (var course in _courses
+                                     .Where(x => x.ProgramId == student.ProgramId))
+                        {
+                            <MudSelectItem T="Guid?"
+               Value="@((Guid?)course.Id)">
+    @course.CourseName
+</MudSelectItem>
+                        }
+
+                    </MudSelect>
+
+                   <MudSelect T="Guid?"
+           Label="Teacher"
+           @bind-Value="approval.TeacherId" Disabled="@(_request?.Status != 1)">
+
+    @foreach (var teacher in _teachers)
+    {
+        <MudSelectItem T="Guid?"
+                       Value="@((Guid?)teacher.Id)">
+            @teacher.FullName
+        </MudSelectItem>
+    }
+
+</MudSelect>
+
+                    <MudSelect T="Guid?"
+                               Label="Time Slot"
+                               @bind-Value="approval.TimeSlotId" Disabled="@(_request?.Status != 1)">
+
+                        @foreach (var slot in _timeSlots)
+                        {
+                           <MudSelectItem T="Guid?"
+               Value="@((Guid?)slot.Id)">
+    @slot.Name
+</MudSelectItem>
+                        }
+
+                    </MudSelect>
+
+                    <MudSelect T="Guid?"
+                               Label="Class Duration"
+                               @bind-Value="approval.ClassDurationId" Disabled="@(_request?.Status != 1)">
+
+                        @foreach (var duration in _classDurations)
+                        {
+                            <MudSelectItem T="Guid?"
+               Value="@((Guid?)duration.Id)">
+    @duration.Name
+</MudSelectItem>
+                        }
+
+                    </MudSelect>
+
+                </MudPaper>
+            }
+        }
+
+    </DialogContent>
+
+    <DialogActions>
+
+    @if (_request?.Status == 1)
+    {
+        <MudButton Color="Color.Success"
+                   OnClick="Approve">
+            APPROVE
+        </MudButton>
+
+        <MudButton Color="Color.Error"
+                   OnClick="Reject">
+            REJECT
+        </MudButton>
+    }
+    else if (_request != null)
+    {
+        <MudChip T="string" Color="Color.Success">
+            @GetStatusText(_request.Status)
+        </MudChip>
+    }
+
+    <MudButton OnClick="Close">
+        Close
+    </MudButton>
+
+</DialogActions>
+
+</MudDialog>
+
+@code {
+
+    [Parameter]
+    public Guid RequestId { get; set; }
+
+    private RegistrationRequestResponse? _request;
+
+    private List<StudentApprovalModel> _studentApprovals = new();
+
+    private List<CourseResponse> _courses = new();
+
+    private List<TeacherResponse> _teachers = new();
+
+    private List<TimeSlotResponse> _timeSlots = new();
+
+    private List<ClassDurationResponse> _classDurations = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _request =
+            await Api.GetByIdAsync(RequestId);
+if (_request != null)
+{
+    foreach (var student in _request.Students)
+    {
+        Console.WriteLine(
+            $"{student.StudentName} | " +
+            $"{student.CourseId} | " +
+            $"{student.CourseName} | " +
+            $"{student.PreferredTime}");
+    }
+}
+
+        _courses =
+            await CourseApi.GetAllAsync();
+
+        var teachersResult =
+            await TeacherApi.GetTeachersAsync(
+                new TeacherQueryRequest
+                {
+                    Page = 1,
+                    PageSize = 1000
+                });
+
+        _teachers =
+            teachersResult?.Data?.Items ?? new();
+
+        _timeSlots =
+            await LookupApi.GetTimeSlotsAsync();
+
+        _classDurations =
+            await LookupApi.GetClassDurationsAsync();
+
+        if (_request != null)
+        {
+           _studentApprovals =
+    _request.Students
+        .Select(x =>
+            new StudentApprovalModel
+            {
+                RegistrationStudentId = x.Id,
+
+                CourseId = x.CourseId,
+                TeacherId = x.TeacherId,
+                TimeSlotId = x.TimeSlotId,
+                ClassDurationId = x.ClassDurationId
+            })
+        .ToList();
+        }
+    }
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private void Close()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task Approve()
+{
+    await Api.ApproveAsync(
+        RequestId,
+        _studentApprovals);
+
+    MudDialog.Close(
+        DialogResult.Ok(true));
+}
+
+    private async Task Reject()
+    {
+        await Api.RejectAsync(
+            RequestId,
+            "Rejected by admin");
+
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+    private string GetStatusText(int status)
+{
+    return status switch
+    {
+        1 => "Pending",
+        2 => "Approved",
+        3 => "Rejected",
+        _ => "Unknown"
+    };
+}
+}

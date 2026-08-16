@@ -24,7 +24,17 @@ public class FeePaymentApiService
     return response?.Data?.Items
            ?? new List<FeePaymentResponse>();
 }
+public async Task<List<FeePaymentResponse>>
+    GetByInvoiceAsync(Guid invoiceId)
+{
+    var response =
+        await _httpClient.GetFromJsonAsync<
+            ApiResponse<PagedResponse<FeePaymentResponse>>>(
+            $"api/FeePayments?FeeInvoiceId={invoiceId}");
 
+    return response?.Data?.Items
+           ?? new List<FeePaymentResponse>();
+}
     public async Task<FeePaymentResponse?>
         CreateAsync(
             CreateFeePaymentRequest request)
@@ -43,7 +53,30 @@ public class FeePaymentApiService
 
         return result?.Data;
     }
+public async Task<FeePaymentResponse?> GetByIdAsync(Guid id)
+{
+    var response =
+        await _httpClient.GetFromJsonAsync<
+            ApiResponse<FeePaymentResponse>>(
+            $"api/FeePayments/{id}");
 
+    return response?.Data;
+}
+
+public async Task UpdateAsync(
+    Guid id,
+    UpdateFeePaymentRequest request)
+{
+    await _httpClient.PutAsJsonAsync(
+        $"api/FeePayments/{id}",
+        request);
+}
+
+public async Task DeleteAsync(Guid id)
+{
+    await _httpClient.DeleteAsync(
+        $"api/FeePayments/{id}");
+}
     private class ApiResponse<T>
     {
         public bool Success { get; set; }

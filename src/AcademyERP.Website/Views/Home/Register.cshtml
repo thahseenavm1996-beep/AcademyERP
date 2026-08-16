@@ -1,0 +1,410 @@
+@{
+    ViewData["Title"] = "Student Registration";
+}
+
+<section class="admission-page">
+
+    <div class="container">
+
+        <div class="admission-header">
+
+            <span class="section-label">
+                Student Registration
+            </span>
+
+            <h1>
+                Register
+                <span>Students</span>
+            </h1>
+
+            <p>
+                Complete the registration form below. Our team will review
+                your request and contact you before approval.
+            </p>
+
+        </div>
+
+        <div class="admission-layout">
+
+            <div class="admission-info-panel">
+
+                <span class="admission-small-label">
+                    MS INTERNATIONAL ACADEMY
+                </span>
+
+                <h2>
+                    Online Registration
+                </h2>
+
+                <p>
+                    Register one or multiple students. Once reviewed and
+                    approved by our administration team, enrollment will
+                    be completed.
+                </p>
+
+            </div>
+
+            <div class="admission-form-card">
+
+                <div class="admission-form-heading">
+
+                    <span>REGISTRATION FORM</span>
+
+                    <h2>
+                        Parent Information
+                    </h2>
+
+                </div>
+
+                <form id="registrationForm">
+
+                    <!-- Parent Information -->
+
+                    <div class="form-group">
+                        <label>Parent Name *</label>
+                        <input
+                            type="text"
+                            id="ParentName"
+                            class="form-control"
+                            required />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email *</label>
+                        <input
+                            type="email"
+                            id="Email"
+                            class="form-control"
+                            required />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Phone Number *</label>
+                        <input
+                            type="text"
+                            id="PhoneNumber"
+                            class="form-control"
+                            required />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Country *</label>
+                        <input
+                            type="text"
+                            id="Country"
+                            class="form-control"
+                            required />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Address</label>
+                        <textarea
+                            id="Address"
+                            class="form-control"></textarea>
+                    </div>
+
+                    <hr />
+
+                    <h3>Students</h3>
+
+                    <div id="studentsContainer"></div>
+
+                    <button
+                        type="button"
+                        id="addStudentBtn"
+                        class="btn btn-secondary mt-3">
+
+                        Add Another Student
+
+                    </button>
+
+                    <br />
+                    <br />
+
+                    <button
+                        type="submit"
+                        class="btn admission-submit-btn">
+
+                        Submit Registration
+
+                    </button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<script>
+
+let catalog = [];
+let studentIndex = 0;
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+    await loadCatalog();
+
+    addStudent();
+
+    document
+        .getElementById("addStudentBtn")
+        .addEventListener("click", addStudent);
+
+    document
+        .getElementById("registrationForm")
+        .addEventListener("submit", submitRegistration);
+});
+
+async function loadCatalog() {
+
+    const response =
+        await fetch(
+            "http://localhost:5235/api/public/catalog"
+        );
+
+    catalog = await response.json();
+}
+
+function addStudent() {
+
+    const container =
+        document.getElementById("studentsContainer");
+
+    const html = `
+
+        <div class="student-card mb-4 p-3 border">
+
+            <h4>
+                Student ${studentIndex + 1}
+            </h4>
+
+            <div class="form-group">
+                <label>Student Name *</label>
+                <input
+                    type="text"
+                    class="form-control student-name"
+                    required />
+            </div>
+
+            <div class="form-group">
+                <label>Date Of Birth *</label>
+                <input
+                    type="date"
+                    class="form-control dob"
+                    required />
+            </div>
+
+            <div class="form-group">
+                <label>Gender *</label>
+
+                <select
+                    class="form-control gender"
+                    required>
+
+                    <option value="">
+                        Select Gender
+                    </option>
+
+                    <option value="1">
+                        Male
+                    </option>
+
+                    <option value="2">
+                        Female
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Program *</label>
+
+                <select
+                    class="form-control program"
+                    required>
+
+                    <option value="">
+                        Select Program
+                    </option>
+
+                    ${catalog.map(x => `
+                        <option value="${x.id}">
+                            ${x.programName}
+                        </option>
+                    `).join("")}
+
+                </select>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Course *</label>
+
+                <select
+                    class="form-control course"
+                    required>
+
+                    <option value="">
+                        Select Course
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="form-group">
+                <label>Preferred Time</label>
+                <input
+                    type="text"
+                    class="form-control preferred-time" />
+            </div>
+
+            <div class="form-group">
+                <label>Remarks</label>
+                <textarea
+                    class="form-control remarks"></textarea>
+            </div>
+
+        </div>
+    `;
+
+    container.insertAdjacentHTML(
+        "beforeend",
+        html
+    );
+
+    const studentCards =
+        document.querySelectorAll(".student-card");
+
+    const currentCard =
+        studentCards[studentCards.length - 1];
+
+    const programSelect =
+        currentCard.querySelector(".program");
+
+    const courseSelect =
+        currentCard.querySelector(".course");
+
+    programSelect.addEventListener(
+        "change",
+        () => {
+
+            courseSelect.innerHTML =
+                '<option value="">Select Course</option>';
+
+            const selected =
+                catalog.find(
+                    x => x.id === programSelect.value
+                );
+
+            if (!selected)
+                return;
+
+            selected.courses.forEach(course => {
+
+                courseSelect.innerHTML += `
+                    <option value="${course.id}">
+                        ${course.courseName}
+                    </option>
+                `;
+            });
+        });
+
+    studentIndex++;
+}
+
+async function submitRegistration(e) {
+
+    e.preventDefault();
+
+    const students = [];
+
+    document
+        .querySelectorAll(".student-card")
+        .forEach(card => {
+
+            students.push({
+
+                studentName:
+                    card.querySelector(".student-name").value,
+
+                dateOfBirth:
+                    card.querySelector(".dob").value,
+
+                gender:
+                    parseInt(
+                        card.querySelector(".gender").value
+                    ),
+
+                programId:
+                    card.querySelector(".program").value,
+
+                courseId:
+                    card.querySelector(".course").value,
+
+                preferredTime:
+                    card.querySelector(".preferred-time").value,
+
+                remarks:
+                    card.querySelector(".remarks").value
+            });
+        });
+
+    const request = {
+
+        parentName:
+            document.getElementById("ParentName").value,
+
+        email:
+            document.getElementById("Email").value,
+
+        phoneNumber:
+            document.getElementById("PhoneNumber").value,
+
+        country:
+            document.getElementById("Country").value,
+
+        address:
+            document.getElementById("Address").value,
+
+        students: students
+    };
+
+    try {
+
+        const response = await fetch(
+            "http://localhost:5235/api/RegistrationRequests",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(request)
+            });
+
+        if (!response.ok) {
+            throw new Error();
+        }
+
+        alert(
+            "Registration submitted successfully."
+        );
+
+        location.reload();
+    }
+    catch {
+
+        alert(
+            "Failed to submit registration."
+        );
+    }
+}
+
+</script>

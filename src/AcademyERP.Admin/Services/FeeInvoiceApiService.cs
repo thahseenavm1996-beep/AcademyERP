@@ -1,6 +1,7 @@
 using AcademyERP.Admin.Models;
 using System.Net.Http.Json;
 using AcademyERP.Admin.Models.ClassReports;
+
 namespace AcademyERP.Admin.Services;
 
 public class FeeInvoiceApiService
@@ -35,4 +36,22 @@ public class FeeInvoiceApiService
         await _httpClient.DeleteAsync(
             $"api/FeeInvoices/{id}");
     }
+    public async Task<FeeInvoiceResponse?> GetByIdAsync(Guid id)
+{
+    var response =
+        await _httpClient.GetFromJsonAsync<
+            ApiResponse<FeeInvoiceResponse>>(
+            $"api/FeeInvoices/{id}");
+
+    return response?.Data;
+}
+
+public async Task UpdateAsync(
+    Guid id,
+    UpdateFeeInvoiceRequest request)
+{
+    await _httpClient.PutAsJsonAsync(
+        $"api/FeeInvoices/{id}",
+        request);
+}
 }

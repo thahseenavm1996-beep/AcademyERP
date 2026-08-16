@@ -35,9 +35,8 @@
                          Class="mt-3" />
 
         <MudDatePicker Label="Payment Date"
-               Date="_paymentDate"
-               DateChanged="OnPaymentDateChanged"
-               Class="mt-3" />
+                       @bind-Date="_model.PaymentDate"
+                       Class="mt-3" />
 
         <MudSelect T="Guid"
                    Label="Payment Method"
@@ -114,17 +113,4 @@
     {
         MudDialog.Cancel();
     }
-    private DateTime? _paymentDate = DateTime.Today;
-
-private Task OnPaymentDateChanged(DateTime? value)
-{
-    _paymentDate = value;
-
-    if (value.HasValue)
-    {
-        _model.PaymentDate = value.Value;
-    }
-
-    return Task.CompletedTask;
-}
 }

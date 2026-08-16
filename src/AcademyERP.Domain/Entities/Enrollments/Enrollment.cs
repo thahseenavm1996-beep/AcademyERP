@@ -6,6 +6,8 @@ using AcademyERP.Domain.Entities.Students;
 using AcademyERP.Domain.Entities.Teachers;
 using AcademyERP.Domain.Entities.ClassReports;
 using AcademyERP.Domain.Entities.Finance;
+using AttendanceEntity = AcademyERP.Domain.Entities.Attendance.Attendance;
+using AcademyERP.Domain.Entities.EnrollmentSchedules;
 
 namespace AcademyERP.Domain.Entities.Enrollments;
 
@@ -16,10 +18,7 @@ public class Enrollment : BaseEntity
     public Guid CourseId { get; set; }
     public Guid? TeacherId { get; set; }
 
-    public Guid TimeSlotId { get; set; }
-
-    public Guid ClassDurationId { get; set; }
-
+   
     public DateTime StartDate { get; set; }
 
     public DateTime? EndDate { get; set; }
@@ -43,15 +42,17 @@ public class Enrollment : BaseEntity
 
     public Teacher? Teacher { get; set; }
 
-    public TimeSlot TimeSlot { get; set; } = null!;
-
-    public ClassDuration ClassDuration { get; set; } = null!;
+   
     public string? ScholarshipReason { get; set; }
 
     public string? DiscountReason { get; set; }
 
     public string? Remarks { get; set; }
     public ICollection<ClassReport> ClassReports { get; set; } = new List<ClassReport>();
+    public ICollection<AttendanceEntity> Attendances { get; set; }
+    = new List<AttendanceEntity>();
     public ICollection<FeeInvoice> FeeInvoices { get; set; }
     = new List<FeeInvoice>();
+    public ICollection<EnrollmentSchedule> EnrollmentSchedules { get; set; }
+    = new List<EnrollmentSchedule>();
 }

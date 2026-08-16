@@ -36,6 +36,8 @@ public class EnrollmentResponse
     public DateTime NextBillingDate { get; set; }
 
     public EnrollmentStatus Status { get; set; }
+    public List<EnrollmentScheduleResponse> Schedules { get; set; }
+    = new();
 
     public string? Remarks { get; set; }
 }

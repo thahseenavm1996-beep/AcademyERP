@@ -84,6 +84,7 @@ builder.Services.AddScoped<ITeacherDashboardService, TeacherDashboardService>();
 builder.Services.AddScoped<ITeachingScheduleService, TeachingScheduleService>();
 builder.Services.AddScoped<ICourseService, CourseService>();
 builder.Services.AddScoped<IClassReportService, ClassReportService>();
+builder.Services.AddScoped<IAttendanceService, AttendanceService>();
 builder.Services.AddScoped<IFeeInvoiceService, FeeInvoiceService>();
 builder.Services.AddScoped<IAdmissionConversionService, AdmissionConversionService>();
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
@@ -96,6 +97,15 @@ builder.Services.AddScoped<
 builder.Services.AddScoped<
     IPaymentMethodService,
     PaymentMethodService>();
+    builder.Services.AddScoped<
+    IRegistrationRequestService,
+    RegistrationRequestService>();
+    builder.Services.AddScoped<
+    ITimeSlotService,
+    TimeSlotService>();
+    builder.Services.AddScoped<
+    IClassDurationService,
+    ClassDurationService>();
 builder.Services.AddAutoMapper(typeof(ProgramMappingProfile).Assembly);
 builder.Services.AddAuthentication(options =>
 {

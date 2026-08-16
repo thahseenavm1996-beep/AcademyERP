@@ -4,12 +4,16 @@ using AcademyERP.Domain.Entities.Enrollments;
 using AcademyERP.Domain.Entities.TeacherCourses;
 using AcademyERP.Domain.Entities.TeacherAvailabilities;
 using AcademyERP.Domain.Entities.ClassReports;
+using AcademyERP.Domain.Entities.Identity;
+using AttendanceEntity = AcademyERP.Domain.Entities.Attendance.Attendance;
 
 namespace AcademyERP.Domain.Entities.Teachers;
 
 public class Teacher : BaseEntity
 {
     public Guid ApplicationUserId { get; set; }
+
+    public ApplicationUser ApplicationUser { get; set; } = null!;
 
     public string EmployeeCode { get; set; } = string.Empty;
 
@@ -38,9 +42,18 @@ public class Teacher : BaseEntity
     public string? Remarks { get; set; }
 
     public UserStatus Status { get; set; } = UserStatus.Active;
-    public ICollection<Enrollment> Enrollments { get; set; } = new List<Enrollment>();
 
-    public ICollection<TeacherCourse> TeacherCourses { get; set; } = new List<TeacherCourse>();
-    public ICollection<ClassReport> ClassReports { get; set; } = new List<ClassReport>();
-    public ICollection<TeacherAvailability> TeacherAvailabilities { get; set; } = new List<TeacherAvailability>();
+    public ICollection<Enrollment> Enrollments { get; set; }
+        = new List<Enrollment>();
+
+    public ICollection<TeacherCourse> TeacherCourses { get; set; }
+        = new List<TeacherCourse>();
+
+    public ICollection<ClassReport> ClassReports { get; set; }
+        = new List<ClassReport>();
+
+    public ICollection<TeacherAvailability> TeacherAvailabilities { get; set; }
+        = new List<TeacherAvailability>();
+       public ICollection<AttendanceEntity> Attendances { get; set; }
+    = new List<AttendanceEntity>();
 }

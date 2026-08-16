@@ -1,5 +1,7 @@
 using AcademyERP.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
+using AcademyERP.Application.DTOs.EnrollmentSchedules;
+
 
 namespace AcademyERP.Application.DTOs.Enrollments;
 
@@ -34,4 +36,6 @@ public class UpdateEnrollmentRequest
     public EnrollmentStatus Status { get; set; }
 
     public string? Remarks { get; set; }
+    public List<EnrollmentScheduleRequest> Schedules { get; set; }
+    = new();
 }

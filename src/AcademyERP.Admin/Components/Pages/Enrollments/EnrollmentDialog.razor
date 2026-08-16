@@ -64,28 +64,106 @@
 
                 </MudSelect>
 
-                <MudSelect T="Guid" Label="Time Slot" @bind-Value="_model.TimeSlotId" Required="true" Class="mb-3">
+               <MudText Typo="Typo.h6" Class="mt-4 mb-2">
+    Class Schedule
+</MudText>
 
-                    @foreach (var slot in _timeSlots)
-                    {
-                        <MudSelectItem T="Guid" Value="@slot.Id">
-                            @slot.Name
-                        </MudSelectItem>
-                    }
 
-                </MudSelect>
+<MudSelect T="DayOfWeek"
+           Label="Day"
+           @bind-Value="_selectedDay"
+           Class="mb-3">
 
-                <MudSelect T="Guid" Label="Class Duration" @bind-Value="_model.ClassDurationId" Required="true"
-                           Class="mb-3">
+    @foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+    {
+        <MudSelectItem T="DayOfWeek" Value="@day">
+            @day
+        </MudSelectItem>
+    }
 
-                    @foreach (var duration in _classDurations)
-                    {
-                        <MudSelectItem T="Guid" Value="@duration.Id">
-                            @duration.Name (@duration.Minutes minutes)
-                        </MudSelectItem>
-                    }
+</MudSelect>
 
-                </MudSelect>
+
+<MudSelect T="Guid"
+           Label="Time Slot"
+           @bind-Value="_selectedTimeSlotId"
+           Class="mb-3">
+
+    @foreach (var slot in _timeSlots)
+    {
+        <MudSelectItem T="Guid" Value="@slot.Id">
+            @slot.Name
+        </MudSelectItem>
+    }
+
+</MudSelect>
+
+
+<MudSelect T="Guid"
+           Label="Duration"
+           @bind-Value="_selectedDurationId"
+           Class="mb-3">
+
+    @foreach (var duration in _classDurations)
+    {
+        <MudSelectItem T="Guid" Value="@duration.Id">
+            @duration.Name
+        </MudSelectItem>
+    }
+
+</MudSelect>
+
+
+<MudButton Color="Color.Primary"
+           Variant="Variant.Filled"
+           FullWidth="true"
+           OnClick="AddSchedule">
+
+    ADD SCHEDULE
+
+</MudButton>
+@if (_schedules.Count > 0)
+{
+    <MudTable Items="_schedules" Class="mt-4">
+
+        <HeaderContent>
+            <MudTh>Day</MudTh>
+            <MudTh>Time</MudTh>
+            <MudTh>Duration</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+
+            <MudTd>
+                @context.DayOfWeek
+            </MudTd>
+
+
+            <MudTd>
+    @_timeSlots.FirstOrDefault(x => x.Id == context.TimeSlotId)?.Name
+</MudTd>
+
+
+           <MudTd>
+    @_classDurations.FirstOrDefault(x => x.Id == context.ClassDurationId)?.Name
+</MudTd>
+
+
+            <MudTd>
+
+                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                               Color="Color.Error"
+                               OnClick="@(() => RemoveSchedule(context))" />
+
+            </MudTd>
+
+        </RowTemplate>
+
+    </MudTable>
+}
+
+               
 
                 <MudDatePicker Label="Start Date" @bind-Date="_startDate" Required="true" Class="mb-3" />
 
@@ -178,6 +256,12 @@
     private List<TimeSlotResponse> _timeSlots = new();
 
     private List<ClassDurationResponse> _classDurations = new();
+    private List<EnrollmentScheduleRequest> _schedules = new();
+    private DayOfWeek _selectedDay = DayOfWeek.Monday;
+
+private Guid _selectedTimeSlotId;
+
+private Guid _selectedDurationId;
 
     private DateTime? _startDate = DateTime.Today;
 
@@ -230,6 +314,8 @@
 
             _classDurations =
                 await LookupApi.GetClassDurationsAsync();
+                
+
 
             if (studentsResult != null)
                 _students = studentsResult.Data.Items ?? new();
@@ -248,11 +334,7 @@
                 _model.TeacherId =
                     Enrollment.TeacherId;
 
-                _model.TimeSlotId =
-                    Enrollment.TimeSlotId;
-
-                _model.ClassDurationId =
-                    Enrollment.ClassDurationId;
+               
 
                 _model.StartDate =
                     Enrollment.StartDate;
@@ -286,6 +368,24 @@
 
                 _status =
                     Enrollment.Status;
+                    _schedules = Enrollment.Schedules
+    .Select(x => new EnrollmentScheduleRequest
+    {
+        DayOfWeek = x.DayOfWeek,
+        TimeSlotId = x.TimeSlotId,
+        ClassDurationId = x.ClassDurationId
+    })
+    .ToList();
+    var firstSchedule = Enrollment.Schedules.FirstOrDefault();
+
+if (firstSchedule != null)
+{
+    _selectedDay = firstSchedule.DayOfWeek;
+
+    _selectedTimeSlotId = firstSchedule.TimeSlotId;
+
+    _selectedDurationId = firstSchedule.ClassDurationId;
+}
             }
         }
         catch (Exception ex)
@@ -298,6 +398,14 @@
         {
             _loading = false;
         }
+        Console.WriteLine(
+    $"Schedules Count: {Enrollment.Schedules.Count}");
+
+foreach(var s in Enrollment.Schedules)
+{
+    Console.WriteLine(
+        $"{s.DayOfWeek} {s.TimeSlotId} {s.ClassDurationId}");
+}
     }
 
     private void Cancel()
@@ -339,23 +447,7 @@
             return;
         }
 
-        if (_model.TimeSlotId == Guid.Empty)
-        {
-            Snackbar.Add(
-                "Please select a time slot.",
-                Severity.Warning);
-
-            return;
-        }
-
-        if (_model.ClassDurationId == Guid.Empty)
-        {
-            Snackbar.Add(
-                "Please select a class duration.",
-                Severity.Warning);
-
-            return;
-        }
+       
 
         if (_model.ScholarshipAmount
             + _model.DiscountAmount
@@ -377,6 +469,7 @@
 
             _model.EndDate =
                 _endDate;
+                _model.Schedules = _schedules;
 
             if (Enrollment == null)
             {
@@ -395,11 +488,7 @@
                         TeacherId =
                             _model.TeacherId,
 
-                        TimeSlotId =
-                            _model.TimeSlotId,
-
-                        ClassDurationId =
-                            _model.ClassDurationId,
+                        
 
                         StartDate =
                             _startDate.Value,
@@ -409,6 +498,7 @@
 
                         MonthlyFee =
                             _model.MonthlyFee,
+                            Schedules = _schedules,
 
                         ScholarshipAmount =
                             _model.ScholarshipAmount,
@@ -452,4 +542,57 @@
             _saving = false;
         }
     }
+ private void AddSchedule()
+{
+    if (_selectedTimeSlotId == Guid.Empty)
+    {
+        Snackbar.Add(
+            "Please select time slot.",
+            Severity.Warning);
+
+        return;
+    }
+
+    if (_selectedDurationId == Guid.Empty)
+    {
+        Snackbar.Add(
+            "Please select duration.",
+            Severity.Warning);
+
+        return;
+    }
+
+
+    if (_schedules.Any(x =>
+        x.DayOfWeek == _selectedDay &&
+        x.TimeSlotId == _selectedTimeSlotId))
+    {
+        Snackbar.Add(
+            "This schedule already exists.",
+            Severity.Warning);
+
+        return;
+    }
+
+
+    _schedules.Add(
+        new EnrollmentScheduleRequest
+        {
+            DayOfWeek = _selectedDay,
+            TimeSlotId = _selectedTimeSlotId,
+            ClassDurationId = _selectedDurationId
+        });
+
+
+    // reset after adding
+    _selectedDay = DayOfWeek.Monday;
+    _selectedTimeSlotId = Guid.Empty;
+    _selectedDurationId = Guid.Empty;
+}
+
+private void RemoveSchedule(
+    EnrollmentScheduleRequest schedule)
+{
+    _schedules.Remove(schedule);
+}
 }

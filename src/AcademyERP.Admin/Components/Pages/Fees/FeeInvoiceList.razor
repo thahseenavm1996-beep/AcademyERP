@@ -60,7 +60,15 @@
 
                 <RowTemplate>
 
-                    <MudTd>@context.InvoiceNumber</MudTd>
+                   <MudTd>
+
+    <MudLink OnClick="@(() => ViewDetails(context.Id))">
+
+    @context.InvoiceNumber
+
+</MudLink>
+
+</MudTd>
 
                     <MudTd>@context.StudentName</MudTd>
 
@@ -171,11 +179,64 @@
         StateHasChanged();
     }
 
-    private Task Edit(Guid id)
-    {
-        return Task.CompletedTask;
-    }
+   private async Task Edit(Guid id)
+{
+    var invoice =
+        await FeeInvoiceApi.GetByIdAsync(id);
 
+    if (invoice == null)
+        return;
+
+    var parameters =
+        new DialogParameters
+        {
+            { nameof(EditFeeInvoiceDialog.Invoice), invoice }
+        };
+
+    var dialog =
+        await DialogService.ShowAsync<
+            EditFeeInvoiceDialog>(
+            "Edit Invoice",
+            parameters);
+
+    var result = await dialog.Result;
+
+    if (result?.Canceled == true)
+        return;
+
+    var request =
+        (UpdateFeeInvoiceRequest)result.Data!;
+
+    await FeeInvoiceApi.UpdateAsync(
+        id,
+        request);
+
+    await LoadData();
+
+    StateHasChanged();
+}
+private async Task ViewDetails(Guid id)
+{
+    var invoice =
+        await FeeInvoiceApi.GetByIdAsync(id);
+
+    if (invoice == null)
+        return;
+
+    var parameters =
+        new DialogParameters
+        {
+            {
+                nameof(InvoiceDetailsDialog.Invoice),
+                invoice
+            }
+        };
+
+    await DialogService.ShowAsync<
+        InvoiceDetailsDialog>(
+        "Invoice Details",
+        parameters);
+}
     private string GetStatusText(int status)
     {
         return status switch

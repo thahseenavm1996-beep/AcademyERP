@@ -1,0 +1,35 @@
+@using AcademyERP.Admin.Models.Attendance
+@using AcademyERP.Domain.Enums
+@using MudBlazor
+
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-4">Edit attendance</MudText>
+        <MudSelect T="AttendanceStatus" Label="Status" Variant="Variant.Outlined" @bind-Value="_model.Status" Class="mb-4">
+            @foreach (var status in Enum.GetValues<AttendanceStatus>())
+            {
+                <MudSelectItem T="AttendanceStatus" Value="@status">@status</MudSelectItem>
+            }
+        </MudSelect>
+        <MudTextField T="string" Label="Remarks" Variant="Variant.Outlined" Lines="3" @bind-Value="_model.Remarks" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save">Save changes</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public AttendanceResponse Record { get; set; } = null!;
+
+    private UpdateAttendanceRequest _model = new();
+
+    protected override void OnParametersSet()
+    {
+        _model = new UpdateAttendanceRequest { Status = Record.Status, Remarks = Record.Remarks };
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+    private void Save() => MudDialog.Close(DialogResult.Ok(_model));
+}

@@ -36,13 +36,25 @@ public class ClassReportController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(CreateClassReportRequest request)
+public async Task<IActionResult> Create(CreateClassReportRequest request)
+{
+    try
     {
         var result = await _service.CreateAsync(request);
 
-        return CreatedAtAction(nameof(Get), new { id = result.Id }, result);
+        return CreatedAtAction(
+            nameof(Get),
+            new { id = result.Id },
+            result);
     }
-
+    catch (InvalidOperationException ex)
+    {
+        return BadRequest(new
+        {
+            message = ex.Message
+        });
+    }
+}
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, UpdateClassReportRequest request)
     {

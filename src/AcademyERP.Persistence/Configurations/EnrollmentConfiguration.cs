@@ -52,16 +52,6 @@ public class EnrollmentConfiguration : BaseEntityConfiguration<Enrollment>
                .HasForeignKey(e => e.TeacherId)
                .OnDelete(DeleteBehavior.SetNull);
 
-        // TimeSlot -> Enrollments
-        builder.HasOne(e => e.TimeSlot)
-               .WithMany()
-               .HasForeignKey(e => e.TimeSlotId)
-               .OnDelete(DeleteBehavior.Restrict);
-
-        // ClassDuration -> Enrollments
-        builder.HasOne(e => e.ClassDuration)
-               .WithMany()
-               .HasForeignKey(e => e.ClassDurationId)
-               .OnDelete(DeleteBehavior.Restrict);
+       
     }
 }

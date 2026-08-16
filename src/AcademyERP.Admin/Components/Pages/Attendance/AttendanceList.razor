@@ -1,0 +1,195 @@
+@page "/attendance"
+@using AcademyERP.Admin.Models.Attendance
+@using AcademyERP.Admin.Models.Enrollments
+@using AcademyERP.Application.DTOs.Programs
+@using AcademyERP.Admin.Services
+@using AcademyERP.Domain.Enums
+@using MudBlazor
+@inject AttendanceApiService AttendanceApi
+@inject EnrollmentApiService EnrollmentApi
+@inject ProgramApiService ProgramApi
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>Attendance</PageTitle>
+
+<MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-5">
+    <div>
+        <MudText Typo="Typo.h4">Attendance</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">Mark, review and act on attendance in one place.</MudText>
+    </div>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AddTask" OnClick="@(() => _showMarkForm = !_showMarkForm)">
+        Mark attendance
+    </MudButton>
+</MudStack>
+
+@if (_showMarkForm)
+{
+    <MudPaper Elevation="2" Class="pa-5 mb-5">
+        <MudText Typo="Typo.h6" Class="mb-4">Mark attendance</MudText>
+        <MudGrid>
+            <MudItem xs="12" md="5">
+                <MudSelect T="Guid" Label="Student & course" Variant="Variant.Outlined" @bind-Value="_newRecord.EnrollmentId" Required="true">
+                    @foreach (var enrollment in _enrollments.Where(x => x.Status == EnrollmentStatus.Active && x.TeacherId.HasValue))
+                    {
+                        <MudSelectItem T="Guid" Value="@enrollment.Id">@enrollment.StudentName — @enrollment.CourseName (@enrollment.TeacherName)</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="2">
+                <MudDatePicker Label="Date"
+               Variant="Variant.Outlined"
+               Date="@_newRecord.AttendanceDate"
+               DateChanged="@(date => _newRecord.AttendanceDate = date ?? DateTime.Today)" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="2">
+                <MudSelect T="AttendanceStatus" Label="Status" Variant="Variant.Outlined" @bind-Value="_newRecord.Status">
+                    @foreach (var status in Enum.GetValues<AttendanceStatus>())
+                    {
+                        <MudSelectItem T="AttendanceStatus" Value="@status">@status</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudTextField T="string" Label="Remarks (optional)" Variant="Variant.Outlined" @bind-Value="_newRecord.Remarks" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="MarkAttendance">Save attendance</MudButton>
+                <MudButton Class="ml-2" OnClick="@(() => _showMarkForm = false)">Cancel</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+}
+
+<MudGrid Class="mb-5">
+    <MudItem xs="12" sm="6" md="3"><MudPaper Class="pa-4"><MudText Typo="Typo.caption">RECORDS</MudText><MudText Typo="Typo.h4">@_summary.Total</MudText></MudPaper></MudItem>
+    <MudItem xs="12" sm="6" md="3"><MudPaper Class="pa-4"><MudText Typo="Typo.caption" Color="Color.Success">PRESENT</MudText><MudText Typo="Typo.h4">@_summary.Present</MudText></MudPaper></MudItem>
+    <MudItem xs="12" sm="6" md="3"><MudPaper Class="pa-4"><MudText Typo="Typo.caption" Color="Color.Error">ABSENT</MudText><MudText Typo="Typo.h4">@_summary.Absent</MudText></MudPaper></MudItem>
+    <MudItem xs="12" sm="6" md="3"><MudPaper Class="pa-4"><MudText Typo="Typo.caption" Color="Color.Info">ATTENDANCE RATE</MudText><MudText Typo="Typo.h4">@_summary.AttendanceRate%</MudText></MudPaper></MudItem>
+</MudGrid>
+
+<MudPaper Elevation="1" Class="pa-4 mb-5">
+    <MudText Typo="Typo.h6" Class="mb-3">History & filters</MudText>
+    <MudGrid>
+  <MudItem xs="12" sm="6" md="3">
+    <MudDatePicker Label="From"
+                   Variant="Variant.Outlined"
+                   Date="@_filters.FromDate"
+                   DateChanged="@(date => _filters.FromDate = date ?? DateTime.Today.AddDays(-29))" />
+</MudItem>
+        <MudItem xs="12" sm="6" md="3">
+    <MudDatePicker Label="To"
+                   Variant="Variant.Outlined"
+                   Date="@_filters.ToDate"
+                   DateChanged="@(date => _filters.ToDate = date ?? DateTime.Today)" />
+</MudItem>
+        <MudItem xs="12" sm="6" md="3"><MudSelect T="Guid?" Label="Student" Clearable="true" Variant="Variant.Outlined" @bind-Value="_filters.StudentId">
+            @foreach (var student in _enrollments.GroupBy(x => new { x.StudentId, x.StudentName }).OrderBy(x => x.Key.StudentName)) { <MudSelectItem T="Guid?" Value="@((Guid?)student.Key.StudentId)">@student.Key.StudentName</MudSelectItem> }
+        </MudSelect></MudItem>
+        <MudItem xs="12" sm="6" md="3"><MudSelect T="Guid?" Label="Teacher" Clearable="true" Variant="Variant.Outlined" @bind-Value="_filters.TeacherId">
+            @foreach (var teacher in _enrollments.Where(x => x.TeacherId.HasValue).GroupBy(x => new { x.TeacherId, x.TeacherName }).OrderBy(x => x.Key.TeacherName)) { <MudSelectItem T="Guid?" Value="@teacher.Key.TeacherId">@teacher.Key.TeacherName</MudSelectItem> }
+        </MudSelect></MudItem>
+        <MudItem xs="12" sm="6" md="3"><MudSelect T="Guid?" Label="Program" Clearable="true" Variant="Variant.Outlined" @bind-Value="_filters.ProgramId">
+            @foreach (var program in _programs.OrderBy(x => x.ProgramName)) { <MudSelectItem T="Guid?" Value="@((Guid?)program.Id)">@program.ProgramName</MudSelectItem> }
+        </MudSelect></MudItem>
+        <MudItem xs="12" sm="6" md="3"><MudSelect T="AttendanceStatus?" Label="Status" Clearable="true" Variant="Variant.Outlined" @bind-Value="_filters.Status">
+            @foreach (var status in Enum.GetValues<AttendanceStatus>()) { <MudSelectItem T="AttendanceStatus?" Value="@((AttendanceStatus?)status)">@status</MudSelectItem> }
+        </MudSelect></MudItem>
+        <MudItem xs="12" Class="d-flex align-center gap-2"><MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoadData">Apply filters</MudButton><MudButton OnClick="ResetFilters">Reset</MudButton></MudItem>
+    </MudGrid>
+</MudPaper>
+
+<MudPaper Elevation="1" Class="pa-4 mb-5">
+    @if (_loading) { <MudProgressLinear Indeterminate="true" /> }
+    else if (_records.Count == 0) { <MudText Class="pa-4">No attendance records match these filters.</MudText> }
+    else
+    {
+        <MudTable Items="_records" Hover="true" Dense="true" Breakpoint="Breakpoint.Sm">
+            <HeaderContent><MudTh>Date</MudTh><MudTh>Student</MudTh><MudTh>Teacher</MudTh><MudTh>Program / course</MudTh><MudTh>Status</MudTh><MudTh>Remarks</MudTh><MudTh></MudTh></HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Date">@context.AttendanceDate.ToString("dd MMM yyyy")</MudTd><MudTd DataLabel="Student">@context.StudentName</MudTd><MudTd DataLabel="Teacher">@context.TeacherName</MudTd><MudTd DataLabel="Program">@context.ProgramName · @context.CourseName</MudTd>
+                <MudTd DataLabel="Status"><MudChip T="string" Color="@StatusColor(context.Status)" Size="Size.Small">@context.Status</MudChip></MudTd><MudTd DataLabel="Remarks">@context.Remarks</MudTd>
+                <MudTd><MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="@(() => EditAttendance(context))" /></MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</MudPaper>
+
+<MudGrid>
+    <MudItem xs="12" md="6"><MudPaper Elevation="1" Class="pa-4"><MudText Typo="Typo.h6" Class="mb-3">Student attendance report</MudText><MudTable Items="_studentReport" Dense="true"><HeaderContent><MudTh>Student</MudTh><MudTh>Present</MudTh><MudTh>Absent</MudTh><MudTh>Rate</MudTh></HeaderContent><RowTemplate><MudTd>@context.PersonName</MudTd><MudTd>@context.Present + @context.Late late</MudTd><MudTd>@context.Absent</MudTd><MudTd>@context.AttendanceRate%</MudTd></RowTemplate></MudTable></MudPaper></MudItem>
+    <MudItem xs="12" md="6"><MudPaper Elevation="1" Class="pa-4"><MudText Typo="Typo.h6" Class="mb-3">Teacher attendance report</MudText><MudTable Items="_teacherReport" Dense="true"><HeaderContent><MudTh>Teacher</MudTh><MudTh>Present</MudTh><MudTh>Absent</MudTh><MudTh>Rate</MudTh></HeaderContent><RowTemplate><MudTd>@context.PersonName</MudTd><MudTd>@context.Present + @context.Late late</MudTd><MudTd>@context.Absent</MudTd><MudTd>@context.AttendanceRate%</MudTd></RowTemplate></MudTable></MudPaper></MudItem>
+</MudGrid>
+
+@code {
+    private readonly AttendanceQueryRequest _filters = new() { FromDate = DateTime.Today.AddDays(-29), ToDate = DateTime.Today };
+    private readonly CreateAttendanceRequest _newRecord = new();
+    private List<AttendanceResponse> _records = new();
+    private List<EnrollmentResponse> _enrollments = new();
+    private List<ProgramResponse> _programs = new();
+    private List<AttendancePersonSummaryResponse> _studentReport = new();
+    private List<AttendancePersonSummaryResponse> _teacherReport = new();
+    private AttendanceSummaryResponse _summary = new();
+    private bool _loading = true;
+    private bool _showMarkForm;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _enrollments = await EnrollmentApi.GetAllAsync();
+        _programs = await ProgramApi.GetAllAsync();
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            _loading = true;
+            var history = await AttendanceApi.GetHistoryAsync(_filters);
+            _records = history.Items;
+            _summary = await AttendanceApi.GetSummaryAsync(_filters);
+            _studentReport = await AttendanceApi.GetStudentReportAsync(_filters);
+            _teacherReport = await AttendanceApi.GetTeacherReportAsync(_filters);
+        }
+        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
+        finally { _loading = false; }
+    }
+
+    private async Task MarkAttendance()
+    {
+        if (_newRecord.EnrollmentId == Guid.Empty) { Snackbar.Add("Select a student and course first.", Severity.Warning); return; }
+        try
+        {
+            await AttendanceApi.CreateAsync(_newRecord);
+            Snackbar.Add("Attendance saved.", Severity.Success);
+            _showMarkForm = false;
+            _newRecord.EnrollmentId = Guid.Empty; _newRecord.Remarks = null; _newRecord.Status = AttendanceStatus.Present;
+            await LoadData();
+        }
+        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
+    }
+
+    private async Task EditAttendance(AttendanceResponse record)
+    {
+        var dialog = await DialogService.ShowAsync<AttendanceEditDialog>("Edit attendance", new DialogParameters<AttendanceEditDialog> { { x => x.Record, record } });
+        var result = await dialog.Result;
+        if (!result.Canceled && result.Data is UpdateAttendanceRequest request)
+        {
+            await AttendanceApi.UpdateAsync(record.Id, request);
+            Snackbar.Add("Attendance updated.", Severity.Success);
+            await LoadData();
+        }
+    }
+
+    private async Task ResetFilters()
+    {
+        _filters.StudentId = null; _filters.TeacherId = null; _filters.ProgramId = null; _filters.Status = null;
+        _filters.FromDate = DateTime.Today.AddDays(-29); _filters.ToDate = DateTime.Today;
+        await LoadData();
+    }
+
+    private static Color StatusColor(AttendanceStatus status) => status switch
+    {
+        AttendanceStatus.Present => Color.Success, AttendanceStatus.Absent => Color.Error,
+        AttendanceStatus.Late => Color.Warning, _ => Color.Info
+    };
+}

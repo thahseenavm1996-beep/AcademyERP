@@ -37,6 +37,7 @@
             <MudTh>Payment Date</MudTh>
             <MudTh>Method</MudTh>
             <MudTh>Reference</MudTh>
+            <MudTh>Actions</MudTh>
         </HeaderContent>
 
         <RowTemplate>
@@ -54,6 +55,19 @@
             <MudTd>@context.PaymentMethodName</MudTd>
 
             <MudTd>@context.TransactionReference</MudTd>
+            <MudTd>
+
+    <MudIconButton
+        Icon="@Icons.Material.Filled.Edit"
+        Color="Color.Primary"
+        OnClick="@(() => Edit(context.Id))" />
+
+    <MudIconButton
+        Icon="@Icons.Material.Filled.Delete"
+        Color="Color.Error"
+        OnClick="@(() => Delete(context.Id))" />
+
+</MudTd>
 
         </RowTemplate>
 
@@ -90,6 +104,51 @@
         (CreateFeePaymentRequest)result.Data!;
 
     await FeePaymentApi.CreateAsync(request);
+
+    await LoadData();
+
+    StateHasChanged();
+}
+private async Task Delete(Guid id)
+{
+    await FeePaymentApi.DeleteAsync(id);
+
+    await LoadData();
+
+    StateHasChanged();
+}
+
+private async Task Edit(Guid id)
+{
+    var payment =
+        await FeePaymentApi.GetByIdAsync(id);
+
+    if (payment == null)
+        return;
+
+    var parameters =
+        new DialogParameters
+        {
+            { nameof(EditFeePaymentDialog.Payment), payment }
+        };
+
+    var dialog =
+        await DialogService.ShowAsync<
+            EditFeePaymentDialog>(
+            "Edit Payment",
+            parameters);
+
+    var result = await dialog.Result;
+
+    if (result?.Canceled == true)
+        return;
+
+    var request =
+        (UpdateFeePaymentRequest)result.Data!;
+
+    await FeePaymentApi.UpdateAsync(
+        id,
+        request);
 
     await LoadData();
 

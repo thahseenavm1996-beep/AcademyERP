@@ -1,0 +1,91 @@
+@using AcademyERP.Admin.Models
+@using MudBlazor
+
+<MudDialog>
+
+    <DialogContent>
+
+        <MudText Typo="Typo.h6">
+            Edit Invoice
+        </MudText>
+
+        <MudSelect T="int"
+                   Label="Status"
+                   @bind-Value="_model.Status"
+                   Class="mt-3">
+
+            <MudSelectItem Value="1">Pending</MudSelectItem>
+            <MudSelectItem Value="2">Partially Paid</MudSelectItem>
+            <MudSelectItem Value="3">Paid</MudSelectItem>
+            <MudSelectItem Value="4">Overdue</MudSelectItem>
+
+        </MudSelect>
+
+        <MudDatePicker Label="Due Date"
+                       @bind-Date="_dueDate"
+                       Class="mt-3" />
+
+        <MudTextField Label="Remarks"
+                      @bind-Value="_model.Remarks"
+                      Lines="3"
+                      Class="mt-3" />
+
+    </DialogContent>
+
+    <DialogActions>
+
+        <MudButton OnClick="Cancel">
+            Cancel
+        </MudButton>
+
+        <MudButton Color="Color.Primary"
+                   OnClick="Save">
+            Save
+        </MudButton>
+
+    </DialogActions>
+
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public FeeInvoiceResponse Invoice { get; set; } = default!;
+
+    private UpdateFeeInvoiceRequest _model = new();
+
+    private DateTime? _dueDate;
+
+    protected override void OnInitialized()
+    {
+        _model.Status = Invoice.Status;
+        _model.PaidDate = Invoice.PaidDate;
+        _model.Remarks = Invoice.Remarks;
+        _model.DueDate = Invoice.DueDate;
+
+        _dueDate = Invoice.DueDate;
+    }
+
+   private void Save()
+{
+    Console.WriteLine($"Invoice DueDate : {Invoice.DueDate}");
+    Console.WriteLine($"Selected DueDate: {_dueDate}");
+
+    if (_dueDate.HasValue)
+    {
+        _model.DueDate = _dueDate.Value;
+    }
+
+    Console.WriteLine($"Model DueDate   : {_model.DueDate}");
+
+    MudDialog.Close(DialogResult.Ok(_model));
+}
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}

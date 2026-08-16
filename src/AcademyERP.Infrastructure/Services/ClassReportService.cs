@@ -77,25 +77,37 @@ public class ClassReportService : IClassReportService
         return _mapper.Map<ClassReportResponse>(report);
     }
 
-    public async Task<ClassReportResponse> CreateAsync(CreateClassReportRequest request)
+  public async Task<ClassReportResponse> CreateAsync(CreateClassReportRequest request)
+{
+    var exists = await _context.ClassReports.AnyAsync(x =>
+        x.EnrollmentId == request.EnrollmentId &&
+        x.ReportDate.Date == request.ReportDate.Date
+    );
+
+    if (exists)
     {
-        var report = _mapper.Map<ClassReport>(request);
-
-        report.SubmittedAt = DateTime.UtcNow;
-
-        _context.ClassReports.Add(report);
-
-        await _context.SaveChangesAsync();
-
-        report = await _context.ClassReports
-            .Include(x => x.Student)
-            .Include(x => x.Teacher)
-           .Include(x => x.Enrollment)
-    .ThenInclude(e => e.Course)
-            .FirstAsync(x => x.Id == report.Id);
-
-        return _mapper.Map<ClassReportResponse>(report);
+        throw new InvalidOperationException(
+            "A class report already exists for this student on this date."
+        );
     }
+
+    var report = _mapper.Map<ClassReport>(request);
+
+    report.SubmittedAt = DateTime.UtcNow;
+
+    _context.ClassReports.Add(report);
+
+    await _context.SaveChangesAsync();
+
+    report = await _context.ClassReports
+        .Include(x => x.Student)
+        .Include(x => x.Teacher)
+        .Include(x => x.Enrollment)
+            .ThenInclude(e => e.Course)
+        .FirstAsync(x => x.Id == report.Id);
+
+    return _mapper.Map<ClassReportResponse>(report);
+}
 
     public async Task<ClassReportResponse?> UpdateAsync(Guid id, UpdateClassReportRequest request)
     {

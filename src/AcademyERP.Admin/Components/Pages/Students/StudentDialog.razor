@@ -150,14 +150,13 @@
             _model.AdmissionDate = Student.AdmissionDate;
             _model.DateOfBirth = Student.DateOfBirth;
             _model.Gender = Student.Gender switch
-            {
-                "Male" => 1,
-                "Female" => 2,
-                "Other" => 3,
-                _ => 1
-            };
-            _model.MobileNumber = _model.MobileNumber;
-            _model.Email = _model.Email;
+{
+    "Male" => 0,
+    "Female" => 1,
+    _ => 0
+};
+          _model.MobileNumber = Student.PhoneNumber;
+_model.Email = Student.Email;
             _model.Country = Student.Country;
             _model.TimeZone = Student.TimeZone;
             _model.Remarks = Student.Remarks;

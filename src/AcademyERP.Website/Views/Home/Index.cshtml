@@ -38,16 +38,25 @@
 
                     <div class="premium-hero-buttons">
 
-                        <a href="#demo" class="btn premium-primary-btn">
-                            Book Your Free Demo
-                            <span>→</span>
-                        </a>
+    
+    <a asp-controller="Home"
+       asp-action="Register"
+       class="btn premium-primary-btn">
+        Student Registration
+        <span>→</span>
+    </a>
 
-                        <a href="#programs" class="btn premium-secondary-btn">
-                            Explore Our Programs
-                        </a>
+    <a asp-controller="Home"
+       asp-action="Admission"
+       class="btn premium-secondary-btn">
+        Enquiry
+    </a>
 
-                    </div>
+    <a href="#programs" class="btn premium-secondary-btn">
+        Explore Programs
+    </a>
+
+</div>
 
                     <div class="premium-trust-row">
 
@@ -170,7 +179,243 @@
 
 </section>
 
-         
+<section class="academy-join-section">
+
+    <svg aria-hidden="true" class="academy-icon-sprite">
+        <symbol id="academy-student-icon" viewBox="0 0 24 24">
+            <circle cx="12" cy="7" r="4"></circle>
+            <path d="M4.5 21c.6-4 3.1-6.2 7.5-6.2s6.9 2.2 7.5 6.2"></path>
+            <path d="m18 15 1.1 1.1L21.5 14"></path>
+        </symbol>
+
+        <symbol id="academy-chat-icon" viewBox="0 0 24 24">
+            <path d="M5.2 18.6 3.5 21l.5-4.2A7.8 7.8 0 0 1 3 13c0-4.4 4-8 9-8s9 3.6 9 8-4 8-9 8a10.8 10.8 0 0 1-3.8-.7"></path>
+            <circle cx="8" cy="13" r=".7" fill="currentColor"></circle>
+            <circle cx="12" cy="13" r=".7" fill="currentColor"></circle>
+            <circle cx="16" cy="13" r=".7" fill="currentColor"></circle>
+        </symbol>
+
+        <symbol id="academy-cap-icon" viewBox="0 0 24 24">
+            <path d="m2.5 9.5 9.5-5 9.5 5-9.5 5-9.5-5Z"></path>
+            <path d="M6.5 12v4.2c2.8 2.4 8.2 2.4 11 0V12"></path>
+            <path d="M21.5 10v5"></path>
+        </symbol>
+
+        <symbol id="academy-calendar-icon" viewBox="0 0 24 24">
+            <rect x="3.5" y="5.5" width="17" height="15" rx="2"></rect>
+            <path d="M7.5 3.5v4M16.5 3.5v4M3.5 10h17M8 14h.1M12 14h.1M16 14h.1M8 17h.1M12 17h.1"></path>
+        </symbol>
+
+        <symbol id="academy-send-icon" viewBox="0 0 24 24">
+            <path d="m21 3-8.2 18-3.2-7.8L3 10.2 21 3Z"></path>
+            <path d="m9.6 13.2 4.7-4.6"></path>
+        </symbol>
+
+        <symbol id="academy-info-icon" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M12 10v6M12 7.2h.01"></path>
+        </symbol>
+
+        <symbol id="academy-headset-icon" viewBox="0 0 24 24">
+            <path d="M4 14v-2a8 8 0 0 1 16 0v2"></path>
+            <path d="M4 14h3v5H5a1 1 0 0 1-1-1v-4ZM20 14h-3v5h2a1 1 0 0 0 1-1v-4Z"></path>
+            <path d="M17 19c0 1.3-1.6 2-3.5 2H12"></path>
+        </symbol>
+
+        <symbol id="academy-globe-icon" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M3 12h18M12 3c2.3 2.5 3.5 5.5 3.5 9S14.3 18.5 12 21c-2.3-2.5-3.5-5.5-3.5-9S9.7 5.5 12 3"></path>
+        </symbol>
+
+        <symbol id="academy-shield-icon" viewBox="0 0 24 24">
+            <path d="M12 3 20 6v5.7c0 4.6-3.2 7.7-8 9.3-4.8-1.6-8-4.7-8-9.3V6l8-3Z"></path>
+            <path d="m8.5 12 2.2 2.2 4.8-4.8"></path>
+        </symbol>
+    </svg>
+
+    <div class="academy-join-dots academy-join-dots-left"></div>
+
+    <div class="academy-join-container">
+        <div class="academy-join-header">
+            <div class="academy-join-eyebrow">
+                <span>☷</span>
+                Start Your Learning Journey
+                <span>✦</span>
+            </div>
+
+            <h2>Join MS International Academy</h2>
+
+            <p>
+                Register as a student or send an admission enquiry and our team will contact you.
+            </p>
+        </div>
+
+        <div class="academy-join-cards">
+
+            <article class="academy-action-card academy-registration-card">
+                <div class="academy-card-dots academy-blue-dots"></div>
+                <div class="academy-card-curve academy-blue-curve"></div>
+
+                <div class="academy-action-icon academy-blue-icon">
+                    <svg class="academy-svg academy-main-svg" viewBox="0 0 24 24">
+                        <use href="#academy-student-icon"></use>
+                    </svg>
+                </div>
+
+                <div class="academy-action-content">
+                    <h3>Student Registration</h3>
+
+                    <div class="academy-title-line academy-blue-line">
+                        <span></span><i>✦</i><span></span>
+                    </div>
+
+                    <p>
+                        Complete the registration form and choose your preferred program,
+                        class timing and submit your request to our admissions team.
+                    </p>
+                </div>
+
+                <div class="academy-action-benefits">
+                    <div class="academy-benefit">
+                        <span class="academy-benefit-icon">
+                            <svg class="academy-svg" viewBox="0 0 24 24">
+                                <use href="#academy-cap-icon"></use>
+                            </svg>
+                        </span>
+                        <span>Choose Your<br>Program</span>
+                    </div>
+
+                    <div class="academy-benefit">
+                        <span class="academy-benefit-icon">
+                            <svg class="academy-svg" viewBox="0 0 24 24">
+                                <use href="#academy-calendar-icon"></use>
+                            </svg>
+                        </span>
+                        <span>Select Preferred<br>Schedule</span>
+                    </div>
+
+                    <div class="academy-benefit">
+                        <span class="academy-benefit-icon">
+                            <svg class="academy-svg" viewBox="0 0 24 24">
+                                <use href="#academy-send-icon"></use>
+                            </svg>
+                        </span>
+                        <span>Submit Your<br>Request</span>
+                    </div>
+                </div>
+
+                <a asp-controller="Home"
+                   asp-action="Register"
+                   class="academy-action-button academy-registration-button">
+                    Register Now <span>→</span>
+                </a>
+            </article>
+
+            <article class="academy-action-card academy-admission-card">
+                <div class="academy-card-dots academy-gold-dots"></div>
+                <div class="academy-card-curve academy-gold-curve"></div>
+
+                <div class="academy-action-icon academy-gold-icon">
+                    <svg class="academy-svg academy-main-svg" viewBox="0 0 24 24">
+                        <use href="#academy-chat-icon"></use>
+                    </svg>
+                </div>
+
+                <div class="academy-action-content">
+                    <h3>Admission Enquiry</h3>
+
+                    <div class="academy-title-line academy-gold-line">
+                        <span></span><i>✦</i><span></span>
+                    </div>
+
+                    <p>
+                        Need more information about fees, programs, class timings or anything
+                        else? We’re here to help you.
+                    </p>
+                </div>
+
+                <div class="academy-action-benefits">
+                    <div class="academy-benefit">
+                        <span class="academy-benefit-icon">
+                            <svg class="academy-svg" viewBox="0 0 24 24">
+                                <use href="#academy-info-icon"></use>
+                            </svg>
+                        </span>
+                        <span>Learn About<br>Programs</span>
+                    </div>
+
+                    <div class="academy-benefit">
+                        <span class="academy-benefit-icon academy-rupee">₹</span>
+                        <span>Fees &amp; Class<br>Details</span>
+                    </div>
+
+                    <div class="academy-benefit">
+                        <span class="academy-benefit-icon">
+                            <svg class="academy-svg" viewBox="0 0 24 24">
+                                <use href="#academy-headset-icon"></use>
+                            </svg>
+                        </span>
+                        <span>Talk to Our<br>Team</span>
+                    </div>
+                </div>
+
+                <a asp-controller="Home"
+                   asp-action="Admission"
+                   class="academy-action-button academy-admission-button">
+                    Admission Enquiry <span>→</span>
+                </a>
+            </article>
+        </div>
+
+        <div class="academy-feature-strip">
+            <div class="academy-feature-item">
+                <svg class="academy-svg academy-feature-svg" viewBox="0 0 24 24">
+                    <use href="#academy-globe-icon"></use>
+                </svg>
+                <div>
+                    <strong>Global Online Learning</strong>
+                    <span>Learn from anywhere<br>in the world.</span>
+                </div>
+            </div>
+
+            <div class="academy-feature-divider"></div>
+
+            <div class="academy-feature-item">
+                <svg class="academy-svg academy-feature-svg" viewBox="0 0 24 24">
+                    <use href="#academy-cap-icon"></use>
+                </svg>
+                <div>
+                    <strong>Personalized Guidance</strong>
+                    <span>One-to-one learning with<br>dedicated teachers.</span>
+                </div>
+            </div>
+
+            <div class="academy-feature-divider"></div>
+
+            <div class="academy-feature-item">
+                <svg class="academy-svg academy-feature-svg" viewBox="0 0 24 24">
+                    <use href="#academy-calendar-icon"></use>
+                </svg>
+                <div>
+                    <strong>Flexible Schedules</strong>
+                    <span>Choose class timings that<br>suit your convenience.</span>
+                </div>
+            </div>
+
+            <div class="academy-feature-divider"></div>
+
+            <div class="academy-feature-item">
+                <svg class="academy-svg academy-feature-svg" viewBox="0 0 24 24">
+                    <use href="#academy-shield-icon"></use>
+                </svg>
+                <div>
+                    <strong>Trusted Education</strong>
+                    <span>Quality learning you and<br>your child can rely on.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
 <!-- PROGRAMS -->
 
@@ -786,214 +1031,116 @@
     </div>
 
 </section>
-<!-- LEADERSHIP -->
-
-<section id="leadership" class="section leadership-section">
+<section class="leadership-premium-section" id="leadership">
+    <div class="leadership-premium-dots"></div>
 
     <div class="container">
-
-        <!-- SECTION HEADING -->
-
-        <div class="leadership-heading">
-
-            <span class="section-label">
-                Our Leadership
-            </span>
-
-            <h2>
-                Guided by experience.
-                <span>Driven by purpose.</span>
-            </h2>
-
+        <header class="leadership-premium-heading">
+            <span class="leadership-kicker">Our Leadership</span>
+            <h2>Guided by knowledge,<br><span>built on service.</span></h2>
             <p>
-                Meet the people whose vision, knowledge and dedication
-                continue to guide our academy and its learning community.
+                Our academy is shaped by a legacy of scholarship and a team
+                committed to nurturing every learner.
             </p>
+        </header>
 
-        </div>
+        <article class="founder-legacy-feature">
+            <div class="founder-portrait-panel">
+                <span class="portrait-label">Founder</span>
 
-
-        <!-- FOUNDER -->
-
-        <div class="founder-card">
-
-            <div class="row align-items-center g-5">
-
-                <div class="col-lg-4">
-
-                    <div class="founder-image-wrap">
-
-                        <img src="~/images/founder.jpg" alt="Usthad Aliyar Baqavi" class="founder-image" />
-
-                    </div>
-
+                <div class="founder-photo-frame">
+                    <img src="~/images/leadership/founder.jpeg"
+                         alt="Usthad Aliyar Baqavi"
+                         class="founder-premium-photo" />
                 </div>
 
-
-                <div class="col-lg-8">
-
-                    <div class="founder-content">
-
-                        <span class="leadership-role">
-                            Founder
-                        </span>
-
-                        <h3>
-                            Usthad Aliyar Baqavi
-                        </h3>
-
-                        <p>
-                            A respected scholar and dedicated educator,
-                            Usthad Aliyar Baqavi devoted his life to
-                            Islamic education, religious service and
-                            guiding generations of students.
-                        </p>
-
-                        <p>
-                            His lifelong commitment to knowledge and
-                            education continues to inspire the vision
-                            and learning journey of our academy.
-                        </p>
-
-                        <div class="founder-legacy">
-                            <span>Our Foundation</span>
-                            <strong>
-                                Knowledge • Service • Education
-                            </strong>
-                        </div>
-
-                    </div>
-
-                </div>
-
+                <span class="portrait-years">A Legacy of Learning</span>
             </div>
 
+            <div class="founder-story">
+                <span class="leadership-kicker leadership-kicker-gold">Founder</span>
+
+                <h3>Usthad Aliyar Baqavi</h3>
+
+                <blockquote>
+                    “Knowledge, service and education are the foundations of a
+                    meaningful learning journey.”
+                </blockquote>
+
+                <p>
+                    A respected scholar and dedicated educator, Usthad Aliyar
+                    Baqavi devoted his life to Islamic education, religious
+                    service and guiding generations of students.
+                </p>
+
+                <div class="founder-foundation">
+                    <span>Our Foundation</span>
+                    <strong>Knowledge <i>•</i> Service <i>•</i> Education</strong>
+                </div>
+            </div>
+        </article>
+
+        <div class="leadership-team-intro">
+            <span class="leadership-kicker">Leadership Team</span>
+            <h3>Continuing the vision</h3>
         </div>
 
+        <div class="leadership-premium-grid">
 
-        <!-- LEADERSHIP TEAM -->
-
-        <div class="leadership-team">
-
-            <div class="leadership-team-heading">
-
-                <span>Leadership Team</span>
-
-                <h3>
-                    Continuing the vision
-                </h3>
-
-            </div>
-
-
-            <div class="row g-4">
-
-
-                <!-- CHAIRMAN -->
-
-                <div class="col-lg-4 col-md-6">
-
-                    <div class="leader-card">
-
-                        <div class="leader-number">
-                            01
-                        </div>
-
-                        <div class="leader-icon">
-                            H
-                        </div>
-
-                        <span class="leader-role">
-                            Chairman
-                        </span>
-
-                        <h4>
-                            Hafiz Rajih Ali Shihab
-                            Thangal (Panakkad)
-                        </h4>
-
-                        <p>
-                            Providing leadership and guidance
-                            to support the academy's educational
-                            mission and future growth.
-                        </p>
-
-                    </div>
-
+            <article class="chairman-profile-card">
+                <div class="chairman-photo-wrap">
+                    <img src="~/images/leadership/chairman.jpeg"
+                         alt="Hafiz Rajih Ali Shihab Thangal"
+                         class="chairman-premium-photo" />
+                    <span class="chairman-role-badge">Chairman</span>
                 </div>
 
-
-                <!-- RECTOR -->
-
-                <div class="col-lg-4 col-md-6">
-
-                    <div class="leader-card leader-card-featured">
-
-                        <div class="leader-number">
-                            02
-                        </div>
-
-                        <div class="leader-icon">
-                            Y
-                        </div>
-
-                        <span class="leader-role">
-                            Rector
-                        </span>
-
-                        <h4>
-                            Hafiz Muhammad Yahya
-                        </h4>
-
-                        <p>
-                            Supporting academic leadership and
-                            helping guide the academy's learning
-                            standards and educational direction.
-                        </p>
-
-                    </div>
-
+                <div class="chairman-profile-content">
+                    <span class="member-number">01</span>
+                    <span class="member-role">Chairman</span>
+                    <h4>Hafiz Rajih Ali Shihab Thangal <small>(Panakkad)</small></h4>
+                    <p>
+                        Providing leadership and guidance to support the academy’s
+                        vision of meaningful education.
+                    </p>
                 </div>
+            </article>
 
+            <article class="leadership-text-card leadership-rector-card">
+                <span class="member-number">02</span>
 
-                <!-- COO -->
+                <div class="leadership-role-symbol">R</div>
 
-                <div class="col-lg-4 col-md-6">
+                <span class="member-role">Rector</span>
+                <h4>Hafiz Muhammad Yahya</h4>
 
-                    <div class="leader-card">
+                <p>
+                    Supporting academic leadership and helping guide the academy’s
+                    learning standards and educational direction.
+                </p>
 
-                        <div class="leader-number">
-                            03
-                        </div>
+                <span class="leadership-card-line"></span>
+                <span class="leadership-card-note">Academic Leadership</span>
+            </article>
 
-                        <div class="leader-icon">
-                            S
-                        </div>
+            <article class="leadership-text-card leadership-coo-card">
+                <span class="member-number">03</span>
 
-                        <span class="leader-role">
-                            COO
-                        </span>
+                <div class="leadership-role-symbol">C</div>
 
-                        <h4>
-                            Sadhique Melathayil
-                        </h4>
+                <span class="member-role">Chief Operating Officer</span>
+                <h4>Sadhique Melathayil</h4>
 
-                        <p>
-                            Supporting academy operations and
-                            organizational development to create
-                            a smooth learning experience.
-                        </p>
+                <p>
+                    Supporting academy operations and organizational development
+                    to create a smooth learning experience for every family.
+                </p>
 
-                    </div>
-
-                </div>
-
-            </div>
-
+                <span class="leadership-card-line"></span>
+                <span class="leadership-card-note">Operations &amp; Student Support</span>
+            </article>
         </div>
-
     </div>
-
 </section>
 <!-- OUR EXPERIENCE -->
 

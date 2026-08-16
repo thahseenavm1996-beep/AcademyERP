@@ -1,4 +1,5 @@
 using AcademyERP.Domain.Enums;
+using AcademyERP.Application.DTOs.EnrollmentSchedules;
 
 namespace AcademyERP.Application.DTOs.Enrollments;
 
@@ -17,14 +18,6 @@ public class EnrollmentResponse
     public Guid? TeacherId { get; set; }
 
     public string? TeacherName { get; set; }
-
-    public Guid TimeSlotId { get; set; }
-
-    public string TimeSlotName { get; set; } = string.Empty;
-
-    public Guid ClassDurationId { get; set; }
-
-    public string ClassDurationName { get; set; } = string.Empty;
 
     public DateTime StartDate { get; set; }
 
@@ -47,4 +40,6 @@ public class EnrollmentResponse
     public EnrollmentStatus Status { get; set; }
 
     public string? Remarks { get; set; }
+    public List<EnrollmentScheduleResponse> Schedules { get; set; }
+    = new();
 }

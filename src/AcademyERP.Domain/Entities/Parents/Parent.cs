@@ -1,5 +1,6 @@
 using AcademyERP.Domain.Entities.Common;
 using AcademyERP.Domain.Entities.StudentParents;
+using AcademyERP.Domain.Entities.Identity;
 using AcademyERP.Domain.Enums;
 
 namespace AcademyERP.Domain.Entities.Parents;
@@ -7,6 +8,8 @@ namespace AcademyERP.Domain.Entities.Parents;
 public class Parent : BaseEntity
 {
     public Guid ApplicationUserId { get; set; }
+
+    public ApplicationUser ApplicationUser { get; set; } = null!;
 
     public string ParentNumber { get; set; } = string.Empty;
 
@@ -30,4 +33,5 @@ public class Parent : BaseEntity
 
     public ICollection<StudentParent> StudentParents { get; set; }
         = new List<StudentParent>();
+        
 }

@@ -166,20 +166,52 @@ public class FeePaymentService : IFeePaymentService
         return MapToResponse(payment);
     }
 
-    public async Task<bool> DeleteAsync(Guid id)
+   public async Task<bool> DeleteAsync(Guid id)
+{
+    var payment = await _context.FeePayments
+        .FirstOrDefaultAsync(x => x.Id == id);
+
+    if (payment == null)
+        return false;
+
+    var invoiceId = payment.FeeInvoiceId;
+
+    _context.FeePayments.Remove(payment);
+
+    await _context.SaveChangesAsync();
+
+    var invoice = await _context.FeeInvoices
+        .FirstOrDefaultAsync(x => x.Id == invoiceId);
+
+    if (invoice != null)
     {
-        var payment = await _context.FeePayments
-            .FirstOrDefaultAsync(x => x.Id == id);
+        var totalPaid = await _context.FeePayments
+            .Where(x => x.FeeInvoiceId == invoiceId)
+            .SumAsync(x => x.Amount);
 
-        if (payment == null)
-            return false;
+        invoice.PaidAmount = totalPaid;
 
-        _context.FeePayments.Remove(payment);
+        invoice.BalanceAmount =
+            invoice.Amount - totalPaid;
+
+        if (totalPaid <= 0)
+        {
+            invoice.Status = FeeStatus.Pending;
+        }
+        else if (invoice.BalanceAmount > 0)
+        {
+            invoice.Status = FeeStatus.PartiallyPaid;
+        }
+        else
+        {
+            invoice.Status = FeeStatus.Paid;
+        }
 
         await _context.SaveChangesAsync();
-
-        return true;
     }
+
+    return true;
+}
 
     private static FeePaymentResponse MapToResponse(
         FeePayment payment)

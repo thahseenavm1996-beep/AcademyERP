@@ -142,8 +142,7 @@ public class StudentService : IStudentService
 
         var response = _mapper.Map<StudentResponse>(student);
 
-        var user = await _userManager.FindByIdAsync(student.ApplicationUserId.ToString());
-
+       var user = await GetStudentUserAsync(student);
         if (user != null)
         {
             response.Email = user.Email ?? string.Empty;
@@ -171,7 +170,7 @@ public class StudentService : IStudentService
         student.TimeZone = request.TimeZone;
         student.Remarks = request.Remarks;
 
-        var user = await _userManager.FindByIdAsync(student.ApplicationUserId.ToString());
+        var user = await GetStudentUserAsync(student);
 
         if (user != null)
         {
@@ -201,7 +200,7 @@ public class StudentService : IStudentService
             return false;
 
         // Delete Identity User first
-        var user = await _userManager.FindByIdAsync(student.ApplicationUserId.ToString());
+       var user = await GetStudentUserAsync(student);
 
         if (user != null)
         {
@@ -228,8 +227,7 @@ public class StudentService : IStudentService
         if (student == null)
             return false;
 
-        var user = await _userManager.FindByIdAsync(student.ApplicationUserId.ToString());
-
+        var user = await GetStudentUserAsync(student);
         if (user == null)
             return false;
 
@@ -239,5 +237,12 @@ public class StudentService : IStudentService
 
         return result.Succeeded;
     }
+private async Task<ApplicationUser?> GetStudentUserAsync(Student student)
+{
+    if (!student.ApplicationUserId.HasValue)
+        return null;
 
+    return await _userManager.FindByIdAsync(
+        student.ApplicationUserId.Value.ToString());
+}
 }

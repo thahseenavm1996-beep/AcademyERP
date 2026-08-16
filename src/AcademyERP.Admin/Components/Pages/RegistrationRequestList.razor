@@ -1,0 +1,120 @@
+@page "/registration-requests"
+
+@using AcademyERP.Admin.Models.Registration
+@using AcademyERP.Admin.Services
+@using MudBlazor
+
+@inject IDialogService DialogService
+@inject RegistrationRequestApiService Api
+
+<PageTitle>
+    Registration Requests
+</PageTitle>
+
+<MudPaper Class="pa-4">
+
+    <MudText Typo="Typo.h5"
+             Class="mb-4">
+        Registration Requests
+    </MudText>
+
+    <MudTable Items="_requests"
+          Hover="true"
+          Dense="true">
+        <HeaderContent>
+
+            <MudTh>Parent</MudTh>
+            <MudTh>Email</MudTh>
+            <MudTh>Country</MudTh>
+            <MudTh>Students</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Actions</MudTh>
+
+        </HeaderContent>
+
+        <RowTemplate>
+
+            <MudTd>
+                @context.ParentName
+            </MudTd>
+
+            <MudTd>
+                @context.Email
+            </MudTd>
+
+            <MudTd>
+                @context.Country
+            </MudTd>
+
+            <MudTd>
+                @context.Students.Count
+            </MudTd>
+
+            <MudTd>
+
+    @if (context.Status == 1)
+    {
+        <MudChip T="string" Color="Color.Warning">
+    Pending
+</MudChip>
+    }
+    else if (context.Status == 2)
+    {
+        <MudChip T="string" Color="Color.Success">
+    Approved
+</MudChip>
+    }
+    else if (context.Status == 3)
+    {
+       <MudChip T="string" Color="Color.Error">
+    Rejected
+</MudChip>
+    }
+
+</MudTd>
+<MudTd>
+
+    <MudIconButton
+        Icon="@Icons.Material.Filled.Visibility"
+        Color="Color.Primary"
+        OnClick="@(() => ViewRequest(context.Id))" />
+
+</MudTd>
+        </RowTemplate>
+
+    </MudTable>
+
+</MudPaper>
+
+@code {
+
+    private List<RegistrationRequestResponse>
+        _requests = new();
+
+    protected override async Task
+        OnInitializedAsync()
+    {
+        _requests =
+            await Api.GetAllAsync();
+    }
+ private async Task ViewRequest(Guid id)
+{
+    var parameters = new DialogParameters
+    {
+        ["RequestId"] = id
+    };
+
+    var dialog = await DialogService.ShowAsync<RegistrationRequestDetailsDialog>(
+        "Registration Request Details",
+        parameters);
+
+    var result = await dialog.Result;
+
+    if (result != null && !result.Canceled)
+    {
+        _requests = await Api.GetAllAsync();
+        StateHasChanged();
+    }
+}
+
+}
