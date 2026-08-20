@@ -1,9 +1,408 @@
 @page "/reports/attendance"
 
+@using AcademyERP.Admin.Models.AttendanceReports
+@using AcademyERP.Admin.Services
+@inject AttendanceReportApiService AttendanceReportApi
+
+
 <MudText Typo="Typo.h4">
     Attendance Reports
 </MudText>
 
-<MudAlert Severity="Severity.Info" Class="mt-4">
-    Attendance reporting is now available in the Attendance workspace.
-</MudAlert>
+
+@if (_dashboard == null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+
+    <!-- SUMMARY CARDS -->
+
+    <MudGrid Class="mt-6">
+
+
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudCard>
+
+                <MudCardContent>
+
+                    <MudText Typo="Typo.subtitle2">
+                        Total Classes
+                    </MudText>
+
+                    <MudText Typo="Typo.h4">
+                        @_dashboard.TotalClasses
+                    </MudText>
+
+                </MudCardContent>
+
+            </MudCard>
+
+        </MudItem>
+
+
+
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudCard>
+
+                <MudCardContent>
+
+                    <MudText Typo="Typo.subtitle2">
+                        Completed Classes
+                    </MudText>
+
+                    <MudText Typo="Typo.h4">
+                        @_dashboard.CompletedClasses
+                    </MudText>
+
+                </MudCardContent>
+
+            </MudCard>
+
+        </MudItem>
+
+
+
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudCard>
+
+                <MudCardContent>
+
+                    <MudText Typo="Typo.subtitle2">
+                        Attendance Records
+                    </MudText>
+
+                    <MudText Typo="Typo.h4">
+                        @_dashboard.TotalAttendanceRecords
+                    </MudText>
+
+                </MudCardContent>
+
+            </MudCard>
+
+        </MudItem>
+
+
+
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudCard>
+
+                <MudCardContent>
+
+                    <MudText Typo="Typo.subtitle2">
+                        Average Attendance
+                    </MudText>
+
+                    <MudText Typo="Typo.h4">
+                        @_dashboard.AverageAttendance%
+                    </MudText>
+
+                </MudCardContent>
+
+            </MudCard>
+
+        </MudItem>
+
+
+    </MudGrid>
+
+
+
+    <!-- ATTENDANCE TREND -->
+
+
+    <MudPaper Class="pa-4 mt-6">
+
+        <MudText Typo="Typo.h5">
+            📈 Attendance Trend
+        </MudText>
+
+
+        <MudChart T="double"
+                  ChartType="ChartType.Line"
+                  ChartSeries="@AttendanceTrendSeries"
+                  XAxisLabels="@AttendanceTrendLabels"
+                  Height="350px" />
+
+    </MudPaper>
+
+
+
+
+    <!-- STATUS DISTRIBUTION -->
+
+
+    <MudPaper Class="pa-4 mt-6">
+
+        <MudText Typo="Typo.h5">
+            📊 Attendance Status Distribution
+        </MudText>
+
+
+        <MudChart T="double"
+                  ChartType="ChartType.Bar"
+                  ChartSeries="@StatusSeries"
+                  ChartLabels="@StatusLabels"
+                  Height="350px" />
+
+    </MudPaper>
+
+
+
+
+    <!-- COURSE ATTENDANCE -->
+
+
+    <MudPaper Class="pa-4 mt-6">
+
+        <MudText Typo="Typo.h5">
+            📚 Course Attendance
+        </MudText>
+
+
+        <MudChart T="double"
+                  ChartType="ChartType.Bar"
+                  ChartSeries="@CourseSeries"
+                  ChartLabels="@CourseLabels"
+                  Height="350px" />
+
+    </MudPaper>
+
+
+
+
+    <!-- LOW ATTENDANCE STUDENTS -->
+
+
+    <MudPaper Class="pa-4 mt-6">
+
+        <MudText Typo="Typo.h5">
+            ⚠️ Students Needing Attention
+        </MudText>
+
+
+        <MudTable Items="_dashboard.StudentsNeedingAttention">
+
+
+            <HeaderContent>
+
+                <MudTh>
+                    Student
+                </MudTh>
+
+                <MudTh>
+                    Course
+                </MudTh>
+
+                <MudTh>
+                    Attendance
+                </MudTh>
+
+            </HeaderContent>
+
+
+            <RowTemplate Context="student">
+
+                <MudTd>
+                    @student.StudentName
+                </MudTd>
+
+
+                <MudTd>
+                    @student.CourseName
+                </MudTd>
+
+
+                <MudTd>
+                    @student.AttendancePercentage%
+                </MudTd>
+
+
+            </RowTemplate>
+
+
+        </MudTable>
+
+
+    </MudPaper>
+
+
+
+
+    <!-- TEACHER SUMMARY -->
+
+
+    <MudPaper Class="pa-4 mt-6">
+
+
+        <MudText Typo="Typo.h5">
+            👨‍🏫 Teacher Attendance Summary
+        </MudText>
+
+
+
+        <MudTable Items="_dashboard.TeacherSummary">
+
+
+            <HeaderContent>
+
+                <MudTh>
+                    Teacher
+                </MudTh>
+
+                <MudTh>
+                    Total Classes
+                </MudTh>
+
+                <MudTh>
+                    Attendance
+                </MudTh>
+
+
+            </HeaderContent>
+
+
+
+            <RowTemplate Context="teacher">
+
+
+                <MudTd>
+                    @teacher.TeacherName
+                </MudTd>
+
+
+                <MudTd>
+                    @teacher.TotalClasses
+                </MudTd>
+
+
+                <MudTd>
+                    @teacher.AttendancePercentage%
+                </MudTd>
+
+
+            </RowTemplate>
+
+
+        </MudTable>
+
+
+    </MudPaper>
+
+}
+
+
+
+@code {
+
+
+    private AttendanceReportDashboardResponse? _dashboard;
+
+
+
+    private List<ChartSeries<double>> AttendanceTrendSeries = new();
+
+    private string[] AttendanceTrendLabels = Array.Empty<string>();
+
+
+
+    private List<ChartSeries<double>> StatusSeries = new();
+
+    private string[] StatusLabels = Array.Empty<string>();
+
+
+
+    private List<ChartSeries<double>> CourseSeries = new();
+
+    private string[] CourseLabels = Array.Empty<string>();
+
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        _dashboard =
+            await AttendanceReportApi.GetAsync();
+
+
+
+        if (_dashboard == null)
+            return;
+
+
+
+        AttendanceTrendLabels =
+            _dashboard.AttendanceTrend
+            .Select(x => x.Month)
+            .ToArray();
+
+
+
+        AttendanceTrendSeries =
+        [
+            new ChartSeries<double>
+            {
+                Name = "Attendance",
+
+                Data =
+                    _dashboard.AttendanceTrend
+                    .Select(x => (double)x.Percentage)
+                    .ToArray()
+            }
+        ];
+
+
+
+
+        StatusLabels =
+            _dashboard.StatusDistribution
+            .Select(x => x.Status)
+            .ToArray();
+
+
+
+        StatusSeries =
+        [
+            new ChartSeries<double>
+            {
+                Name = "Attendance",
+
+                Data =
+                    _dashboard.StatusDistribution
+                    .Select(x => (double)x.Count)
+                    .ToArray()
+            }
+        ];
+
+
+
+
+        CourseLabels =
+            _dashboard.CourseAttendance
+            .Select(x => x.CourseName)
+            .ToArray();
+
+
+
+        CourseSeries =
+        [
+            new ChartSeries<double>
+            {
+                Name = "Attendance",
+
+                Data =
+                    _dashboard.CourseAttendance
+                    .Select(x => (double)x.AttendancePercentage)
+                    .ToArray()
+            }
+        ];
+
+    }
+
+}

@@ -94,6 +94,7 @@ builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
 builder.Services.AddScoped<IStudentReportService, StudentReportService>();
 builder.Services.AddScoped<TeacherReportService>();
 builder.Services.AddScoped<StudentReportDashboardService>();
+builder.Services.AddScoped<IAttendanceReportService, AttendanceReportService>();
 builder.Services.AddScoped<
     IStudentPerformanceService,
     StudentPerformanceService>();
