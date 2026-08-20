@@ -1,0 +1,8 @@
+namespace AcademyERP.Application.DTOs.FinanceReports;
+
+public class PaymentStatusDistributionDto
+{
+    public string Status { get; set; } = string.Empty;
+
+    public int Count { get; set; }
+}

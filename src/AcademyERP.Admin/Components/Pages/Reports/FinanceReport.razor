@@ -1,9 +1,465 @@
 @page "/reports/finance"
 
+@using AcademyERP.Admin.Models.FinanceReports
+@using AcademyERP.Admin.Services
+
+@inject FinanceReportApiService FinanceReportApi
+
+
 <MudText Typo="Typo.h4">
     Finance Reports
 </MudText>
 
-<MudAlert Severity="Severity.Info" Class="mt-4">
-    Finance reporting will be available in the next phase.
-</MudAlert>
+
+@if (_dashboard == null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+
+    <!-- SUMMARY CARDS -->
+
+    <MudGrid Class="mt-6">
+
+
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudCard>
+
+                <MudCardContent>
+
+                    <MudText Typo="Typo.subtitle2">
+                        Total Revenue
+                    </MudText>
+
+                    <MudText Typo="Typo.h4">
+                        ₹ @_dashboard.TotalRevenue
+                    </MudText>
+
+                </MudCardContent>
+
+            </MudCard>
+
+        </MudItem>
+
+
+
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudCard>
+
+                <MudCardContent>
+
+                    <MudText Typo="Typo.subtitle2">
+                        Collected Amount
+                    </MudText>
+
+                    <MudText Typo="Typo.h4">
+                        ₹ @_dashboard.CollectedAmount
+                    </MudText>
+
+                </MudCardContent>
+
+            </MudCard>
+
+        </MudItem>
+
+
+
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudCard>
+
+                <MudCardContent>
+
+                    <MudText Typo="Typo.subtitle2">
+                        Pending Amount
+                    </MudText>
+
+                    <MudText Typo="Typo.h4">
+                        ₹ @_dashboard.PendingAmount
+                    </MudText>
+
+                </MudCardContent>
+
+            </MudCard>
+
+        </MudItem>
+
+
+
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudCard>
+
+                <MudCardContent>
+
+                    <MudText Typo="Typo.subtitle2">
+                        Monthly Average
+                    </MudText>
+
+                    <MudText Typo="Typo.h4">
+                        ₹ @_dashboard.MonthlyAverageCollection
+                    </MudText>
+
+                </MudCardContent>
+
+            </MudCard>
+
+        </MudItem>
+
+
+    </MudGrid>
+
+
+
+
+
+    <!-- REVENUE TREND -->
+
+    <MudPaper Class="pa-4 mt-6">
+
+        <MudText Typo="Typo.h5">
+            📈 Revenue Trend
+        </MudText>
+
+
+        <MudChart T="double"
+                  ChartType="ChartType.Line"
+                  ChartSeries="@RevenueSeries"
+                  XAxisLabels="@RevenueLabels"
+                  Height="350px" />
+
+    </MudPaper>
+
+
+
+
+
+    <!-- PAYMENT STATUS -->
+
+    <MudPaper Class="pa-4 mt-6">
+
+        <MudText Typo="Typo.h5">
+            📊 Payment Status Distribution
+        </MudText>
+
+
+        <MudChart T="double"
+                  ChartType="ChartType.Bar"
+                  ChartSeries="@PaymentStatusSeries"
+                  ChartLabels="@PaymentStatusLabels"
+                  Height="350px" />
+
+    </MudPaper>
+
+
+
+
+
+    <!-- COURSE REVENUE -->
+
+    <MudPaper Class="pa-4 mt-6">
+
+        <MudText Typo="Typo.h5">
+            📚 Course Revenue
+        </MudText>
+
+
+        <MudChart T="double"
+                  ChartType="ChartType.Bar"
+                  ChartSeries="@CourseRevenueSeries"
+                  ChartLabels="@CourseRevenueLabels"
+                  Height="350px" />
+
+    </MudPaper>
+
+
+
+
+
+
+    <!-- OUTSTANDING FEES -->
+
+    <MudPaper Class="pa-4 mt-6">
+
+
+        <MudText Typo="Typo.h5">
+            ⚠️ Outstanding Fees
+        </MudText>
+
+
+
+        <MudTable Items="_dashboard.OutstandingFees">
+
+
+            <HeaderContent>
+
+                <MudTh>
+                    Student
+                </MudTh>
+
+                <MudTh>
+                    Course
+                </MudTh>
+
+                <MudTh>
+                    Amount Due
+                </MudTh>
+
+                <MudTh>
+                    Due Date
+                </MudTh>
+
+                <MudTh>
+                    Status
+                </MudTh>
+
+            </HeaderContent>
+
+
+
+            <RowTemplate Context="fee">
+
+
+                <MudTd>
+                    @fee.StudentName
+                </MudTd>
+
+
+                <MudTd>
+                    @fee.CourseName
+                </MudTd>
+
+
+                <MudTd>
+                    ₹ @fee.AmountDue
+                </MudTd>
+
+
+                <MudTd>
+                    @fee.DueDate
+                </MudTd>
+
+
+                <MudTd>
+
+                    @if (fee.Status == "Paid")
+                    {
+                        <MudChip T="string"
+                                 Color="Color.Success">
+                            Paid
+                        </MudChip>
+                    }
+                    else if (fee.Status == "Overdue")
+                    {
+                        <MudChip T="string"
+                                 Color="Color.Error">
+                            Overdue
+                        </MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string"
+                                 Color="Color.Warning">
+                            @fee.Status
+                        </MudChip>
+                    }
+
+                </MudTd>
+
+
+            </RowTemplate>
+
+
+        </MudTable>
+
+
+    </MudPaper>
+
+
+
+
+
+
+    <!-- RECENT PAYMENTS -->
+
+    <MudPaper Class="pa-4 mt-6">
+
+
+        <MudText Typo="Typo.h5">
+            💳 Recent Payments
+        </MudText>
+
+
+
+        <MudTable Items="_dashboard.RecentPayments">
+
+
+            <HeaderContent>
+
+                <MudTh>
+                    Student
+                </MudTh>
+
+                <MudTh>
+                    Amount
+                </MudTh>
+
+                <MudTh>
+                    Payment Date
+                </MudTh>
+
+                <MudTh>
+                    Payment Method
+                </MudTh>
+
+            </HeaderContent>
+
+
+
+            <RowTemplate Context="payment">
+
+
+                <MudTd>
+                    @payment.StudentName
+                </MudTd>
+
+
+                <MudTd>
+                    ₹ @payment.Amount
+                </MudTd>
+
+
+                <MudTd>
+                    @payment.PaymentDate
+                </MudTd>
+
+
+                <MudTd>
+                    @payment.PaymentMethod
+                </MudTd>
+
+
+            </RowTemplate>
+
+
+        </MudTable>
+
+
+    </MudPaper>
+
+}
+
+
+
+@code {
+
+
+    private FinanceReportDashboardResponse? _dashboard;
+
+
+
+    private List<ChartSeries<double>> RevenueSeries = new();
+
+    private string[] RevenueLabels = Array.Empty<string>();
+
+
+
+    private List<ChartSeries<double>> PaymentStatusSeries = new();
+
+    private string[] PaymentStatusLabels = Array.Empty<string>();
+
+
+
+    private List<ChartSeries<double>> CourseRevenueSeries = new();
+
+    private string[] CourseRevenueLabels = Array.Empty<string>();
+
+
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        _dashboard =
+            await FinanceReportApi.GetAsync();
+
+
+
+        if (_dashboard == null)
+            return;
+
+
+
+        RevenueLabels =
+            _dashboard.RevenueTrend
+            .Select(x => x.Month)
+            .ToArray();
+
+
+
+        RevenueSeries =
+        [
+            new ChartSeries<double>
+            {
+                Name = "Revenue",
+
+                Data =
+                    _dashboard.RevenueTrend
+                    .Select(x => (double)x.Amount)
+                    .ToArray()
+            }
+        ];
+
+
+
+
+        PaymentStatusLabels =
+            _dashboard.PaymentStatusDistribution
+            .Select(x => x.Status)
+            .ToArray();
+
+
+
+        PaymentStatusSeries =
+        [
+            new ChartSeries<double>
+            {
+                Name = "Payments",
+
+                Data =
+                    _dashboard.PaymentStatusDistribution
+                    .Select(x => (double)x.Count)
+                    .ToArray()
+            }
+        ];
+
+
+
+
+        CourseRevenueLabels =
+            _dashboard.CourseRevenue
+            .Select(x => x.CourseName)
+            .ToArray();
+
+
+
+        CourseRevenueSeries =
+        [
+            new ChartSeries<double>
+            {
+                Name = "Revenue",
+
+                Data =
+                    _dashboard.CourseRevenue
+                    .Select(x => (double)x.Revenue)
+                    .ToArray()
+            }
+        ];
+
+    }
+
+}
