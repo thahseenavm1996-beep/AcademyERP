@@ -1,0 +1,173 @@
+@using AcademyERP.Admin.Services
+@using AcademyERP.Admin.Authentication
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject TokenService TokenService
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inherits LayoutComponentBase
+
+<MudLayout>
+
+    <MudDrawer @bind-Open="_drawerOpen"
+               Variant="DrawerVariant.Responsive"
+               Elevation="1">
+
+        <MudDrawerHeader>
+
+            <MudText Typo="Typo.h6">
+                🎓 Academy ERP
+            </MudText>
+
+        </MudDrawerHeader>
+
+
+        <MudNavMenu>
+
+
+            <MudNavLink Href="/parent/dashboard"
+                        Match="NavLinkMatch.All"
+                        Icon="@Icons.Material.Filled.Dashboard">
+
+                Dashboard
+
+            </MudNavLink>
+
+
+
+            <MudNavLink Href="/parent/children"
+                        Icon="@Icons.Material.Filled.FamilyRestroom">
+
+                My Children
+
+            </MudNavLink>
+
+
+
+            <MudNavLink Href="/parent/schedule"
+                        Icon="@Icons.Material.Filled.CalendarMonth">
+
+                Class Schedule
+
+            </MudNavLink>
+
+
+
+            <MudNavLink Href="/parent/attendance"
+                        Icon="@Icons.Material.Filled.CheckCircle">
+
+                Attendance
+
+            </MudNavLink>
+
+
+
+            <MudNavLink Href="/parent/fees"
+                        Icon="@Icons.Material.Filled.Payment">
+
+                Fees
+
+            </MudNavLink>
+
+
+
+            <MudNavLink Href="/parent/progress"
+                        Icon="@Icons.Material.Filled.MenuBook">
+
+                Learning Progress
+
+            </MudNavLink>
+
+
+
+            <MudNavLink Href="/parent/messages"
+                        Icon="@Icons.Material.Filled.Message">
+
+                Messages
+
+            </MudNavLink>
+
+
+
+            <MudNavLink Href="/parent/profile"
+                        Icon="@Icons.Material.Filled.Person">
+
+                Profile
+
+            </MudNavLink>
+
+
+        </MudNavMenu>
+
+
+    </MudDrawer>
+
+
+
+    <MudMainContent>
+
+        <MudAppBar Color="Color.Primary">
+
+            <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                           Color="Color.Inherit"
+                           OnClick="ToggleDrawer" />
+
+
+            <MudText Typo="Typo.h6">
+                Academy ERP - Parent Portal
+            </MudText>
+
+
+            <MudSpacer />
+
+
+            <MudButton Color="Color.Error"
+                       Variant="Variant.Filled"
+                       OnClick="Logout">
+
+                Logout
+
+            </MudButton>
+
+
+        </MudAppBar>
+
+
+
+        <MudContainer MaxWidth="MaxWidth.False"
+                      Class="pa-6">
+
+            @Body
+
+        </MudContainer>
+
+
+    </MudMainContent>
+
+
+</MudLayout>
+
+
+
+@code {
+
+    private bool _drawerOpen = true;
+
+
+    private void ToggleDrawer()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+
+    private async Task Logout()
+    {
+        await TokenService.RemoveTokenAsync();
+
+        ((JwtAuthenticationStateProvider)AuthenticationStateProvider)
+            .NotifyUserLogout();
+
+        Navigation.NavigateTo("/login", true);
+    }
+
+}

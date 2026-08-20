@@ -1,0 +1,247 @@
+@page "/parent/dashboard"
+@layout ParentLayout
+
+@using AcademyERP.Admin.Models.ParentPortal
+@using AcademyERP.Admin.Services
+
+@inject ParentPortalApiService ParentPortalApi
+
+
+<MudText Typo="Typo.h4">
+    Parent Dashboard
+</MudText>
+
+
+@if (_dashboard == null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+
+    <MudText Typo="Typo.h5" Class="mt-4">
+    Assalamu Alaikum @_dashboard.ParentName 👋
+</MudText>
+
+<MudText Typo="Typo.subtitle1">
+    Welcome back to Mueenu Ssalik International Academy
+</MudText>
+
+
+    <MudGrid Class="mt-6">
+
+
+        <MudItem xs="12" sm="6" md="4">
+
+            <MudCard>
+
+                <MudCardContent>
+
+                    <MudText Typo="Typo.subtitle2">
+                        My Children
+                    </MudText>
+
+                    <MudText Typo="Typo.h4">
+                        @_dashboard.ChildrenCount
+                    </MudText>
+
+                </MudCardContent>
+
+            </MudCard>
+
+        </MudItem>
+
+
+
+        <MudItem xs="12" sm="6" md="4">
+
+            <MudCard>
+
+                <MudCardContent>
+
+                    <MudText Typo="Typo.subtitle2">
+                        Pending Fees
+                    </MudText>
+
+                    <MudText Typo="Typo.h4">
+                        ₹ @_dashboard.PendingFeeAmount
+                    </MudText>
+
+                </MudCardContent>
+
+            </MudCard>
+
+        </MudItem>
+
+
+    </MudGrid>
+
+
+
+    <MudText Typo="Typo.h5" Class="mt-6">
+        My Children
+    </MudText>
+
+
+
+    <MudGrid Class="mt-3">
+
+        @foreach (var child in _dashboard.Children)
+        {
+
+            <MudItem xs="12" md="6">
+
+                <MudCard>
+
+                    <MudCardContent>
+
+                        <MudText Typo="Typo.h5">
+                            @child.StudentName
+                        </MudText>
+
+
+                        <MudText>
+                            Course:
+                            @child.CourseName
+                        </MudText>
+
+
+                        <MudText>
+                            Teacher:
+                            @child.TeacherName
+                        </MudText>
+
+
+                       <MudText Class="mt-3">
+    Attendance
+</MudText>
+
+@if (child.HasAttendanceRecords)
+{
+    <MudProgressLinear
+        Value="@((double)child.AttendancePercentage)"
+        Class="mb-3" />
+
+    <MudText>
+        @child.AttendancePercentage%
+    </MudText>
+}
+else
+{
+    <MudText Color="Color.Secondary">
+        No attendance records available
+    </MudText>
+}
+
+
+
+                        <MudText Class="mt-3">
+    Progress
+</MudText>
+
+@if (child.HasProgressRecords)
+{
+    <MudProgressLinear
+        Value="@((double)child.ProgressPercentage)" />
+
+    <MudText>
+        @child.ProgressPercentage%
+    </MudText>
+}
+else
+{
+    <MudText Typo="Typo.body2" Class="text-secondary">
+    No progress records available
+</MudText>
+}
+
+                    </MudCardContent>
+
+                </MudCard>
+
+            </MudItem>
+
+        }
+
+    </MudGrid>
+
+
+
+
+    <MudText Typo="Typo.h5" Class="mt-6">
+        Upcoming Classes
+    </MudText>
+
+
+    <MudTable Items="_dashboard.UpcomingClasses"
+              Class="mt-3">
+
+
+       <HeaderContent>
+
+    <MudTh>
+        Date
+    </MudTh>
+
+    <MudTh>
+        Student
+    </MudTh>
+
+    <MudTh>
+        Course
+    </MudTh>
+
+    <MudTh>
+        Teacher
+    </MudTh>
+
+    <MudTh>
+        Time
+    </MudTh>
+
+</HeaderContent>
+
+
+       <RowTemplate Context="item">
+
+    <MudTd>
+        @item.ClassDate
+    </MudTd>
+
+    <MudTd>
+        @item.StudentName
+    </MudTd>
+
+    <MudTd>
+        @item.CourseName
+    </MudTd>
+
+    <MudTd>
+        @item.TeacherName
+    </MudTd>
+
+    <MudTd>
+        @item.StartTime
+    </MudTd>
+
+</RowTemplate>
+
+
+    </MudTable>
+
+}
+
+
+
+@code {
+
+    private ParentDashboardResponse? _dashboard;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        _dashboard =
+            await ParentPortalApi.GetDashboardAsync();
+    }
+
+}

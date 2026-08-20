@@ -96,6 +96,7 @@ builder.Services.AddScoped<TeacherReportService>();
 builder.Services.AddScoped<StudentReportDashboardService>();
 builder.Services.AddScoped<IAttendanceReportService, AttendanceReportService>();
 builder.Services.AddScoped<IFinanceReportService, FinanceReportService>();
+builder.Services.AddScoped<IParentPortalService, ParentPortalService>();
 builder.Services.AddScoped<
     IStudentPerformanceService,
     StudentPerformanceService>();

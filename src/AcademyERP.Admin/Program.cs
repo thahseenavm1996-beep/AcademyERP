@@ -45,6 +45,7 @@ builder.Services.AddScoped<StudentPerformanceApiService>();
 builder.Services.AddScoped<TeacherReportApiService>();
 builder.Services.AddScoped<AttendanceReportApiService>();
 builder.Services.AddScoped<FinanceReportApiService>();
+builder.Services.AddScoped<ParentPortalApiService>();
 builder.Services.AddScoped<
     RegistrationRequestApiService>();
 builder.Services.AddScoped<
