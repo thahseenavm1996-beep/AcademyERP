@@ -8,7 +8,7 @@ using AcademyERP.Application.Common;
 using AcademyERP.Application.Interfaces;
 using AcademyERP.Domain.Entities.Identity;
 using Microsoft.AspNetCore.Identity;
-
+using AcademyERP.Domain.Enums;
 namespace AcademyERP.Infrastructure.Services;
 
 public class StudentService : IStudentService
@@ -17,7 +17,6 @@ public class StudentService : IStudentService
     private readonly IMapper _mapper;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ApplicationDbContext _context;
-
     public StudentService(
         IRepository<Student> repository,
         IMapper mapper,
@@ -29,6 +28,71 @@ public class StudentService : IStudentService
         _context = context;
         _userManager = userManager;
     }
+    public async Task<StudentProfileSummaryResponse> GetProfileSummaryAsync(Guid id)
+{
+    var student = await _context.Students
+        .FirstOrDefaultAsync(x => x.Id == id);
+
+    if (student == null)
+        throw new Exception("Student not found");
+
+
+    var programsCount = await _context.Enrollments
+        .Where(x => x.StudentId == id)
+        .Select(x => x.Course.ProgramId)
+        .Distinct()
+        .CountAsync();
+
+
+    var teachersCount = await _context.Enrollments
+        .Where(x => x.StudentId == id)
+        .Select(x => x.TeacherId)
+        .Distinct()
+        .CountAsync();
+
+
+  var completedClasses = await _context.ScheduledClasses
+    .Where(x =>
+        x.TeachingSchedule
+         .Enrollment
+         .StudentId == id
+        &&
+        x.Status == ScheduledClassStatus.Completed)
+    .CountAsync();
+
+
+var presentClasses = await _context.Attendances
+    .Where(x =>
+        x.ScheduledClass
+         .TeachingSchedule
+         .Enrollment
+         .StudentId == id
+        &&
+        x.ScheduledClass.Status == ScheduledClassStatus.Completed
+        &&
+        x.Status == AttendanceStatus.Present)
+    .CountAsync();
+
+
+var attendancePercentage = completedClasses == 0
+    ? 0
+    : (decimal)presentClasses / completedClasses * 100;
+
+
+  var outstandingFees = await _context.FeeInvoices
+    .Where(x =>
+        x.Enrollment.StudentId == id)
+    .SumAsync(x => x.BalanceAmount);
+
+
+    return new StudentProfileSummaryResponse
+    {
+        ProgramsCount = programsCount,
+        TeachersCount = teachersCount,
+        AttendancePercentage = Math.Round(attendancePercentage, 2),
+        OutstandingFees = outstandingFees
+    };
+}
     public async Task<StudentResponse> CreateAsync(CreateStudentRequest request)
     {
         using var transaction = await _context.Database.BeginTransactionAsync();

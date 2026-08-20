@@ -9,45 +9,108 @@ public class AttendanceMappingProfile : Profile
     public AttendanceMappingProfile()
     {
         CreateMap<Attendance, AttendanceResponse>()
+
             .ForMember(
-                d => d.AttendanceDate,
-                o => o.MapFrom(s => s.AttendanceDate)
+                dest => dest.ScheduledClassId,
+                opt => opt.MapFrom(src => src.ScheduledClassId)
             )
+
             .ForMember(
-                d => d.Status,
-                o => o.MapFrom(s => s.Status)
+                dest => dest.ClassDate,
+                opt => opt.MapFrom(src => src.ScheduledClass.ClassDate)
             )
+
             .ForMember(
-                d => d.Remarks,
-                o => o.MapFrom(s => s.Remarks)
+                dest => dest.StudentId,
+                opt => opt.MapFrom(
+                    src => src.ScheduledClass
+                        .TeachingSchedule
+                        .Enrollment
+                        .StudentId)
             )
+
             .ForMember(
-                d => d.StudentId,
-                o => o.MapFrom(s => s.Enrollment.StudentId)
+                dest => dest.StudentName,
+                opt => opt.MapFrom(
+                    src => src.ScheduledClass
+                        .TeachingSchedule
+                        .Enrollment
+                        .Student
+                        .FullName)
             )
+
             .ForMember(
-                d => d.StudentName,
-                o => o.MapFrom(s => s.Enrollment.Student.FullName)
+                dest => dest.TeacherId,
+                opt => opt.MapFrom(
+                    src => src.ScheduledClass
+                        .TeachingSchedule
+                        .TeacherId)
             )
+
             .ForMember(
-                d => d.TeacherId,
-                o => o.MapFrom(s => s.Enrollment.TeacherId!.Value)
+                dest => dest.TeacherName,
+                opt => opt.MapFrom(
+                    src => src.ScheduledClass
+                        .TeachingSchedule
+                        .Teacher
+                        .FullName)
             )
+
             .ForMember(
-                d => d.TeacherName,
-                o => o.MapFrom(s => s.Enrollment.Teacher!.FullName)
+                dest => dest.ProgramId,
+                opt => opt.MapFrom(
+                    src => src.ScheduledClass
+                        .TeachingSchedule
+                        .Enrollment
+                        .Course
+                        .ProgramId)
             )
+
             .ForMember(
-                d => d.ProgramId,
-                o => o.MapFrom(s => s.Enrollment.Course.ProgramId)
+                dest => dest.ProgramName,
+                opt => opt.MapFrom(
+                    src => src.ScheduledClass
+                        .TeachingSchedule
+                        .Enrollment
+                        .Course
+                        .Program
+                        .ProgramName)
             )
-            .ForMember(
-                d => d.ProgramName,
-                o => o.MapFrom(s => s.Enrollment.Course.Program.ProgramName)
+
+                       .ForMember(
+                dest => dest.CourseName,
+                opt => opt.MapFrom(
+                    src => src.ScheduledClass
+                        .TeachingSchedule
+                        .Enrollment
+                        .Course
+                        .CourseName)
             )
+
             .ForMember(
-                d => d.CourseName,
-                o => o.MapFrom(s => s.Enrollment.Course.CourseName)
-            );
+                dest => dest.StartTime,
+                opt => opt.MapFrom(
+                    src => src.ScheduledClass
+                        .TeachingSchedule
+                        .StartTime)
+                        
+            ) 
+            .ForMember(
+    dest => dest.EndTime,
+    opt => opt.MapFrom(
+        src =>
+            src.ScheduledClass
+              .TeachingSchedule
+              .StartTime
+              .AddMinutes(
+                  src.ScheduledClass
+                    .TeachingSchedule
+                    .ClassDuration
+                    .Minutes
+              )
+    )
+);
+
+            
     }
 }

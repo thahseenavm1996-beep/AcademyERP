@@ -1,13 +1,18 @@
 @page "/Teachers/TeacherDashboard"
-
-
+@using AcademyERP.Application.DTOs.ScheduledClasses
 @using Microsoft.AspNetCore.Authorization
 @using MudBlazor
 @using AcademyERP.Admin.Services
 @using AcademyERP.Admin.Models.TeacherDashboard
 @using AcademyERP.Domain.Enums
+@using AcademyERP.Admin.Components.Pages.Attendance
+@using AcademyERP.Admin.Models.Attendance
 
+@inject ISnackbar Snackbar
 @inject TeacherDashboardApiService DashboardApi
+@inject AttendanceApiService AttendanceApi
+@inject IDialogService DialogService
+@inject ClassProgressApiService ClassProgressApi
 
 <PageTitle>Teacher Dashboard</PageTitle>
 
@@ -140,15 +145,39 @@
 
                 </MudTd>
 
-                <MudTd>
+                
 
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary">
+             <MudTd>
 
-                        Start Class
+@if(item.Status == ScheduledClassStatus.Scheduled)
+{
+    <MudButton
+        Variant="Variant.Filled"
+        Color="Color.Primary"
+        OnClick="@(() => StartClass(item.Id))">
+        Start Class
+    </MudButton>
+}
+else if(item.Status == ScheduledClassStatus.Started)
+{
+    <MudButton
+        Variant="Variant.Filled"
+        Color="Color.Success"
+        OnClick="@(() => OpenCompleteDialog(item))">
+        Complete Class
+    </MudButton>
+}
+else
+{
+    <MudChip T="string"
+             Color="Color.Success">
+        Completed
+    </MudChip>
+}
 
-                    </MudButton>
+</MudTd>
 
-                </MudTd>
+                
 
             </RowTemplate>
 
@@ -170,9 +199,8 @@
 
         _loaded = true;
 
-        var teacherId = Guid.Parse("03b03c1e-941e-45f5-341d-08dedc3ed2a8");
-
-        DashboardData = await DashboardApi.GetDashboardAsync(teacherId);
+        DashboardData =
+    await DashboardApi.GetDashboardAsync();
 
         StateHasChanged();
     }
@@ -188,4 +216,116 @@
             _ => Color.Default
         };
     }
+    private async Task StartClass(Guid id)
+{
+    try
+    {
+        await DashboardApi.StartClassAsync(id);
+
+        Snackbar.Add(
+            "Class started successfully",
+            Severity.Success);
+
+        DashboardData =
+            await DashboardApi.GetDashboardAsync();
+
+        StateHasChanged();
+    }
+    catch(Exception ex)
+    {
+        Snackbar.Add(
+            ex.Message,
+            Severity.Error);
+    }
+}
+/*private async Task CompleteClass(Guid id)
+{
+    try
+    {
+        await DashboardApi.CompleteClassAsync(
+            id,
+            new CompleteScheduledClassRequest
+            {
+                Attendance = AttendanceStatus.Present,
+                LessonCovered = "",
+                HomeworkStatus = "",
+                TeacherRemarks = ""
+            });
+
+        Snackbar.Add(
+            "Class completed successfully",
+            Severity.Success);
+
+        DashboardData =
+            await DashboardApi.GetDashboardAsync();
+
+        StateHasChanged();
+    }
+    catch(Exception ex)
+    {
+        Snackbar.Add(
+            ex.Message,
+            Severity.Error);
+    }
+}*/
+private async Task OpenCompleteDialog(
+    TodayClassResponse item)
+{
+    var parameters =
+        new DialogParameters
+        {
+            ["Class"] = item
+        };
+
+
+    var dialog =
+        await DialogService.ShowAsync
+        <CompleteClassAttendanceDialog>(
+            "Complete Class",
+            parameters);
+
+
+    var result = await dialog.Result;
+
+
+    if(!result.Canceled &&
+       result.Data is CompleteClassRequest request)
+    {
+        try
+        {
+            // 1. Complete scheduled class
+            await DashboardApi.CompleteClassAsync(
+                item.ScheduledClassId,
+                new CompleteScheduledClassRequest());
+
+
+            // 2. Save attendance
+            await AttendanceApi.CreateAsync(
+                request.Attendance);
+
+
+            // 3. Save lesson progress + homework
+            await ClassProgressApi.CreateAsync(
+                request.Progress);
+
+
+            Snackbar.Add(
+                "Class completed successfully.",
+                Severity.Success);
+
+
+            DashboardData =
+                await DashboardApi.GetDashboardAsync();
+
+
+            StateHasChanged();
+        }
+        catch(Exception ex)
+        {
+            Snackbar.Add(
+                ex.Message,
+                Severity.Error);
+        }
+    }
+}
 }

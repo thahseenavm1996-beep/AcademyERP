@@ -65,6 +65,23 @@
 
         Snackbar.Add("Login successful.", Severity.Success);
 
-        Navigation.NavigateTo("/", true);
+        var authState = await AuthenticationStateProvider
+    .GetAuthenticationStateAsync();
+
+var user = authState.User;
+
+
+if (user.IsInRole("Teacher"))
+{
+    Navigation.NavigateTo("/Teachers/TeacherDashboard");
+}
+else if (user.IsInRole("Parent"))
+{
+    Navigation.NavigateTo("/Parent/Dashboard");
+}
+else
+{
+    Navigation.NavigateTo("/");
+}
     }
 }

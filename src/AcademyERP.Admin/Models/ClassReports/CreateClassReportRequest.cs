@@ -7,7 +7,8 @@ public class CreateClassReportRequest
 {
     [Required]
     public Guid TeacherId { get; set; }
-
+    
+public Guid ScheduledClassId { get; set; }
     [Required]
     public Guid StudentId { get; set; }
 

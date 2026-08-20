@@ -71,6 +71,10 @@
                         Icon="@Icons.Material.Filled.FactCheck">
                 Attendance
             </MudNavLink>
+            <MudNavLink Href="/Teachers/TeacherDashboard"
+            Icon="@Icons.Material.Filled.Person">
+    Teacher Dashboard (Test)
+</MudNavLink>
 
         </MudNavGroup>
 
@@ -129,5 +133,12 @@
         </MudNavLink>
 
     </AuthorizeView>
+<AuthorizeView Roles="@Roles.Teacher">
 
+    <MudNavLink Href="/Teachers/TeacherDashboard"
+                Icon="@Icons.Material.Filled.Person">
+        Teacher Dashboard
+    </MudNavLink>
+
+</AuthorizeView>
 </MudNavMenu>

@@ -1,0 +1,110 @@
+@using AcademyERP.Application.DTOs.ScheduledClasses
+@using AcademyERP.Domain.Enums
+@using MudBlazor
+
+<MudDialog>
+
+    <DialogContent>
+
+
+        <MudSelect T="ScheduledClassStatus"
+                   Label="Status"
+                   Variant="Variant.Outlined"
+                   @bind-Value="_model.Status">
+
+            @foreach (var status in Enum.GetValues<ScheduledClassStatus>())
+            {
+                <MudSelectItem T="ScheduledClassStatus"
+                               Value="@status">
+                    @status
+                </MudSelectItem>
+            }
+
+        </MudSelect>
+
+
+        @if (_model.Status == ScheduledClassStatus.Cancelled)
+        {
+            <MudTextField T="string"
+                          Label="Cancellation Reason"
+                          Variant="Variant.Outlined"
+                          Class="mt-4"
+                          @bind-Value="_model.CancellationReason" />
+        }
+
+
+        <MudTextField T="string"
+                      Label="Remarks"
+                      Variant="Variant.Outlined"
+                      Lines="4"
+                      Class="mt-4"
+                      @bind-Value="_model.Remarks" />
+
+
+    </DialogContent>
+
+
+    <DialogActions>
+
+        <MudButton OnClick="Cancel">
+            Cancel
+        </MudButton>
+
+
+        <MudButton Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   OnClick="Save">
+
+            Save
+
+        </MudButton>
+
+    </DialogActions>
+
+</MudDialog>
+
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+
+    [Parameter]
+    public ScheduledClassResponse Class { get; set; } = new();
+
+
+    private UpdateScheduledClassRequest _model = new();
+
+
+    protected override void OnInitialized()
+    {
+        Enum.TryParse<ScheduledClassStatus>(
+            Class.Status,
+            out var status);
+
+
+        _model.Status = status;
+
+        _model.Remarks = Class.Remarks;
+
+        _model.CancellationReason =
+            Class.CancellationReason;
+    }
+
+
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+
+
+    private void Save()
+    {
+        MudDialog.Close(
+            DialogResult.Ok(_model));
+    }
+
+}

@@ -82,12 +82,21 @@ builder.Services.AddScoped<IAdmissionApplicationService, AdmissionApplicationSer
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<ITeacherDashboardService, TeacherDashboardService>();
 builder.Services.AddScoped<ITeachingScheduleService, TeachingScheduleService>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IClassProgressService, ClassProgressService>();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<ICourseService, CourseService>();
 builder.Services.AddScoped<IClassReportService, ClassReportService>();
 builder.Services.AddScoped<IAttendanceService, AttendanceService>();
 builder.Services.AddScoped<IFeeInvoiceService, FeeInvoiceService>();
 builder.Services.AddScoped<IAdmissionConversionService, AdmissionConversionService>();
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
+builder.Services.AddScoped<IStudentReportService, StudentReportService>();
+builder.Services.AddScoped<TeacherReportService>();
+builder.Services.AddScoped<StudentReportDashboardService>();
+builder.Services.AddScoped<
+    IStudentPerformanceService,
+    StudentPerformanceService>();
 builder.Services.AddScoped<
     IFeePaymentService,
     FeePaymentService>();

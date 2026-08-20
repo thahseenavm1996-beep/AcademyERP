@@ -7,7 +7,9 @@
   <ItemGroup>
     <ProjectReference Include="..\AcademyERP.Persistence\AcademyERP.Persistence.csproj" />
 </ItemGroup>
-
+<ItemGroup>
+  <FrameworkReference Include="Microsoft.AspNetCore.App" />
+</ItemGroup>
   <ItemGroup>
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.19.1" />
   </ItemGroup>

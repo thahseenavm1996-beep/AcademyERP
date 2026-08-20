@@ -4,25 +4,14 @@ using AcademyERP.Domain.Entities.Students;
 using AcademyERP.Domain.Entities.Teachers;
 using AcademyERP.Domain.Enums;
 
+using AcademyERP.Domain.Entities.ScheduledClasses;
 namespace AcademyERP.Domain.Entities.ClassReports;
-
 public class ClassReport : BaseEntity
 {
-    public Guid TeacherId { get; set; }
+    public Guid ScheduledClassId { get; set; }
 
-    public Teacher Teacher { get; set; } = null!;
+    public ScheduledClass ScheduledClass { get; set; } = null!;
 
-    public Guid StudentId { get; set; }
-
-    public Student Student { get; set; } = null!;
-
-    public Guid EnrollmentId { get; set; }
-
-    public Enrollment Enrollment { get; set; } = null!;
-
-    public DateTime ReportDate { get; set; }
-
-    public AttendanceStatus AttendanceStatus { get; set; }
 
     public PerformanceRating PerformanceRating { get; set; }
 
@@ -32,11 +21,13 @@ public class ClassReport : BaseEntity
 
     public ClassOutcome ClassOutcome { get; set; }
 
+
     public string LessonTaken { get; set; } = string.Empty;
 
     public string NextHomework { get; set; } = string.Empty;
 
     public string? TeacherRemarks { get; set; }
+
 
     public int ActualDurationMinutes { get; set; }
 

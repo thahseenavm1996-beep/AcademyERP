@@ -39,6 +39,10 @@ builder.Services.AddScoped<AuthStateService>();
 builder.Services.AddScoped<TeachingScheduleApiService>();
 builder.Services.AddScoped<ScheduledClassApiService>();
 builder.Services.AddScoped<FeeInvoiceApiService>();
+builder.Services.AddScoped<ClassProgressApiService>();
+builder.Services.AddScoped<StudentReportApiService>();
+builder.Services.AddScoped<StudentPerformanceApiService>();
+builder.Services.AddScoped<TeacherReportApiService>();
 builder.Services.AddScoped<
     RegistrationRequestApiService>();
 builder.Services.AddScoped<
@@ -90,10 +94,7 @@ builder.Services
 builder.Services.AddAuthorizationCore();
 builder.Services.AddCascadingAuthenticationState();
 
-builder.Services.AddScoped<AuthenticationStateProvider,
-    JwtAuthenticationStateProvider>();
 
-builder.Services.AddCascadingAuthenticationState();
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
@@ -109,6 +110,7 @@ if (!app.Environment.IsDevelopment())
 }
 //app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
+
 app.UseStaticFiles();
 
 app.UseRouting();
@@ -118,7 +120,6 @@ app.UseRouting();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
-
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

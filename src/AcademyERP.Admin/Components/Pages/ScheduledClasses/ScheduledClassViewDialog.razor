@@ -1,0 +1,138 @@
+@using AcademyERP.Application.DTOs.ScheduledClasses
+@using MudBlazor
+
+<MudDialog>
+
+    <DialogContent>
+
+        <MudGrid>
+
+            <MudItem xs="12" md="6">
+                <MudText Typo="Typo.subtitle2">
+                    Student
+                </MudText>
+                <MudText>
+                    @_class.StudentName
+                </MudText>
+            </MudItem>
+
+
+            <MudItem xs="12" md="6">
+                <MudText Typo="Typo.subtitle2">
+                    Teacher
+                </MudText>
+                <MudText>
+                    @_class.TeacherName
+                </MudText>
+            </MudItem>
+
+
+            <MudItem xs="12" md="6">
+                <MudText Typo="Typo.subtitle2">
+                    Course
+                </MudText>
+                <MudText>
+                    @_class.CourseName
+                </MudText>
+            </MudItem>
+
+
+            <MudItem xs="12" md="6">
+                <MudText Typo="Typo.subtitle2">
+                    Status
+                </MudText>
+
+                <MudChip T="string"
+                         Color="Color.Primary">
+                    @_class.Status
+                </MudChip>
+
+            </MudItem>
+
+
+            <MudItem xs="12" md="6">
+
+                <MudText Typo="Typo.subtitle2">
+                    Class Date
+                </MudText>
+
+                <MudText>
+                    @_class.ClassDate.ToString("dd MMM yyyy")
+                </MudText>
+
+            </MudItem>
+
+
+            <MudItem xs="12" md="6">
+
+                <MudText Typo="Typo.subtitle2">
+                    Time
+                </MudText>
+
+                <MudText>
+                    @_class.StartTime -
+                    @_class.EndTime
+                </MudText>
+
+            </MudItem>
+
+
+            <MudItem xs="12">
+
+                <MudText Typo="Typo.subtitle2">
+                    Remarks
+                </MudText>
+
+                <MudText>
+                    @(string.IsNullOrWhiteSpace(_class.Remarks)
+                        ? "No remarks"
+                        : _class.Remarks)
+                </MudText>
+
+            </MudItem>
+
+
+        </MudGrid>
+
+
+    </DialogContent>
+
+
+    <DialogActions>
+
+        <MudButton OnClick="Close">
+            Close
+        </MudButton>
+
+    </DialogActions>
+
+
+</MudDialog>
+
+
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+
+    [Parameter]
+    public ScheduledClassResponse Class { get; set; } = new();
+
+
+    private ScheduledClassResponse _class = new();
+
+
+    protected override void OnInitialized()
+    {
+        _class = Class;
+    }
+
+
+    private void Close()
+    {
+        MudDialog.Close();
+    }
+
+}

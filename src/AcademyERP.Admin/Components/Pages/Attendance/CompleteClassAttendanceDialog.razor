@@ -1,0 +1,224 @@
+@using AcademyERP.Admin.Models.TeacherDashboard
+@using AcademyERP.Domain.Enums
+@using MudBlazor
+@using AcademyERP.Admin.Models.Attendance
+@using AcademyERP.Admin.Models.ClassProgress
+
+<MudDialog>
+
+<DialogContent>
+
+
+<MudText Class="mt-3">
+    Student:
+    <b>@Class.StudentName</b>
+</MudText>
+
+
+<MudText>
+    Course:
+    <b>@Class.CourseName</b>
+</MudText>
+
+
+<MudRadioGroup T="AttendanceStatus"
+               @bind-Value="_status">
+
+    <MudRadio T="AttendanceStatus"
+              Value="AttendanceStatus.Present">
+        Present
+    </MudRadio>
+
+    <MudRadio T="AttendanceStatus"
+              Value="AttendanceStatus.Absent">
+        Absent
+    </MudRadio>
+
+    <MudRadio T="AttendanceStatus"
+              Value="AttendanceStatus.Late">
+        Late
+    </MudRadio>
+
+    <MudRadio T="AttendanceStatus"
+              Value="AttendanceStatus.Leave">
+        Leave
+    </MudRadio>
+
+</MudRadioGroup>
+<MudDivider Class="my-4" />
+
+<MudText Typo="Typo.h6">
+    Lesson Progress
+</MudText>
+
+
+<MudTextField T="string"
+              Label="Lesson Title"
+              Variant="Variant.Outlined"
+              Class="mt-3"
+              @bind-Value="_lessonTitle" />
+
+
+<MudTextField T="string"
+              Label="Chapter Name"
+              Variant="Variant.Outlined"
+              Class="mt-3"
+              @bind-Value="_chapterName" />
+
+
+<MudTextField T="string"
+              Label="Pages Covered"
+              Variant="Variant.Outlined"
+              Class="mt-3"
+              @bind-Value="_pagesCovered" />
+<MudCheckBox T="bool"
+             Label="Lesson Completed"
+             @bind-Value="_isLessonCompleted" />
+
+<MudDivider Class="my-4" />
+
+
+<MudText Typo="Typo.h6">
+    Homework
+</MudText>
+
+
+<MudCheckBox T="bool"
+             Label="Homework Given"
+             @bind-Value="_homeworkGiven" />
+
+
+@if(_homeworkGiven)
+{
+    <MudTextField T="string"
+                  Label="Homework Details"
+                  Variant="Variant.Outlined"
+                  Class="mt-3"
+                  @bind-Value="_homework" />
+
+
+    <MudCheckBox T="bool"
+                 Label="Homework Completed"
+                 @bind-Value="_homeworkCompleted" />
+}
+
+
+<MudTextField T="string"
+              Label="Teacher Notes"
+              Variant="Variant.Outlined"
+              Lines="3"
+              Class="mt-3"
+              @bind-Value="_teacherNotes" />
+
+<MudTextField
+    Label="Remarks"
+    Lines="3"
+    @bind-Value="_remarks" />
+
+
+</DialogContent>
+
+
+<DialogActions>
+
+<MudButton OnClick="Cancel">
+Cancel
+</MudButton>
+
+
+<MudButton Color="Color.Success"
+           Variant="Variant.Filled"
+           OnClick="Save">
+Complete
+</MudButton>
+
+
+</DialogActions>
+
+
+</MudDialog>
+
+
+@code {
+
+[CascadingParameter]
+IMudDialogInstance MudDialog {get;set;} = default!;
+
+
+[Parameter]
+public TodayClassResponse Class {get;set;} = new();
+
+
+private AttendanceStatus _status =
+    AttendanceStatus.Present;
+
+private string? _lessonTitle;
+
+private string? _chapterName;
+
+private string? _pagesCovered;
+
+
+private bool _homeworkGiven;
+
+private string? _homework;
+
+private bool _homeworkCompleted;
+
+private bool _isLessonCompleted;
+private string? _teacherNotes;
+private string? _remarks;
+
+
+private void Cancel()
+{
+    MudDialog.Cancel();
+}
+
+
+private void Save()
+{MudDialog.Close(
+    DialogResult.Ok(
+        new CompleteClassRequest
+        {
+            Attendance = new CreateAttendanceRequest
+            {
+                ScheduledClassId =
+                    Class.ScheduledClassId,
+
+                Status = _status,
+
+                Remarks = _remarks
+            },
+
+
+            Progress = new CreateClassProgressRequest
+            {
+                ScheduledClassId =
+                    Class.ScheduledClassId,
+
+                LessonTitle = _lessonTitle,
+
+                ChapterName = _chapterName,
+
+                PagesCovered = _pagesCovered,
+
+                IsLessonCompleted =
+                    _isLessonCompleted,
+
+                HomeworkGiven =
+                    _homeworkGiven,
+
+                Homework =
+                    _homework,
+
+                HomeworkCompleted =
+                    _homeworkCompleted,
+
+                TeacherNotes =
+                    _teacherNotes
+            }
+        }));
+}
+
+}

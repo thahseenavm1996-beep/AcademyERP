@@ -4,8 +4,12 @@ namespace AcademyERP.Admin.Models.Attendance;
 
 public class CreateAttendanceRequest
 {
-    public Guid EnrollmentId { get; set; }
-    public DateTime AttendanceDate { get; set; } = DateTime.Today;
+   
+    public Guid ScheduledClassId { get; set; }
+
+  
     public AttendanceStatus Status { get; set; } = AttendanceStatus.Present;
+
+    
     public string? Remarks { get; set; }
 }

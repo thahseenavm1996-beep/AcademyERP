@@ -1,16 +1,15 @@
 @page "/scheduledclasses"
 
-@using AcademyERP.Admin.Models
+@using AcademyERP.Application.DTOs.ScheduledClasses
 @using AcademyERP.Admin.Services
 @using MudBlazor
 
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
 @inject ScheduledClassApiService ScheduledClassApi
 
 <PageTitle>Scheduled Classes</PageTitle>
 
-<MudText Typo="Typo.h3" Class="mb-4">
-    Scheduled Classes
-</MudText>
 <MudButton
     Variant="Variant.Filled"
     Color="Color.Primary"
@@ -158,19 +157,17 @@
                 }
 
             </MudTd>
-<MudTd>
+<MudIconButton
+    Icon="@Icons.Material.Filled.Visibility"
+    Color="Color.Info"
+    Size="Size.Small"
+    OnClick="@(() => OpenViewDialog(context))" />
 
-    <MudIconButton
-        Icon="@Icons.Material.Filled.Visibility"
-        Color="Color.Info"
-        Size="Size.Small" />
-
-    <MudIconButton
-        Icon="@Icons.Material.Filled.Edit"
-        Color="Color.Primary"
-        Size="Size.Small" />
-
-</MudTd>
+<MudIconButton
+    Icon="@Icons.Material.Filled.Edit"
+    Color="Color.Primary"
+    Size="Size.Small"
+    OnClick="@(() => OpenEditDialog(context))" />
         </RowTemplate>
 
     </MudTable>
@@ -197,4 +194,64 @@
 
         _classes = result ?? new List<ScheduledClassResponse>();
     }
+  private async Task OpenViewDialog(
+    ScheduledClassResponse scheduledClass)
+{
+    var parameters =
+        new DialogParameters
+        {
+            {
+                "Class",
+                scheduledClass
+            }
+        };
+
+
+    await DialogService.ShowAsync<ScheduledClassViewDialog>(
+        "Scheduled Class Details",
+        parameters);
+}
+
+private async Task OpenEditDialog(
+    ScheduledClassResponse scheduledClass)
+{
+    var parameters =
+        new DialogParameters
+        {
+            {
+                "Class",
+                scheduledClass
+            }
+        };
+
+
+    var dialog =
+        await DialogService.ShowAsync<ScheduledClassEditDialog>(
+            "Edit Scheduled Class",
+            parameters);
+
+
+    var result = await dialog.Result;
+
+
+    if (!result.Canceled &&
+        result.Data is UpdateScheduledClassRequest request)
+    {
+        await ScheduledClassApi.UpdateAsync(
+            scheduledClass.Id,
+            request);
+
+
+        Snackbar.Add(
+            "Scheduled class updated successfully.",
+            Severity.Success);
+
+
+        var classes =
+            await ScheduledClassApi.GetAllAsync();
+
+        _classes = classes;
+        StateHasChanged();
+    }
+}
 }

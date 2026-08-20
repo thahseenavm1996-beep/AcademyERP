@@ -3,10 +3,12 @@
 @using AcademyERP.Admin.Services
 @using AcademyERP.Domain.Enums
 @using MudBlazor
+@using AcademyERP.Application.DTOs.ScheduledClasses
 
 @inject EnrollmentApiService EnrollmentApi
 @inject AttendanceApiService AttendanceApi
 @inject ISnackbar Snackbar
+@inject ScheduledClassApiService ScheduledClassApi
 
 <MudDialog>
 
@@ -14,15 +16,19 @@
 
         <MudForm @ref="_form">
 
-            <MudSelect T="Guid" Label="Enrollment" Value="_model.EnrollmentId" ValueChanged="OnEnrollmentChanged"
-                       Required="true" RequiredError="Please select an enrollment.">
+           <MudSelect T="Guid" 
+           Label="Scheduled Class"
+           Value="_model.ScheduledClassId"
+           ValueChanged="OnScheduledClassChanged">
 
-                @foreach (var enrollment in _enrollments)
-                {
-                    <MudSelectItem T="Guid" Value="@enrollment.Id">
-                        @($"{enrollment.StudentName} - {enrollment.CourseName} - {enrollment.TeacherName}")
-                    </MudSelectItem>
-                }
+               @foreach(var item in _scheduledClasses)
+{
+    <MudSelectItem T="Guid" Value="@item.Id">
+
+        @($"{item.ClassDate:dd MMM yyyy} - {item.StartTime} - {item.StudentName} - {item.CourseName}")
+
+    </MudSelectItem>
+}
 
             </MudSelect>
 
@@ -146,7 +152,7 @@
 
     private CreateClassReportRequest _model = new();
 
-    private List<EnrollmentResponse> _enrollments = new();
+   private List<ScheduledClassResponse> _scheduledClasses = new();
 
     private string _selectedStudentName = string.Empty;
 
@@ -161,37 +167,34 @@
 
         try
         {
-            _enrollments = await EnrollmentApi.GetAllAsync();
+           _scheduledClasses =
+    await ScheduledClassApi.GetAllAsync();
 
             // If opening with an existing enrollment selected
-            if (_model.EnrollmentId != Guid.Empty)
-            {
-                SetSelectedEnrollment(_model.EnrollmentId);
-            }
+            
         }
         catch (Exception ex)
-        {
-            Snackbar.Add(
-                $"Unable to load enrollments: {ex.Message}",
-                Severity.Error);
-        }
+    {
+        Snackbar.Add(
+            $"Unable to load scheduled classes: {ex.Message}",
+            Severity.Error);
+    }
     }
 
 
-   private async Task OnEnrollmentChanged(Guid enrollmentId)
+  /* private async Task OnEnrollmentChanged(Guid enrollmentId)
 {
     _model.EnrollmentId = enrollmentId;
 
     SetSelectedEnrollment(enrollmentId);
 
-    await LoadAttendance();
-}
+   
+}*/
 
 
-    private void SetSelectedEnrollment(Guid enrollmentId)
+  /*  private void SetSelectedEnrollment(Guid enrollmentId)
     {
-        var enrollment = _enrollments
-            .FirstOrDefault(x => x.Id == enrollmentId);
+        
 
         if (enrollment == null)
         {
@@ -229,7 +232,7 @@
             _selectedTeacherName =
                 "No teacher assigned";
         }
-    }
+    }*/
 
 
     private void Cancel()
@@ -305,25 +308,56 @@ private async Task OnDateChanged(DateTime? date)
 private string _attendanceStatusText = "Not marked";
 private async Task LoadAttendance()
 {
-    if (_model.EnrollmentId == Guid.Empty)
-        return;
-
-    var attendance =
-        await AttendanceApi.GetByEnrollmentDateAsync(
-            _model.EnrollmentId,
-            _reportDate!.Value);
+    try
+    {
+        if (_model.EnrollmentId == Guid.Empty)
+            return;
 
 
-    if (attendance == null)
+        var attendance =
+            await AttendanceApi.GetByEnrollmentDateAsync(
+                _model.EnrollmentId,
+                _reportDate!.Value);
+
+
+        if (attendance == null)
+        {
+            _attendanceStatusText = "Not marked";
+            return;
+        }
+
+
+        _model.AttendanceStatus = attendance.Status;
+
+        _attendanceStatusText =
+            attendance.Status.ToString();
+
+    }
+    catch(Exception ex)
     {
         _attendanceStatusText = "Not marked";
-        return;
+
+        Snackbar.Add(
+            $"Unable to load attendance: {ex.Message}",
+            Severity.Warning);
     }
+}
+private void OnScheduledClassChanged(Guid id)
+{
+    _model.ScheduledClassId = id;
+
+    var item = _scheduledClasses
+        .FirstOrDefault(x => x.Id == id);
+
+    if(item == null)
+        return;
 
 
-    _model.AttendanceStatus = attendance.Status;
+    _selectedStudentName = item.StudentName;
+    _selectedTeacherName = item.TeacherName;
+    _selectedCourseName = item.CourseName;
 
-    _attendanceStatusText =
-        attendance.Status.ToString();
+    _reportDate =
+        item.ClassDate.ToDateTime(TimeOnly.MinValue);
 }
 }

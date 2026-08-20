@@ -1,0 +1,230 @@
+@page "/students/report/{StudentId:guid}"
+
+@using AcademyERP.Admin.Models.StudentReports
+@using AcademyERP.Admin.Services
+@using MudBlazor
+
+@inject StudentReportApiService StudentReportApi
+
+
+<PageTitle>
+    Student Report
+</PageTitle>
+
+
+<MudContainer MaxWidth="MaxWidth.False">
+
+@if(_report == null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+
+<MudText Typo="Typo.h4">
+    Student Report
+</MudText>
+
+
+<MudText Typo="Typo.h5" Class="mt-4">
+    @_report.StudentName
+</MudText>
+
+
+<MudGrid Class="mt-4">
+
+
+<MudItem xs="12" md="3">
+
+<MudCard Class="pa-4">
+
+<MudText>
+Attendance
+</MudText>
+
+<MudText Typo="Typo.h4">
+@_report.Attendance.AttendancePercentage%
+</MudText>
+
+</MudCard>
+
+</MudItem>
+
+
+
+<MudItem xs="12" md="3">
+
+<MudCard Class="pa-4">
+
+<MudText>
+Total Classes
+</MudText>
+
+<MudText Typo="Typo.h4">
+@_report.Attendance.TotalClasses
+</MudText>
+
+</MudCard>
+
+</MudItem>
+
+
+
+<MudItem xs="12" md="3">
+
+<MudCard Class="pa-4">
+
+<MudText>
+Lessons Completed
+</MudText>
+
+<MudText Typo="Typo.h4">
+@_report.Progress.CompletedLessons
+</MudText>
+
+</MudCard>
+
+</MudItem>
+
+
+
+<MudItem xs="12" md="3">
+
+<MudCard Class="pa-4">
+
+<MudText>
+Homework Completed
+</MudText>
+
+<MudText Typo="Typo.h4">
+@_report.Homework.Completed
+</MudText>
+
+</MudCard>
+
+</MudItem>
+
+
+</MudGrid>
+
+
+<MudDivider Class="my-5"/>
+
+
+<MudText Typo="Typo.h5">
+Courses
+</MudText>
+
+
+<MudTable Items="_report.Courses">
+
+<HeaderContent>
+
+<MudTh>
+Course
+</MudTh>
+
+<MudTh>
+Teacher
+</MudTh>
+
+<MudTh>
+Start Date
+</MudTh>
+
+<MudTh>
+Status
+</MudTh>
+
+</HeaderContent>
+
+
+<RowTemplate>
+
+<MudTd>
+@context.CourseName
+</MudTd>
+
+<MudTd>
+@context.TeacherName
+</MudTd>
+
+<MudTd>
+@context.StartDate
+</MudTd>
+
+<MudTd>
+@context.Status
+</MudTd>
+
+</RowTemplate>
+
+</MudTable>
+
+
+
+<MudDivider Class="my-5"/>
+
+
+<MudText Typo="Typo.h5">
+Learning Progress
+</MudText>
+
+
+<MudText>
+Lessons:
+@_report.Progress.CompletedLessons /
+@_report.Progress.TotalLessons
+</MudText>
+
+
+<MudText>
+Chapters Completed:
+@_report.Progress.ChaptersCompleted
+</MudText>
+
+
+<MudText>
+Pages Covered:
+@_report.Progress.PagesCovered
+</MudText>
+
+
+<MudDivider Class="my-5"/>
+
+
+<MudText Typo="Typo.h5">
+Teacher Feedback
+</MudText>
+
+
+@foreach(var feedback in _report.TeacherFeedback)
+{
+    <MudAlert Severity="Severity.Info">
+        @feedback
+    </MudAlert>
+}
+
+
+}
+
+</MudContainer>
+
+
+@code {
+
+[Parameter]
+public Guid StudentId {get;set;}
+
+
+private StudentReportResponse? _report;
+
+
+
+protected override async Task OnInitializedAsync()
+{
+    _report =
+        await StudentReportApi.GetAsync(StudentId);
+}
+
+}

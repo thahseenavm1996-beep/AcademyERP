@@ -42,4 +42,7 @@ public class EnrollmentResponse
     public string? Remarks { get; set; }
     public List<EnrollmentScheduleResponse> Schedules { get; set; }
     = new();
+    public string? TimeSlotName { get; set; }
+
+public string? ClassDurationName { get; set; }
 }

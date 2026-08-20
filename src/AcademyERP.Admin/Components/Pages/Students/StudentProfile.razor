@@ -7,6 +7,8 @@
 @inject NavigationManager Navigation
 @inject StudentApiService StudentApi
 @inject IDialogService DialogService
+@using AcademyERP.Admin.Models.StudentPerformance
+@inject StudentPerformanceApiService PerformanceApi
 
 <PageTitle>Student Profile</PageTitle>
 
@@ -111,7 +113,7 @@ else
                 <MudIcon Icon="@Icons.Material.Filled.School" Size="Size.Large" Color="Color.Primary" />
 
                 <MudText Typo="Typo.h5">
-                    3
+                    @_summary?.ProgramsCount
                 </MudText>
 
                 <MudText>
@@ -129,7 +131,7 @@ else
                 <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Large" Color="Color.Success" />
 
                 <MudText Typo="Typo.h5">
-                    2
+                   @_summary?.TeachersCount
                 </MudText>
 
                 <MudText>
@@ -147,7 +149,7 @@ else
                 <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Large" Color="Color.Info" />
 
                 <MudText Typo="Typo.h5">
-                    100%
+                   @($"{_summary?.AttendancePercentage}%")
                 </MudText>
 
                 <MudText>
@@ -165,7 +167,7 @@ else
                 <MudIcon Icon="@Icons.Material.Filled.AccountBalanceWallet" Size="Size.Large" Color="Color.Warning" />
 
                 <MudText Typo="Typo.h5">
-                    ₹0
+                   ₹@_summary?.OutstandingFees
                 </MudText>
 
                 <MudText>
@@ -263,6 +265,458 @@ else
         </MudItem>
 
     </MudGrid>
+    <!-- ================= PERFORMANCE DASHBOARD ================= -->
+
+@if (Performance != null)
+{
+    <MudDivider Class="my-6" />
+
+    <MudText Typo="Typo.h5">
+        Performance Dashboard
+    </MudText>
+
+
+    <MudGrid Class="mt-4">
+
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudPaper Class="pa-4 text-center">
+
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
+                         Color="Color.Success"
+                         Size="Size.Large" />
+
+                <MudText Typo="Typo.h5">
+                    @Performance.AttendancePercentage%
+                </MudText>
+
+                <MudText>
+                    Attendance
+                </MudText>
+
+            </MudPaper>
+
+        </MudItem>
+
+
+
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudPaper Class="pa-4 text-center">
+
+                <MudIcon Icon="@Icons.Material.Filled.School"
+                         Color="Color.Primary"
+                         Size="Size.Large" />
+
+                <MudText Typo="Typo.h5">
+                    @Performance.CompletedClasses /
+                    @Performance.TotalClasses
+                </MudText>
+
+                <MudText>
+                    Classes Completed
+                </MudText>
+
+            </MudPaper>
+
+        </MudItem>
+
+
+
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudPaper Class="pa-4 text-center">
+
+                <MudIcon Icon="@Icons.Material.Filled.MenuBook"
+                         Color="Color.Info"
+                         Size="Size.Large" />
+
+                <MudText Typo="Typo.h5">
+                    @Performance.LearningScore%
+                </MudText>
+
+                <MudText>
+                    Learning Score
+                </MudText>
+
+            </MudPaper>
+
+        </MudItem>
+
+
+
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudPaper Class="pa-4 text-center">
+
+                <MudIcon Icon="@Icons.Material.Filled.Assignment"
+                         Color="Color.Warning"
+                         Size="Size.Large" />
+
+                <MudText Typo="Typo.h5">
+                    @Performance.HomeworkPercentage%
+                </MudText>
+
+                <MudText>
+                    Homework
+                </MudText>
+
+            </MudPaper>
+
+        </MudItem>
+
+    </MudGrid>
+}
+@if (Performance != null)
+{
+    <MudDivider Class="my-6" />
+
+    <MudText Typo="Typo.h6">
+        Performance Overview
+    </MudText>
+
+
+    <MudGrid Class="mt-4">
+
+
+        <MudItem xs="12" md="4">
+
+            <MudPaper Class="pa-5">
+
+                <MudText>
+                    Learning Progress
+                </MudText>
+
+
+                <MudProgressLinear
+    Value="@((double)Performance.LearningScore)"
+    Rounded="true"
+    Class="mt-3"/>
+
+
+                <MudText Class="mt-2">
+                    @Performance.LearningScore%
+                </MudText>
+
+            </MudPaper>
+
+        </MudItem>
+
+
+
+        <MudItem xs="12" md="4">
+
+            <MudPaper Class="pa-5">
+
+                <MudText>
+                    Homework Completion
+                </MudText>
+
+
+               <MudProgressLinear
+    Value="@((double)Performance.HomeworkPercentage)"
+    Rounded="true"
+    Class="mt-3"/>
+
+
+                <MudText Class="mt-2">
+                    @Performance.HomeworkPercentage%
+                </MudText>
+
+
+            </MudPaper>
+
+        </MudItem>
+
+
+
+        <MudItem xs="12" md="4">
+
+            <MudPaper Class="pa-5">
+
+                <MudText>
+                    Class Completion
+                </MudText>
+
+
+                <MudProgressLinear
+                   Value="@(Performance.TotalClasses == 0 
+    ? 0
+    : (double)Performance.CompletedClasses * 100 /
+      Performance.TotalClasses)"
+                    Rounded="true"
+                    Class="mt-3"/>
+
+
+                <MudText Class="mt-2">
+                    @Performance.CompletedClasses /
+                    @Performance.TotalClasses
+                </MudText>
+
+            </MudPaper>
+
+        </MudItem>
+
+
+    </MudGrid>
+}
+@if (Performance != null)
+{
+    <MudDivider Class="my-6" />
+
+    <MudText Typo="Typo.h6">
+        Performance Status
+    </MudText>
+
+    <MudPaper Class="pa-5 mt-4">
+
+        <MudChip T="string"
+                 Color="@GetPerformanceColor()"
+                 Size="Size.Large">
+
+            @GetPerformanceStatus()
+
+        </MudChip>
+
+
+        <MudText Typo="Typo.h6" Class="mt-4">
+            Overall Score:
+            <b>@GetOverallPerformanceScore()%</b>
+        </MudText>
+
+
+        <MudText Class="mt-2">
+
+            Trend:
+            @if(GetImprovementPercentage() > 0)
+            {
+                <span style="color:green">
+                    ↑ Improving (+@GetImprovementPercentage()%)
+                </span>
+            }
+            else
+            {
+                <span style="color:red">
+                    ↓ Needs Improvement
+                </span>
+            }
+
+        </MudText>
+
+    </MudPaper>
+}
+@if (Performance?.RecentProgress.Any() == true)
+{
+    <MudDivider Class="my-6" />
+
+    <MudText Typo="Typo.h6">
+        Recent Learning Activity
+    </MudText>
+
+
+    <MudTable Items="Performance.RecentProgress"
+              Class="mt-3">
+
+        <HeaderContent>
+
+            <MudTh>Date</MudTh>
+            <MudTh>Lesson</MudTh>
+            <MudTh>Status</MudTh>
+
+        </HeaderContent>
+
+
+        <RowTemplate>
+
+            <MudTd>
+                @context.Date
+            </MudTd>
+
+
+            <MudTd>
+                @context.LessonTitle
+            </MudTd>
+
+
+            <MudTd>
+
+                @if(context.Completed)
+                {
+                    <MudChip T="string"
+                             Color="Color.Success">
+                        Completed
+                    </MudChip>
+                }
+                else
+                {
+                    <MudChip T="string"
+                             Color="Color.Warning">
+                        Pending
+                    </MudChip>
+                }
+
+            </MudTd>
+
+        </RowTemplate>
+
+    </MudTable>
+}
+@if (Performance?.TeacherFeedback.Any() == true)
+{
+    <MudDivider Class="my-6" />
+
+    <MudText Typo="Typo.h6">
+        Teacher Feedback
+    </MudText>
+
+
+    @foreach(var feedback in Performance.TeacherFeedback)
+    {
+        <MudAlert Severity="Severity.Info"
+                  Class="mt-3">
+
+            @feedback
+
+        </MudAlert>
+    }
+}
+<MudDivider Class="my-6" />
+
+<MudText Typo="Typo.h6">
+    Performance Summary
+</MudText>
+
+
+<MudGrid Class="mt-4">
+
+    <MudItem xs="12" sm="4">
+
+        <MudPaper Class="pa-5 text-center">
+
+            <MudIcon Icon="@Icons.Material.Filled.TrendingUp"
+                     Color="Color.Success"
+                     Size="Size.Large"/>
+
+            <MudText Typo="Typo.h5">
+                @CurrentWeekScore%
+            </MudText>
+
+            <MudText>
+                Current Week
+            </MudText>
+
+        </MudPaper>
+
+    </MudItem>
+
+
+    <MudItem xs="12" sm="4">
+
+        <MudPaper Class="pa-5 text-center">
+
+            <MudIcon Icon="@Icons.Material.Filled.History"
+                     Color="Color.Info"
+                     Size="Size.Large"/>
+
+            <MudText Typo="Typo.h5">
+                @PreviousWeekScore%
+            </MudText>
+
+            <MudText>
+                Previous Week
+            </MudText>
+
+        </MudPaper>
+
+    </MudItem>
+
+
+    <MudItem xs="12" sm="4">
+
+        <MudPaper Class="pa-5 text-center">
+
+            <MudIcon Icon="@Icons.Material.Filled.ShowChart"
+                     Color="Color.Success"
+                     Size="Size.Large"/>
+
+            <MudText Typo="Typo.h5">
+                +@PerformanceImprovement%
+            </MudText>
+
+            <MudText>
+                Improvement
+            </MudText>
+
+        </MudPaper>
+
+    </MudItem>
+
+</MudGrid>
+@if(_weeklySeries.Any())
+{
+<MudDivider Class="my-6"/>
+
+<MudText Typo="Typo.h6">
+    Weekly Performance Trend
+</MudText>
+
+<MudPaper Class="pa-5 mt-4">
+
+<MudChart ChartType="ChartType.Line"
+          ChartSeries="@_weeklySeries"
+          XAxisLabels="@_weeklyLabels"
+          Width="100%"
+          Height="300px" />
+
+</MudPaper>
+}
+
+@if (Performance?.MonthlyTrend.Any() == true)
+{
+    <MudDivider Class="my-6" />
+
+    <MudText Typo="Typo.h6">
+        Monthly Performance Trend
+    </MudText>
+
+
+    <MudPaper Class="pa-5 mt-4">
+
+        <MudChart ChartType="ChartType.Line"
+                  ChartSeries="@_trendSeries"
+                  XAxisLabels="@_trendLabels"
+                  Width="100%"
+                  Height="300px" />
+
+    </MudPaper>
+}
+@if (Performance != null)
+{
+    <MudDivider Class="my-6" />
+
+    <MudPaper Class="pa-5">
+
+        <MudText Typo="Typo.h6">
+            Performance Status
+        </MudText>
+
+        <MudDivider Class="my-3" />
+
+        <MudChip T="string"
+                 Color="@GetPerformanceColor()"
+                 Size="Size.Large">
+
+            @GetPerformanceStatus()
+
+        </MudChip>
+
+        <MudText Class="mt-3">
+            Overall Score:
+            <b>@GetOverallPerformanceScore()%</b>
+        </MudText>
+
+    </MudPaper>
+}
 }
 
 @code
@@ -272,10 +726,92 @@ else
 
     private StudentResponse? _student;
 
-    protected override async Task OnParametersSetAsync()
+ protected override async Task OnParametersSetAsync()
+{
+    _student = await StudentApi.GetStudentAsync(Id);
+
+    _summary =
+        await StudentApi.GetProfileSummaryAsync(Id);
+
+    Performance =
+        await PerformanceApi.GetAsync(Id);
+
+
+  if (Performance?.MonthlyTrend?.Any() == true)
+{
+    _trendLabels = Performance.MonthlyTrend
+        .Select(x => x.Month)
+        .ToArray();
+
+    _trendSeries = new List<ChartSeries<double>>
+{
+    new ChartSeries<double>
     {
-        _student = await StudentApi.GetStudentAsync(Id);
+        Name = "Performance",
+        Data = Performance.MonthlyTrend
+            .Select(x => Convert.ToDouble(x.Score))
+            .ToArray()
     }
+};
+}
+else
+{
+    _trendLabels = Array.Empty<string>();
+   _trendSeries = new List<ChartSeries<double>>();
+}
+if (Performance?.WeeklyTrend.Any() == true)
+{
+    _weeklyLabels =
+        Performance.WeeklyTrend
+        .Select(x => x.Week)
+        .ToArray();
+
+
+    _weeklySeries =
+new()
+{
+    new ChartSeries<double>
+    {
+        Name = "Attendance",
+
+        Data =
+        Performance.WeeklyTrend
+        .Select(x => x.AttendancePercentage)
+        .ToArray()
+    },
+
+    new ChartSeries<double>
+    {
+        Name = "Learning",
+
+        Data =
+        Performance.WeeklyTrend
+        .Select(x => x.LearningScore)
+        .ToArray()
+    },
+
+    new ChartSeries<double>
+    {
+        Name = "Homework",
+
+        Data =
+        Performance.WeeklyTrend
+        .Select(x => x.HomeworkPercentage)
+        .ToArray()
+    },
+
+    new ChartSeries<double>
+    {
+        Name = "Overall",
+
+        Data =
+        Performance.WeeklyTrend
+        .Select(x => x.OverallScore)
+        .ToArray()
+    }
+};
+}
+}
 
     private string GetInitials(string name)
     {
@@ -330,5 +866,92 @@ private string GetGenderText(string gender)
         "1" => "Female",
         _ => gender
     };
+}
+private StudentPerformanceResponse? Performance;
+private StudentProfileSummaryResponse? _summary;
+private List<ChartSeries<double>> _trendSeries = new();
+
+private string[] _trendLabels = Array.Empty<string>();
+private double GetOverallPerformanceScore()
+{
+    if (Performance == null)
+        return 0d;
+
+    var score =
+        (
+            Performance.AttendancePercentage +
+            Performance.LearningScore +
+            Performance.HomeworkPercentage
+        ) / 3;
+
+    return (double)Math.Round(score, 2);
+}
+
+
+private Color GetPerformanceColor()
+{
+    var score = GetOverallPerformanceScore();
+
+    return score switch
+    {
+        >= 85 => Color.Success,
+        >= 70 => Color.Info,
+        >= 50 => Color.Warning,
+        _ => Color.Error
+    };
+}
+private List<ChartSeries<double>> _weeklySeries = new();
+
+private string[] _weeklyLabels = Array.Empty<string>();
+private double CurrentWeekScore =>
+    Performance?.WeeklyTrend.LastOrDefault()?.OverallScore ?? 0;
+
+private double PreviousWeekScore =>
+    Performance?.WeeklyTrend.Count > 1
+        ? Performance.WeeklyTrend[^2].OverallScore
+        : 0;
+
+private double PerformanceImprovement =>
+    CurrentWeekScore - PreviousWeekScore;
+
+private string PerformanceStatus =>
+    PerformanceImprovement >= 0
+        ? "Improving"
+        : "Needs Attention";
+
+        private string GetPerformanceStatus()
+{
+    var score = GetOverallPerformanceScore();
+
+    return score switch
+    {
+        >= 90 => "⭐ Excellent Performer",
+        >= 75 => "🟢 Good Performer",
+        >= 50 => "🟡 Average Performer",
+        _ => "🔴 Needs Attention"
+    };
+}
+
+
+
+
+private double GetImprovementPercentage()
+{
+    if (Performance?.WeeklyTrend == null ||
+        Performance.WeeklyTrend.Count < 2)
+        return 0;
+
+
+    var current =
+        Performance.WeeklyTrend.Last()
+        .OverallScore;
+
+
+    var previous =
+        Performance.WeeklyTrend[^2]
+        .OverallScore;
+
+
+    return current - previous;
 }
 }

@@ -6,20 +6,24 @@ public class ClassReportResponse
 {
     public Guid Id { get; set; }
 
+    public Guid ScheduledClassId { get; set; }
+
+
     public Guid TeacherId { get; set; }
 
     public string TeacherName { get; set; } = string.Empty;
+
 
     public Guid StudentId { get; set; }
 
     public string StudentName { get; set; } = string.Empty;
 
-    public Guid EnrollmentId { get; set; }
+
     public string CourseName { get; set; } = string.Empty;
 
-    public DateTime ReportDate { get; set; }
 
-    public AttendanceStatus AttendanceStatus { get; set; }
+    public DateOnly ClassDate { get; set; }
+
 
     public PerformanceRating PerformanceRating { get; set; }
 
@@ -29,15 +33,19 @@ public class ClassReportResponse
 
     public ClassOutcome ClassOutcome { get; set; }
 
+
     public string LessonTaken { get; set; } = string.Empty;
 
     public string NextHomework { get; set; } = string.Empty;
 
     public string? TeacherRemarks { get; set; }
 
+
     public int ActualDurationMinutes { get; set; }
 
+
     public DateTime SubmittedAt { get; set; }
+
 
     public bool IsLocked { get; set; }
 }

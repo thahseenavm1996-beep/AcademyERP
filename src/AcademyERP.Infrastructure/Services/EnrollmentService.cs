@@ -6,17 +6,22 @@ using Microsoft.EntityFrameworkCore;
 using AcademyERP.Domain.Entities.EnrollmentSchedules;
 using AcademyERP.Application.DTOs.Enrollments;
 using AcademyERP.Application.DTOs.EnrollmentSchedules;
+using AcademyERP.Domain.Entities.TeachingSchedules;
+using AcademyERP.Application.DTOs.TeachingSchedules;
 
 namespace AcademyERP.Infrastructure.Services;
 
 public class EnrollmentService : IEnrollmentService
 {
     private readonly ApplicationDbContext _context;
-
-    public EnrollmentService(ApplicationDbContext context)
-    {
-        _context = context;
-    }
+private readonly ITeachingScheduleService _teachingScheduleService;
+    public EnrollmentService(
+    ApplicationDbContext context,
+    ITeachingScheduleService teachingScheduleService)
+{
+    _context = context;
+    _teachingScheduleService = teachingScheduleService;
+}
 
    public async Task<List<EnrollmentResponse>> GetAllAsync()
 {
@@ -60,7 +65,13 @@ public class EnrollmentService : IEnrollmentService
             Status = x.Status,
 
             Remarks = x.Remarks,
+TimeSlotName = x.EnrollmentSchedules
+    .Select(s => s.TimeSlot.Name)
+    .FirstOrDefault(),
 
+ClassDurationName = x.EnrollmentSchedules
+    .Select(s => s.ClassDuration.Name)
+    .FirstOrDefault(),
 
             Schedules = x.EnrollmentSchedules
                 .Select(s => new EnrollmentScheduleResponse
@@ -119,7 +130,13 @@ public class EnrollmentService : IEnrollmentService
             Status = x.Status,
 
             Remarks = x.Remarks,
+TimeSlotName = x.EnrollmentSchedules
+    .Select(s => s.TimeSlot.Name)
+    .FirstOrDefault(),
 
+ClassDurationName = x.EnrollmentSchedules
+    .Select(s => s.ClassDuration.Name)
+    .FirstOrDefault(),
 
             Schedules = x.EnrollmentSchedules
                 .Select(s => new EnrollmentScheduleResponse
@@ -220,6 +237,41 @@ public class EnrollmentService : IEnrollmentService
     await _context.SaveChangesAsync();
 
 
+
+await _context.Entry(enrollment)
+    .Collection(x => x.EnrollmentSchedules)
+    .Query()
+    .Include(x => x.TimeSlot)
+    .LoadAsync();
+
+
+// Create TeachingSchedule automatically
+foreach (var schedule in enrollment.EnrollmentSchedules)
+{
+    await _teachingScheduleService.CreateAsync(
+        new CreateTeachingScheduleRequest
+        {
+            EnrollmentId = enrollment.Id,
+
+            TeacherId = enrollment.TeacherId!.Value,
+
+            DayOfWeek = schedule.DayOfWeek,
+
+            StartTime = schedule.TimeSlot.StartTime,
+
+            ClassDurationId = schedule.ClassDurationId,
+
+            EffectiveFrom = enrollment.StartDate,
+
+            EffectiveTo = enrollment.EndDate,
+
+            IsActive = true,
+
+            MaximumStudents = 1
+        });
+}
+
+
     return await GetByIdAsync(enrollment.Id)
         ?? throw new InvalidOperationException(
             "Enrollment was created but could not be retrieved.");
@@ -271,7 +323,13 @@ public class EnrollmentService : IEnrollmentService
         enrollment.Remarks = request.Remarks;
 // Remove existing schedules completely
 var existingSchedules = enrollment.EnrollmentSchedules.ToList();
+var oldTeachingSchedules =
+    await _context.TeachingSchedules
+    .Where(x => x.EnrollmentId == enrollment.Id)
+    .ToListAsync();
 
+
+_context.TeachingSchedules.RemoveRange(oldTeachingSchedules);
 _context.EnrollmentSchedules.RemoveRange(existingSchedules);
 
 

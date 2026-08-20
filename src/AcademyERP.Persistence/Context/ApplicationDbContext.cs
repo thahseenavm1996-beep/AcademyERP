@@ -20,6 +20,8 @@ using AcademyERP.Domain.Entities.Admissions;
 using AcademyERP.Domain.Entities.Finance;
 using AttendanceEntity = AcademyERP.Domain.Entities.Attendance.Attendance;
 using AcademyERP.Domain.Entities.EnrollmentSchedules;
+using AcademyERP.Domain.Entities.AcademicProgress;
+
 
 namespace AcademyERP.Persistence.Context;
 
@@ -45,6 +47,8 @@ public class ApplicationDbContext
     public DbSet<TimeSlot> TimeSlots => Set<TimeSlot>();
     public DbSet<TeacherCourse> TeacherCourses => Set<TeacherCourse>();
     public DbSet<FeeInvoice> FeeInvoices => Set<FeeInvoice>();
+    public DbSet<ClassProgress> ClassProgresses => 
+    Set<ClassProgress>();
     public DbSet<TeacherAvailability> TeacherAvailabilities => Set<TeacherAvailability>();
     public DbSet<RegistrationRequest>
     RegistrationRequests => Set<RegistrationRequest>();

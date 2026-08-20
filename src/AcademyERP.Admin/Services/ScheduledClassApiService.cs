@@ -1,5 +1,5 @@
 using System.Net.Http.Json;
-using AcademyERP.Admin.Models;
+using AcademyERP.Application.DTOs.ScheduledClasses;
 
 namespace AcademyERP.Admin.Services;
 
@@ -19,4 +19,25 @@ public class ScheduledClassApiService
             "api/scheduledclasses")
             ?? new List<ScheduledClassResponse>();
     }
+    public async Task<ScheduledClassResponse?> GetByIdAsync(Guid id)
+{
+    return await _http.GetFromJsonAsync<ScheduledClassResponse>(
+        $"api/scheduledclasses/{id}");
+}
+public async Task<ScheduledClassResponse?> UpdateAsync(
+    Guid id,
+    UpdateScheduledClassRequest request)
+{
+    var response =
+        await _http.PutAsJsonAsync(
+            $"api/scheduledclasses/{id}",
+            request);
+
+
+    response.EnsureSuccessStatusCode();
+
+
+    return await response.Content
+        .ReadFromJsonAsync<ScheduledClassResponse>();
+}
 }

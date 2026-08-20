@@ -3,18 +3,20 @@ using AcademyERP.Domain.Entities.Enrollments;
 using AcademyERP.Domain.Entities.Students;
 using AcademyERP.Domain.Entities.Teachers;
 using AcademyERP.Domain.Enums;
+using AcademyERP.Domain.Entities.ScheduledClasses;
 
 namespace AcademyERP.Domain.Entities.Attendance;
 
 public class Attendance : BaseEntity
 {
-    public Guid EnrollmentId { get; set; }
+    public Guid ScheduledClassId { get; set; }
 
-    public Enrollment Enrollment { get; set; } = null!;
+    public ScheduledClass ScheduledClass { get; set; } = null!;
 
-    public DateTime AttendanceDate { get; set; }
 
     public AttendanceStatus Status { get; set; }
 
+
     public string? Remarks { get; set; }
+
 }

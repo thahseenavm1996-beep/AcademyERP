@@ -398,13 +398,16 @@ if (firstSchedule != null)
         {
             _loading = false;
         }
-        Console.WriteLine(
-    $"Schedules Count: {Enrollment.Schedules.Count}");
-
-foreach(var s in Enrollment.Schedules)
+       if (Enrollment != null)
 {
     Console.WriteLine(
-        $"{s.DayOfWeek} {s.TimeSlotId} {s.ClassDurationId}");
+        $"Schedules Count: {Enrollment.Schedules.Count}");
+
+    foreach(var s in Enrollment.Schedules)
+    {
+        Console.WriteLine(
+            $"{s.DayOfWeek} {s.TimeSlotId} {s.ClassDurationId}");
+    }
 }
     }
 

@@ -190,4 +190,9 @@ public class StudentApiService
 
         return true;
     }
+    public async Task<StudentProfileSummaryResponse?> GetProfileSummaryAsync(Guid id)
+{
+    return await _httpClient.GetFromJsonAsync<StudentProfileSummaryResponse>(
+    $"api/students/{id}/profile-summary");
+}
 }

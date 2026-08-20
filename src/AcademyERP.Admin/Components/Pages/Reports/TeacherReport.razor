@@ -4,104 +4,550 @@
 @using AcademyERP.Admin.Services
 @using MudBlazor
 
+@using AcademyERP.Admin.Models.TeacherReports
+@inject TeacherReportApiService TeacherReportApi
 @inject TeacherApiService TeacherApi
 
 <PageTitle>Teacher Reports</PageTitle>
 
-<MudText Typo="Typo.h4" Class="mb-4">
-    Teacher Reports
+@if (_dashboard == null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+
+<MudText Typo="Typo.h4">
+    Teacher Performance Dashboard
 </MudText>
 
-<MudGrid Class="mb-4">
 
-    <MudItem xs="12" sm="6" md="3">
-        <MudPaper Class="pa-4">
-            <MudText Typo="Typo.subtitle2">
-                Total Teachers
-            </MudText>
+<MudGrid Class="mt-5">
 
-            <MudText Typo="Typo.h4">
-                @_teachers.Count
-            </MudText>
-        </MudPaper>
-    </MudItem>
 
-    <MudItem xs="12" sm="6" md="3">
-        <MudPaper Class="pa-4">
-            <MudText Typo="Typo.subtitle2">
-                Active Teachers
-            </MudText>
+<MudItem xs="12" sm="6" md="3">
 
-            <MudText Typo="Typo.h4">
-                @_teachers.Count(x => x.IsActive)
-            </MudText>
-        </MudPaper>
-    </MudItem>
+<MudPaper Class="pa-5 text-center">
 
-</MudGrid>
+<MudIcon Icon="@Icons.Material.Filled.People"
+         Size="Size.Large"
+         Color="Color.Primary"/>
 
-<MudPaper Class="pa-4">
+<MudText Typo="Typo.h4">
+@_dashboard.TotalTeachers
+</MudText>
 
-    <MudTable Items="_teachers"
-              Hover="true"
-              Dense="true"
-              Striped="true">
-
-        <HeaderContent>
-
-            <MudTh>Employee Code</MudTh>
-            <MudTh>Name</MudTh>
-            <MudTh>Department</MudTh>
-            <MudTh>Qualification</MudTh>
-            <MudTh>Country</MudTh>
-            <MudTh>Status</MudTh>
-
-        </HeaderContent>
-
-        <RowTemplate>
-
-            <MudTd>@context.EmployeeCode</MudTd>
-            <MudTd>@context.FullName</MudTd>
-            <MudTd>@context.Department</MudTd>
-            <MudTd>@context.Qualification</MudTd>
-            <MudTd>@context.Country</MudTd>
-
-            <MudTd>
-
-                <MudChip T="string"
-                         Value="@(context.IsActive ? "Active" : "Inactive")"
-                         Color="@(context.IsActive ? Color.Success : Color.Error)"
-                         Size="Size.Small">
-
-                    @(context.IsActive ? "Active" : "Inactive")
-
-                </MudChip>
-
-            </MudTd>
-
-        </RowTemplate>
-
-    </MudTable>
+<MudText>
+Total Teachers
+</MudText>
 
 </MudPaper>
 
+</MudItem>
+
+
+
+<MudItem xs="12" sm="6" md="3">
+
+<MudPaper Class="pa-5 text-center">
+
+<MudIcon Icon="@Icons.Material.Filled.CheckCircle"
+         Size="Size.Large"
+         Color="Color.Success"/>
+
+<MudText Typo="Typo.h4">
+@_dashboard.ActiveTeachers
+</MudText>
+
+<MudText>
+Active Teachers
+</MudText>
+
+</MudPaper>
+
+</MudItem>
+
+
+
+<MudItem xs="12" sm="6" md="3">
+
+<MudPaper Class="pa-5 text-center">
+
+<MudIcon Icon="@Icons.Material.Filled.TrendingUp"
+         Size="Size.Large"
+         Color="Color.Info"/>
+
+<MudText Typo="Typo.h4">
+@_dashboard.AveragePerformance%
+</MudText>
+
+<MudText>
+Average Performance
+</MudText>
+
+</MudPaper>
+
+</MudItem>
+
+
+
+<MudItem xs="12" sm="6" md="3">
+
+<MudPaper Class="pa-5 text-center">
+
+<MudIcon Icon="@Icons.Material.Filled.School"
+         Size="Size.Large"
+         Color="Color.Warning"/>
+
+<MudText Typo="Typo.h4">
+@_dashboard.CompletedClasses
+</MudText>
+
+<MudText>
+Completed Classes
+</MudText>
+
+</MudPaper>
+
+</MudItem>
+
+
+</MudGrid>
+@if (_dashboard?.BestPerformingTeacher != null)
+{
+    <MudDivider Class="my-6" />
+
+    <MudText Typo="Typo.h5">
+        Best Performing Teacher
+    </MudText>
+
+
+    <MudPaper Class="pa-6 mt-4 elevation-3">
+
+        <MudGrid AlignItems="AlignItems.Center">
+
+            <MudItem xs="12" md="3">
+
+                <MudAvatar Size="Size.Large"
+                           Color="Color.Primary">
+
+                    @GetInitials(
+                        _dashboard.BestPerformingTeacher.TeacherName)
+
+                </MudAvatar>
+
+            </MudItem>
+
+
+            <MudItem xs="12" md="5">
+
+                <MudText Typo="Typo.h5">
+
+                    @_dashboard.BestPerformingTeacher.TeacherName
+
+                </MudText>
+
+
+                <MudText Color="Color.Secondary">
+
+                    Top Performing Teacher
+
+                </MudText>
+
+            </MudItem>
+
+
+            <MudItem xs="12" md="4">
+
+                <MudStack Spacing="2">
+
+                    <MudChip T="string"
+                             Color="Color.Success">
+
+                        Score:
+                        @_dashboard.BestPerformingTeacher.Score%
+
+                    </MudChip>
+
+
+                    <MudChip T="string"
+                             Color="Color.Info">
+
+                        Classes:
+                        @_dashboard.BestPerformingTeacher.ClassesCompleted
+
+                    </MudChip>
+
+
+                    <MudChip T="string"
+                             Color="Color.Primary">
+
+                        Attendance:
+                        @_dashboard.BestPerformingTeacher.AttendancePercentage%
+
+                    </MudChip>
+
+                </MudStack>
+
+            </MudItem>
+
+        </MudGrid>
+
+    </MudPaper>
+}
+@if (_dashboard?.PerformanceTrend.Any() == true)
+{
+    <MudDivider Class="my-6" />
+
+    <MudText Typo="Typo.h5">
+        Teacher Performance Trend
+    </MudText>
+
+
+    <MudPaper Class="pa-5 mt-4">
+
+        <MudChart T="double"
+          ChartType="ChartType.Line"
+          ChartSeries="@_performanceSeries"
+          ChartLabels="@_performanceLabels"
+          ChartOptions="@TeacherPerformanceOptions"
+          Height="400px" />
+
+    </MudPaper>
+}
+<MudDivider Class="my-6" />
+
+<MudText Typo="Typo.h5">
+    Teacher Growth Trend
+</MudText>
+
+
+<MudPaper Class="pa-5 mt-4">
+
+<MudChart T="double"
+          ChartType="ChartType.Bar"
+          ChartSeries="@_joiningSeries"
+          ChartLabels="@_joiningLabels"
+          ChartOptions="@JoiningChartOptions"
+          Width="100%"
+          Height="400px" />
+
+</MudPaper>
+
+<MudDivider Class="my-6" />
+
+<MudText Typo="Typo.h5">
+    Teacher Ranking
+</MudText>
+
+@if (_dashboard?.TeacherRanking?.Any() == true)
+{
+<MudPaper Class="pa-5 mt-4">
+
+<MudTable Items="_dashboard.TeacherRanking">
+
+<HeaderContent>
+
+<MudTh>Rank</MudTh>
+<MudTh>Teacher</MudTh>
+<MudTh>Performance</MudTh>
+<MudTh>Classes</MudTh>
+<MudTh>Students</MudTh>
+<MudTh>Attendance</MudTh>
+
+</HeaderContent>
+
+
+<RowTemplate>
+
+<MudTd>
+
+@if(context.Rank == 1)
+{
+    <MudChip T="string" Color="Color.Warning">
+    🥇 @context.Rank
+</MudChip>
+}
+else if(context.Rank == 2)
+{
+    <MudChip T="string" Color="Color.Default">
+    🥈 @context.Rank
+</MudChip>
+}
+else if(context.Rank == 3)
+{
+    <MudChip T="string" Color="Color.Info">
+    🥉 @context.Rank
+</MudChip>
+}
+else
+{
+    @context.Rank
+}
+
+</MudTd>
+
+
+<MudTd>
+<b>@context.TeacherName</b>
+</MudTd>
+
+
+<MudTd>
+   <MudProgressLinear
+    Value="@((double)context.PerformanceScore)"
+    Rounded="true" />
+    
+
+@context.PerformanceScore%
+</MudTd>
+
+
+<MudTd>
+@context.CompletedClasses
+</MudTd>
+
+
+<MudTd>
+@context.StudentsCount
+</MudTd>
+
+
+<MudTd>
+@context.AttendancePercentage%
+</MudTd>
+
+
+</RowTemplate>
+
+</MudTable>
+
+</MudPaper>
+}
+<MudDivider Class="my-6" />
+
+<MudText Typo="Typo.h5" Class="mt-6">
+    Teacher Workload Distribution
+</MudText>
+
+<MudPaper Class="pa-5 mt-4">
+
+<MudTable Items="_dashboard.TeacherWorkload">
+    <HeaderContent>
+        <MudTh>Teacher</MudTh>
+        <MudTh>Students</MudTh>
+        <MudTh>Active Classes</MudTh>
+        <MudTh>Weekly Hours</MudTh>
+        <MudTh>Workload</MudTh>
+    </HeaderContent>
+
+    <RowTemplate>
+        <MudTd DataLabel="Teacher">
+            @context.TeacherName
+        </MudTd>
+
+        <MudTd DataLabel="Students">
+            @context.StudentsCount
+        </MudTd>
+
+        <MudTd DataLabel="Classes">
+            @context.ActiveClasses
+        </MudTd>
+
+        <MudTd DataLabel="Hours">
+            @context.WeeklyHours hrs
+        </MudTd>
+
+        <MudTd DataLabel="Workload">
+
+            <MudProgressLinear
+                Value="@context.ActiveClasses"
+                Max="150"
+                Rounded="true" />
+
+        </MudTd>
+
+    </RowTemplate>
+
+</MudTable>
+
+</MudPaper>
+<MudDivider Class="my-6" />
+
+<MudText Typo="Typo.h5" Class="mt-6">
+    Program-wise Teacher Distribution
+</MudText>
+
+
+<MudGrid Class="mt-4">
+
+@foreach(var item in _dashboard.ProgramDistribution)
+{
+    <MudItem xs="12" sm="6" md="3">
+
+        <MudCard Class="pa-4">
+
+            <MudText Typo="Typo.h6">
+                @item.ProgramName
+            </MudText>
+
+
+            <MudText>
+                Teachers:
+                <b>@item.TeachersCount</b>
+            </MudText>
+
+
+            <MudText>
+                Students:
+                <b>@item.StudentsCount</b>
+            </MudText>
+
+
+        </MudCard>
+
+    </MudItem>
+}
+
+</MudGrid>
+}
 @code
 {
     private List<TeacherResponse> _teachers = new();
+    private TeacherReportDashboardResponse? _dashboard;
+    private List<ChartSeries<double>> _performanceSeries = new();
 
-    protected override async Task OnInitializedAsync()
+private string[] _performanceLabels = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr"
+];
+private List<ChartSeries<double>> _joiningSeries = new();
+
+private string[] _joiningLabels = Array.Empty<string>();
+
+private List<ChartSeries<int>> _workloadSeries = new();
+
+private string[] _workloadLabels = Array.Empty<string>();
+
+private List<ChartSeries<int>> _programSeries = new();
+
+private string[] _programLabels = Array.Empty<string>();
+
+protected override async Task OnInitializedAsync()
+{
+    _dashboard =
+        await TeacherReportApi.GetDashboardAsync();
+
+
+    if (_dashboard?.PerformanceTrend.Any() == true)
     {
-        var result = await TeacherApi.GetTeachersAsync(
-            new TeacherQueryRequest
-            {
-                Page = 1,
-                PageSize = 1000,
-                Search = ""
-            });
+        _performanceLabels =
+            _dashboard.PerformanceTrend
+            .Select(x => x.Month)
+            .ToArray();
 
-        if (result?.Data?.Items != null)
+
+        _performanceSeries =
+        new()
         {
-            _teachers = result.Data.Items;
-        }
+            new ChartSeries<double>
+            {
+                Name = "Performance",
+
+                Data =
+                    _dashboard.PerformanceTrend
+                    .Select(x =>
+                        (double)x.Score)
+                    .ToArray()
+            }
+        };
     }
+    _joiningLabels =
+   _dashboard.JoiningTrend
+    .Select(x => x.Month)
+    .ToArray();
+
+
+_joiningSeries =
+[
+    new ChartSeries<double>
+    {
+        Name = "New Teachers",
+
+        Data =
+            _dashboard.JoiningTrend
+            .Select(x => (double)x.Count)
+            .ToArray()
+    }
+];
+_workloadLabels =
+    _dashboard.TeacherWorkload
+    .Select(x => x.TeacherName)
+    .ToArray();
+
+
+_workloadSeries =
+new()
+{
+    new ChartSeries<int>
+    {
+        Name = "Active Classes",
+
+        Data =
+            _dashboard.TeacherWorkload
+            .Select(x => x.ActiveClasses)
+            .ToArray()
+    }
+};
+
+_programLabels =
+    _dashboard.ProgramDistribution
+    .Select(x => x.ProgramName)
+    .ToArray();
+
+
+_programSeries =
+new()
+{
+    new ChartSeries<int>
+    {
+        Name = "Students",
+
+        Data =
+            _dashboard.ProgramDistribution
+            .Select(x => x.StudentsCount)
+            .ToArray()
+    }
+};
+}
+private string GetInitials(string name)
+{
+    if (string.IsNullOrWhiteSpace(name))
+        return "?";
+
+    var parts = name.Split(
+        ' ',
+        StringSplitOptions.RemoveEmptyEntries);
+
+    if (parts.Length == 1)
+        return parts[0][0].ToString().ToUpper();
+
+    return (
+        parts[0][0].ToString() +
+        parts[^1][0].ToString()
+    ).ToUpper();
+}
+private LineChartOptions TeacherPerformanceOptions = new()
+{
+    XAxisLabelRotation = 45,
+    XAxisTitle = "Month",
+    YAxisTitle = "Performance %"
+};
+private BarChartOptions JoiningChartOptions = new()
+{
+    XAxisTitle = "Month",
+    YAxisTitle = "New Teachers"
+};
 }

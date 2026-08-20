@@ -10,6 +10,7 @@
 @inject IDialogService DialogService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject NavigationManager Navigation
 
 <PageTitle>Students</PageTitle>
 
@@ -85,7 +86,11 @@
                 <MudIconButton Icon="@Icons.Material.Filled.LockReset" Color="Color.Warning" Size="Size.Small"
                                OnClick="@(() => OpenResetPasswordDialog(context.Id))" />
             </MudTooltip>
-
+<MudIconButton
+    Icon="@Icons.Material.Filled.Assessment"
+    Color="Color.Success"
+    OnClick="@(() => OpenReport(context.Id))"
+/>
             <MudTooltip Text="Delete Student">
                 <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
                                OnClick="@(() => DeleteStudent(context))" />
@@ -304,4 +309,9 @@
 
         await dialog.Result;
     }
+    private void OpenReport(Guid studentId)
+{
+    Navigation.NavigateTo(
+        $"/students/report/{studentId}");
+}
 }

@@ -6,10 +6,7 @@ namespace AcademyERP.Application.DTOs.Attendance;
 public class CreateAttendanceRequest
 {
     [Required]
-    public Guid EnrollmentId { get; set; }
-
-    [Required]
-    public DateTime AttendanceDate { get; set; } = DateTime.Today;
+    public Guid ScheduledClassId { get; set; }
 
     [Required]
     public AttendanceStatus Status { get; set; } = AttendanceStatus.Present;

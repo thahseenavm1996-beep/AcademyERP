@@ -15,9 +15,10 @@ public class AttendanceConfiguration : IEntityTypeConfiguration<AttendanceEntity
         builder.Property(x => x.Remarks)
             .HasMaxLength(1000);
 
-        builder.HasOne(x => x.Enrollment)
-    .WithMany(x => x.Attendances)
-    .HasForeignKey(x => x.EnrollmentId)
-    .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(x => x.ScheduledClass)
+            .WithMany()
+            .HasForeignKey(x => x.ScheduledClassId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

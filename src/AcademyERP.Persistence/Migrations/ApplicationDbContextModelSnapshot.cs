@@ -22,6 +22,67 @@ namespace AcademyERP.Persistence.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("AcademyERP.Domain.Entities.AcademicProgress.ClassProgress", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ChapterName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Homework")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("HomeworkCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HomeworkGiven")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsLessonCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LessonTitle")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PagesCovered")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("ScheduledClassId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TeacherNotes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ScheduledClassId");
+
+                    b.ToTable("ClassProgresses");
+                });
+
             modelBuilder.Entity("AcademyERP.Domain.Entities.Admissions.AdmissionApplication", b =>
                 {
                     b.Property<Guid>("Id")
@@ -274,9 +335,6 @@ namespace AcademyERP.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("AttendanceDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -289,10 +347,7 @@ namespace AcademyERP.Persistence.Migrations
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("EnrollmentId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("EnrollmentId1")
+                    b.Property<Guid?>("EnrollmentId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("IsDeleted")
@@ -301,6 +356,9 @@ namespace AcademyERP.Persistence.Migrations
                     b.Property<string>("Remarks")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid>("ScheduledClassId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -321,7 +379,7 @@ namespace AcademyERP.Persistence.Migrations
 
                     b.HasIndex("EnrollmentId");
 
-                    b.HasIndex("EnrollmentId1");
+                    b.HasIndex("ScheduledClassId");
 
                     b.HasIndex("StudentId");
 
@@ -337,9 +395,6 @@ namespace AcademyERP.Persistence.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("ActualDurationMinutes")
-                        .HasColumnType("int");
-
-                    b.Property<int>("AttendanceStatus")
                         .HasColumnType("int");
 
                     b.Property<int>("BehaviourRating")
@@ -360,7 +415,7 @@ namespace AcademyERP.Persistence.Migrations
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("EnrollmentId")
+                    b.Property<Guid?>("EnrollmentId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("HomeworkStatus")
@@ -385,16 +440,16 @@ namespace AcademyERP.Persistence.Migrations
                     b.Property<int>("PerformanceRating")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("ReportDate")
-                        .HasColumnType("datetime2");
+                    b.Property<Guid>("ScheduledClassId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("StudentId")
+                    b.Property<Guid?>("StudentId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("SubmittedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("TeacherId")
+                    b.Property<Guid?>("TeacherId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("TeacherRemarks")
@@ -410,6 +465,8 @@ namespace AcademyERP.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("EnrollmentId");
+
+                    b.HasIndex("ScheduledClassId");
 
                     b.HasIndex("StudentId");
 
@@ -1825,6 +1882,17 @@ namespace AcademyERP.Persistence.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("AcademyERP.Domain.Entities.AcademicProgress.ClassProgress", b =>
+                {
+                    b.HasOne("AcademyERP.Domain.Entities.ScheduledClasses.ScheduledClass", "ScheduledClass")
+                        .WithMany()
+                        .HasForeignKey("ScheduledClassId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ScheduledClass");
+                });
+
             modelBuilder.Entity("AcademyERP.Domain.Entities.Admissions.AdmissionApplication", b =>
                 {
                     b.HasOne("AcademyERP.Domain.Entities.Courses.Course", "Course")
@@ -1888,15 +1956,15 @@ namespace AcademyERP.Persistence.Migrations
 
             modelBuilder.Entity("AcademyERP.Domain.Entities.Attendance.Attendance", b =>
                 {
-                    b.HasOne("AcademyERP.Domain.Entities.Enrollments.Enrollment", "Enrollment")
-                        .WithMany()
-                        .HasForeignKey("EnrollmentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("AcademyERP.Domain.Entities.Enrollments.Enrollment", null)
                         .WithMany("Attendances")
-                        .HasForeignKey("EnrollmentId1");
+                        .HasForeignKey("EnrollmentId");
+
+                    b.HasOne("AcademyERP.Domain.Entities.ScheduledClasses.ScheduledClass", "ScheduledClass")
+                        .WithMany()
+                        .HasForeignKey("ScheduledClassId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("AcademyERP.Domain.Entities.Students.Student", null)
                         .WithMany("Attendances")
@@ -1906,34 +1974,30 @@ namespace AcademyERP.Persistence.Migrations
                         .WithMany("Attendances")
                         .HasForeignKey("TeacherId");
 
-                    b.Navigation("Enrollment");
+                    b.Navigation("ScheduledClass");
                 });
 
             modelBuilder.Entity("AcademyERP.Domain.Entities.ClassReports.ClassReport", b =>
                 {
-                    b.HasOne("AcademyERP.Domain.Entities.Enrollments.Enrollment", "Enrollment")
+                    b.HasOne("AcademyERP.Domain.Entities.Enrollments.Enrollment", null)
                         .WithMany("ClassReports")
-                        .HasForeignKey("EnrollmentId")
+                        .HasForeignKey("EnrollmentId");
+
+                    b.HasOne("AcademyERP.Domain.Entities.ScheduledClasses.ScheduledClass", "ScheduledClass")
+                        .WithMany()
+                        .HasForeignKey("ScheduledClassId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("AcademyERP.Domain.Entities.Students.Student", "Student")
+                    b.HasOne("AcademyERP.Domain.Entities.Students.Student", null)
                         .WithMany("ClassReports")
-                        .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .HasForeignKey("StudentId");
 
-                    b.HasOne("AcademyERP.Domain.Entities.Teachers.Teacher", "Teacher")
+                    b.HasOne("AcademyERP.Domain.Entities.Teachers.Teacher", null)
                         .WithMany("ClassReports")
-                        .HasForeignKey("TeacherId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .HasForeignKey("TeacherId");
 
-                    b.Navigation("Enrollment");
-
-                    b.Navigation("Student");
-
-                    b.Navigation("Teacher");
+                    b.Navigation("ScheduledClass");
                 });
 
             modelBuilder.Entity("AcademyERP.Domain.Entities.Courses.Course", b =>

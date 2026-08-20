@@ -2,43 +2,529 @@
 
 @using AcademyERP.Admin.Models.Enrollments
 @using AcademyERP.Admin.Services
+@using AcademyERP.Admin.Models.StudentReports
 
+@inject StudentReportApiService StudentReportApi
 @inject EnrollmentApiService EnrollmentApi
 
 <PageTitle>Student Reports</PageTitle>
 
-<MudText Typo="Typo.h4" Class="mb-4">
-    Student Reports
+@if (_dashboard != null)
+{
+    <MudGrid Class="mb-5">
+
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudPaper Class="pa-5 text-center">
+
+                <MudIcon Icon="@Icons.Material.Filled.Groups"
+                         Color="Color.Primary"
+                         Size="Size.Large" />
+
+                <MudText Typo="Typo.h4">
+                    @_dashboard.TotalStudents
+                </MudText>
+
+                <MudText>
+                    Total Students
+                </MudText>
+
+            </MudPaper>
+
+        </MudItem>
+
+
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudPaper Class="pa-5 text-center">
+
+                <MudIcon Icon="@Icons.Material.Filled.Person"
+                         Color="Color.Success"
+                         Size="Size.Large" />
+
+                <MudText Typo="Typo.h4">
+                    @_dashboard.ActiveStudents
+                </MudText>
+
+                <MudText>
+                    Active Students
+                </MudText>
+
+            </MudPaper>
+
+        </MudItem>
+
+
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudPaper Class="pa-5 text-center">
+
+                <MudIcon Icon="@Icons.Material.Filled.TrendingUp"
+                         Color="Color.Info"
+                         Size="Size.Large" />
+
+                <MudText Typo="Typo.h4">
+                    @_dashboard.AveragePerformance%
+                </MudText>
+
+                <MudText>
+                    Average Performance
+                </MudText>
+
+            </MudPaper>
+
+        </MudItem>
+
+
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudPaper Class="pa-5 text-center">
+
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
+                         Color="Color.Warning"
+                         Size="Size.Large" />
+
+                <MudText Typo="Typo.h4">
+                    @_dashboard.AverageAttendance%
+                </MudText>
+
+                <MudText>
+                    Average Attendance
+                </MudText>
+
+            </MudPaper>
+
+        </MudItem>
+
+    </MudGrid>
+}
+
+@if (_dashboard?.BestStudent != null)
+{
+    <MudPaper Class="pa-6 mt-5 elevation-3">
+
+        <MudText Typo="Typo.h5">
+            ⭐ Best Performing Student
+        </MudText>
+
+
+        <MudDivider Class="my-4"/>
+
+
+        <MudGrid>
+
+            <MudItem xs="12" md="6">
+
+                <MudText Typo="Typo.h6">
+                    @_dashboard.BestStudent.StudentName
+                </MudText>
+
+                <MudText>
+                    Course:
+                    <b>
+                        @_dashboard.BestStudent.CourseName
+                    </b>
+                </MudText>
+
+            </MudItem>
+
+
+            <MudItem xs="12" md="3">
+
+                <MudText>
+                    Performance
+                </MudText>
+
+                <MudText Typo="Typo.h5">
+                    @_dashboard.BestStudent.PerformanceScore%
+                </MudText>
+
+            </MudItem>
+
+
+            <MudItem xs="12" md="3">
+
+                <MudText>
+                    Attendance
+                </MudText>
+
+                <MudText Typo="Typo.h5">
+                    @_dashboard.BestStudent.AttendancePercentage%
+                </MudText>
+
+            </MudItem>
+
+
+        </MudGrid>
+
+    </MudPaper>
+}
+
+<MudGrid Class="mt-6">
+
+    <!-- Attendance Summary -->
+    <MudItem xs="12" md="4">
+
+        <MudPaper Class="pa-4">
+
+            <MudText Typo="Typo.h6">
+                📅 Attendance Summary
+            </MudText>
+
+            <MudDivider Class="my-3" />
+
+            <MudText>
+                🟢 Present:
+                <b>@_dashboard?.AttendanceSummary.PresentPercentage%</b>
+            </MudText>
+
+            <MudText>
+                🔴 Absent:
+                <b>@_dashboard?.AttendanceSummary.AbsentPercentage%</b>
+            </MudText>
+
+            <MudText>
+                🟡 Leave:
+                <b>@_dashboard?.AttendanceSummary.LeavePercentage%</b>
+            </MudText>
+
+            <MudText>
+                🟠 Late:
+                <b>@_dashboard?.AttendanceSummary.LatePercentage%</b>
+            </MudText>
+
+        </MudPaper>
+
+    </MudItem>
+
+
+    <!-- Fee Summary -->
+    <MudItem xs="12" md="4">
+
+        <MudPaper Class="pa-4">
+
+            <MudText Typo="Typo.h6">
+                💰 Fee Summary
+            </MudText>
+
+            <MudDivider Class="my-3" />
+
+            <MudText>
+                Total Collected:
+                <b>₹ @_dashboard?.FeeSummary.TotalCollected</b>
+            </MudText>
+
+            <MudText>
+                Pending Amount:
+                <b>₹ @_dashboard?.FeeSummary.PendingAmount</b>
+            </MudText>
+
+            <MudText>
+                Paid Students:
+                <b>@_dashboard?.FeeSummary.PaidStudents</b>
+            </MudText>
+
+            <MudText>
+                Pending Students:
+                <b>@_dashboard?.FeeSummary.PendingStudents</b>
+            </MudText>
+
+        </MudPaper>
+
+    </MudItem>
+
+
+    <!-- Learning Summary -->
+    <MudItem xs="12" md="4">
+
+        <MudPaper Class="pa-4">
+
+            <MudText Typo="Typo.h6">
+                📚 Learning Summary
+            </MudText>
+
+            <MudDivider Class="my-3" />
+
+            <MudText>
+                Average Progress:
+                <b>@_dashboard?.LearningSummary.AverageProgress%</b>
+            </MudText>
+
+            <MudProgressLinear
+                Value="@((double)(_dashboard?.LearningSummary.AverageProgress ?? 0))"
+                Rounded="true"
+                Class="mt-3" />
+
+            <MudText Class="mt-3">
+                Lessons Completed:
+                <b>@_dashboard?.LearningSummary.TotalLessonsCompleted</b>
+            </MudText>
+
+        </MudPaper>
+
+    </MudItem>
+
+
+</MudGrid>
+
+<MudPaper Class="pa-4 mt-6">
+
+    <MudText Typo="Typo.h5">
+        📊 Attendance Distribution
+    </MudText>
+
+
+  <MudChart T="double"
+          ChartType="ChartType.Bar"
+          ChartSeries="@AttendanceDistributionSeries"
+          ChartLabels="@AttendanceDistributionLabels"
+          Height="350px" />
+
+</MudPaper>
+
+
+    @if (_dashboard?.PerformanceTrend != null)
+{
+    <MudPaper Class="pa-5 mt-5">
+
+        <MudText Typo="Typo.h5">
+            📈 Student Performance Trend
+        </MudText>
+
+      <MudChart T="double"
+          ChartType="ChartType.Line"
+          ChartSeries="@PerformanceSeries"
+          ChartLabels="@PerformanceLabels"
+          ChartOptions="@PerformanceChartOptions"
+          Height="400px" />
+          </MudPaper>
+}
+<MudPaper Class="pa-4 mt-6">
+
+    <MudText Typo="Typo.h5">
+        📊 Student Attendance Trend
+    </MudText>
+
+    <MudChart T="double"
+              ChartType="ChartType.Line"
+              ChartSeries="@AttendanceSeries"
+             ChartLabels="@AttendanceLabels"
+              ChartOptions="@AttendanceChartOptions"
+              Height="400px" />
+
+</MudPaper>
+<MudPaper Class="pa-4 mt-6">
+
+    <MudText Typo="Typo.h5">
+        📚 Course-wise Student Distribution
+    </MudText>
+
+    <MudChart T="double"
+              ChartType="ChartType.Bar"
+              ChartSeries="@CourseSeries"
+              ChartLabels="@CourseLabels"
+              ChartOptions="@CourseChartOptions"
+              Height="400px" />
+
+</MudPaper>
+<MudPaper Class="pa-4 mt-6">
+
+<MudText Typo="Typo.h5">
+🏆 Student Ranking
 </MudText>
 
-<MudPaper Class="pa-4">
 
-    <MudTable Items="_enrollments"
-              Hover="true"
-              Dense="true"
-              Striped="true">
+<MudTable Items="_dashboard?.StudentRanking ?? new List<StudentRankingDto>()">
+
+<HeaderContent>
+
+<MudTh>Rank</MudTh>
+<MudTh>Student</MudTh>
+<MudTh>Course</MudTh>
+<MudTh>Performance</MudTh>
+<MudTh>Attendance</MudTh>
+
+</HeaderContent>
+
+
+<RowTemplate Context="student">
+
+<MudTd>
+@student.Rank
+</MudTd>
+
+
+<MudTd>
+<b>@student.StudentName</b>
+</MudTd>
+
+
+<MudTd>
+@student.CourseName
+</MudTd>
+
+
+<MudTd>
+@student.PerformanceScore%
+</MudTd>
+
+
+<MudTd>
+@student.Attendance%
+</MudTd>
+
+
+</RowTemplate>
+
+</MudTable>
+
+</MudPaper>
+
+<MudPaper Class="pa-4 mt-6">
+
+    <MudText Typo="Typo.h5">
+        📚 Learning Progress Overview
+    </MudText>
+
+    <MudTable Items="_dashboard?.LearningProgress 
+        ?? new List<StudentLearningProgressDto>()">
 
         <HeaderContent>
 
             <MudTh>Student</MudTh>
             <MudTh>Course</MudTh>
-            <MudTh>Teacher</MudTh>
-            <MudTh>Status</MudTh>
-            <MudTh>Start Date</MudTh>
+            <MudTh>Lessons Completed</MudTh>
+            <MudTh>Pages Covered</MudTh>
+            <MudTh>Progress</MudTh>
 
         </HeaderContent>
 
-        <RowTemplate>
 
-            <MudTd>@context.StudentName</MudTd>
-            <MudTd>@context.CourseName</MudTd>
-            <MudTd>@context.TeacherName</MudTd>
-            <MudTd>@context.Status</MudTd>
+        <RowTemplate Context="student">
+
             <MudTd>
-                @context.StartDate.ToString("dd MMM yyyy")
+                <b>@student.StudentName</b>
+            </MudTd>
+
+
+            <MudTd>
+                @student.CourseName
+            </MudTd>
+
+
+            <MudTd>
+                @student.LessonsCompleted
+            </MudTd>
+
+
+            <MudTd>
+                @student.PagesCovered
+            </MudTd>
+
+
+            <MudTd>
+
+                <MudProgressLinear
+                    Value="@((double)student.ProgressPercentage)"
+                    Rounded="true" />
+
+                <MudText Typo="Typo.caption">
+                    @student.ProgressPercentage%
+                </MudText>
+
             </MudTd>
 
         </RowTemplate>
+
+
+    </MudTable>
+
+</MudPaper>
+
+<MudPaper Class="pa-4 mt-6">
+
+    <MudText Typo="Typo.h5">
+        💰 Fee Status Overview
+    </MudText>
+
+
+    <MudTable Items="_dashboard?.FeeStatus 
+        ?? new List<StudentFeeStatusDto>()">
+
+        <HeaderContent>
+
+            <MudTh>Student</MudTh>
+
+            <MudTh>Course</MudTh>
+
+            <MudTh>Monthly Fee</MudTh>
+
+            <MudTh>Last Payment</MudTh>
+
+            <MudTh>Next Due Date</MudTh>
+
+            <MudTh>Status</MudTh>
+
+        </HeaderContent>
+
+
+        <RowTemplate Context="fee">
+
+
+            <MudTd>
+                <b>@fee.StudentName</b>
+            </MudTd>
+
+
+            <MudTd>
+                @fee.CourseName
+            </MudTd>
+
+
+            <MudTd>
+                ₹ @fee.MonthlyFee
+            </MudTd>
+
+
+            <MudTd>
+                @fee.LastPaymentDate
+            </MudTd>
+
+
+            <MudTd>
+                @fee.NextDueDate
+            </MudTd>
+
+
+            <MudTd>
+
+                @if (fee.Status == "Paid")
+                {
+                    <MudChip T="string"
+                             Color="Color.Success">
+                        Paid
+                    </MudChip>
+                }
+                else if (fee.Status == "Pending")
+                {
+                    <MudChip T="string"
+                             Color="Color.Error">
+                        Pending
+                    </MudChip>
+                }
+                else
+                {
+                    <MudChip T="string"
+                             Color="Color.Warning">
+                        @fee.Status
+                    </MudChip>
+                }
+
+            </MudTd>
+
+
+        </RowTemplate>
+
 
     </MudTable>
 
@@ -47,10 +533,130 @@
 @code {
 
     private List<EnrollmentResponse> _enrollments = new();
+    private StudentReportDashboardResponse? _dashboard;
+   
+private List<ChartSeries<double>> PerformanceSeries = new();
+private string[] PerformanceLabels =
+[
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr"
+];
 
-    protected override async Task OnInitializedAsync()
+private List<ChartSeries<double>> AttendanceSeries = new();
+
+private string[] AttendanceLabels = Array.Empty<string>();
+
+private ChartOptions AttendanceChartOptions = new ChartOptions();
+
+private List<ChartSeries<double>> CourseSeries = new();
+
+private string[] CourseLabels = Array.Empty<string>();
+
+private ChartOptions CourseChartOptions = new();
+
+private List<ChartSeries<double>> AttendanceDistributionSeries = new();
+
+private string[] AttendanceDistributionLabels =
+[
+    "Present",
+    "Absent",
+    "Leave",
+    "Late"
+];
+
+protected override async Task OnInitializedAsync()
+{
+    _dashboard =
+        await StudentReportApi.GetDashboardAsync();
+if (_dashboard == null)
     {
-        _enrollments = await EnrollmentApi.GetAllAsync();
+        _dashboard = new StudentReportDashboardResponse();
     }
 
+    if (_dashboard?.PerformanceTrend != null)
+    {
+        PerformanceLabels =
+            _dashboard.PerformanceTrend
+            .Select(x => x.Month)
+            .ToArray();
+
+
+       PerformanceSeries =
+[
+    new ChartSeries<double>
+    {
+        Name = "Performance",
+
+        Data =
+            _dashboard.PerformanceTrend
+            .Select(x =>
+                (double)x.Score)
+            .ToArray()
+    }
+];
+    }
+
+    AttendanceLabels =
+    _dashboard.AttendanceTrend
+    .Select(x => x.Month)
+    .ToArray();
+
+
+AttendanceSeries =
+[
+    new ChartSeries<double>
+    {
+        Name = "Attendance",
+
+        Data =
+            _dashboard.AttendanceTrend
+            .Select(x => (double)x.Attendance)
+            .ToArray()
+    }
+];
+
+CourseLabels =
+    _dashboard.CourseDistribution
+    .Select(x => x.CourseName)
+    .ToArray();
+
+
+CourseSeries =
+[
+    new ChartSeries<double>
+    {
+        Name = "Students",
+
+        Data =
+            _dashboard.CourseDistribution
+            .Select(x => (double)x.Students)
+            .ToArray()
+    }
+];
+
+AttendanceDistributionSeries =
+[
+    new ChartSeries<double>
+    {
+        Name = "Attendance",
+
+        Data = new List<double>
+        {
+            92,
+            5,
+            2,
+            1
+        }.ToArray()
+    }
+];
+
+}
+private LineChartOptions PerformanceChartOptions = new()
+{
+    XAxisLabelRotation = 45,
+    XAxisTitle = "Month",
+    YAxisTitle = "Performance %"
+};
 }

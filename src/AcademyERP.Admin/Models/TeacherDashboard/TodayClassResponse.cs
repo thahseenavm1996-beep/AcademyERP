@@ -4,6 +4,7 @@ namespace AcademyERP.Admin.Models.TeacherDashboard;
 
 public class TodayClassResponse
 {
+    public Guid Id { get; set; }
     public Guid ScheduledClassId { get; set; }
 
     public string StudentName { get; set; } = string.Empty;

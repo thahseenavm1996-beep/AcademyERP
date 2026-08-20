@@ -45,11 +45,22 @@ public class AttendanceApiService
         return string.Join("&", values.Where(x => !string.IsNullOrWhiteSpace(x.Value))
             .Select(x => $"{x.Key}={Uri.EscapeDataString(x.Value!)}"));
     }
-    public async Task<AttendanceResponse?> GetByEnrollmentDateAsync(
+  public async Task<AttendanceResponse?> GetByEnrollmentDateAsync(
     Guid enrollmentId,
     DateTime date)
 {
-    return await _http.GetFromJsonAsync<AttendanceResponse>(
+    var response = await _http.GetAsync(
         $"api/attendance/by-enrollment-date?enrollmentId={enrollmentId}&date={date:yyyy-MM-dd}");
+
+    if (!response.IsSuccessStatusCode)
+    {
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            return null;
+
+        response.EnsureSuccessStatusCode();
+    }
+
+    return await response.Content
+        .ReadFromJsonAsync<AttendanceResponse>();
 }
 }

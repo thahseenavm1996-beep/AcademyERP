@@ -111,4 +111,12 @@ public class StudentsController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
+    [HttpGet("{id:guid}/profile-summary")]
+public async Task<IActionResult> GetProfileSummary(Guid id)
+{
+    var result =
+    await _studentService.GetProfileSummaryAsync(id);
+
+    return Ok(result);
+}
 }
