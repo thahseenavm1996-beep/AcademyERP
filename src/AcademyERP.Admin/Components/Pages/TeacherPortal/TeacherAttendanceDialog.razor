@@ -1,0 +1,135 @@
+@using AcademyERP.Admin.Models.TeacherPortal
+@using AcademyERP.Domain.Enums
+@using MudBlazor
+@using AcademyERP.Admin.Services
+
+<MudDialog>
+    <DialogContent>
+
+        <MudText Typo="Typo.h6">
+            Mark Attendance
+        </MudText>
+
+        <MudText Class="mt-3">
+            Student:
+            <b>@Class.StudentName</b>
+        </MudText>
+
+        <MudText>
+            Course:
+            <b>@Class.CourseName</b>
+        </MudText>
+
+        <MudText>
+            Date:
+            <b>@Class.ClassDate.ToString("dd MMM yyyy")</b>
+        </MudText>
+
+        <MudDivider Class="my-4" />
+
+        <MudRadioGroup T="AttendanceStatus"
+                       @bind-Value="_status">
+
+            <MudRadio T="AttendanceStatus"
+                      Value="AttendanceStatus.Present">
+                Present
+            </MudRadio>
+
+            <MudRadio T="AttendanceStatus"
+                      Value="AttendanceStatus.Late">
+                Late
+            </MudRadio>
+
+            <MudRadio T="AttendanceStatus"
+                      Value="AttendanceStatus.Absent">
+                Absent
+            </MudRadio>
+
+            <MudRadio T="AttendanceStatus"
+                      Value="AttendanceStatus.Leave">
+                Leave
+            </MudRadio>
+
+        </MudRadioGroup>
+
+        <MudTextField T="string"
+                      Label="Remarks"
+                      Variant="Variant.Outlined"
+                      Lines="3"
+                      Class="mt-3"
+                      @bind-Value="_remarks" />
+
+    </DialogContent>
+
+    <DialogActions>
+
+        <MudButton OnClick="Cancel">
+            Cancel
+        </MudButton>
+
+        <MudButton Color="Color.Success"
+                   Variant="Variant.Filled"
+                   Disabled="_saving"
+                   OnClick="Save">
+
+            @if (_saving)
+            {
+                <MudProgressCircular Size="Size.Small"
+                                     Indeterminate="true"
+                                     Class="mr-2" />
+                <span>Saving</span>
+            }
+            else
+            {
+                <span>Save Attendance</span>
+            }
+
+        </MudButton>
+
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public TeacherClassDto Class { get; set; } = null!;
+
+    private AttendanceStatus _status =
+        AttendanceStatus.Present;
+
+    private string? _remarks;
+
+    private bool _saving;
+
+    [Inject]
+    private TeacherPortalApiService TeacherApi { get; set; } = null!;
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task Save()
+    {
+        _saving = true;
+
+        var result =
+            await TeacherApi.MarkAttendanceAsync(
+                Class.Id,
+                _status,
+                _remarks);
+
+        _saving = false;
+
+        if (result is null)
+        {
+            return;
+        }
+
+        MudDialog.Close(
+            DialogResult.Ok(result));
+    }
+}

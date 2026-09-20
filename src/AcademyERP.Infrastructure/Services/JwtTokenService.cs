@@ -62,9 +62,6 @@ public class JwtTokenService : IJwtTokenService
         /* return new JwtSecurityTokenHandler().WriteToken(token);*/
         var jwts = new JwtSecurityTokenHandler().WriteToken(token);
 
-        Console.WriteLine("JWT:");
-        Console.WriteLine(jwts);
-        Console.WriteLine($"DOT COUNT: {jwts.Count(c => c == '.')}");
 
         return jwts;
     }

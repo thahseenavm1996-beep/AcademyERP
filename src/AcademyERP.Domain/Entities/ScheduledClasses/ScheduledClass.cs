@@ -1,6 +1,8 @@
 using AcademyERP.Domain.Entities.Common;
 using AcademyERP.Domain.Entities.TeachingSchedules;
 using AcademyERP.Domain.Enums;
+using AttendanceEntity = AcademyERP.Domain.Entities.Attendance.Attendance;
+
 
 namespace AcademyERP.Domain.Entities.ScheduledClasses;
 
@@ -19,6 +21,9 @@ public class ScheduledClass : BaseEntity
 
     // Scheduled end time
     public TimeOnly EndTime { get; set; }
+
+    public ICollection<AttendanceEntity> Attendances { get; set; }
+    = new List<AttendanceEntity>();
 
     // Current status
     public ScheduledClassStatus Status { get; set; }

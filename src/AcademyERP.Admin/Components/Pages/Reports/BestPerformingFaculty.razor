@@ -1,0 +1,566 @@
+@page "/reports/best-performing-faculty"
+
+@using AcademyERP.Admin.Models.Reports
+@using AcademyERP.Admin.Services
+@using AcademyERP.Admin.Models.Courses
+@using AcademyERP.Domain.Enums
+@using Microsoft.JSInterop
+
+@inject BestPerformingFacultyApiService FacultyApi
+@inject CourseApiService CourseApi
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.False" Class="pa-4">
+
+    <MudStack Row="true"
+          AlignItems="AlignItems.Center"
+          Justify="Justify.SpaceBetween"
+          Class="mb-4"
+          Style="width:100%; flex-wrap:wrap; gap:12px;">
+
+    <div style="min-width:0;">
+
+        <MudText Typo="Typo.h4" Class="fw-bold">
+            Best Performing Faculty
+        </MudText>
+
+        <MudText Typo="Typo.body2"
+                 Color="Color.Secondary">
+            Faculty performance based on class reports and attendance.
+        </MudText>
+
+    </div>
+
+    <MudStack Row="true"
+              Spacing="2"
+              Style="flex-wrap:wrap;">
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Image"
+                   OnClick="DownloadImageAsync">
+            Download Image
+        </MudButton>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Error"
+                   StartIcon="@Icons.Material.Filled.PictureAsPdf"
+                   OnClick="DownloadPdfAsync">
+            Download PDF
+        </MudButton>
+
+    </MudStack>
+
+</MudStack>
+
+    <MudPaper Class="pa-4 mb-4">
+
+        <MudGrid>
+
+            <MudItem xs="12" sm="6" md="3">
+
+                <MudSelect T="string"
+                           Label="Course"
+                           Variant="Variant.Outlined"
+                           Clearable="true"
+                           @bind-Value="_courseName">
+
+                    <MudSelectItem Value="@((string?)null)">
+                        All Courses
+                    </MudSelectItem>
+
+                    @foreach (var course in _courses)
+                    {
+                        <MudSelectItem Value="@course.CourseName">
+                            @course.CourseName
+                        </MudSelectItem>
+                    }
+
+                </MudSelect>
+
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="3">
+
+                <MudSelect T="Gender?"
+                           Label="Gender"
+                           Variant="Variant.Outlined"
+                           @bind-Value="_gender">
+
+                    <MudSelectItem Value="@((Gender?)null)">
+                        All
+                    </MudSelectItem>
+
+                    <MudSelectItem Value="@((Gender?)Gender.Male)">
+                        Male
+                    </MudSelectItem>
+
+                    <MudSelectItem Value="@((Gender?)Gender.Female)">
+                        Female
+                    </MudSelectItem>
+
+                    <MudSelectItem Value="@((Gender?)Gender.Other)">
+                        Other
+                    </MudSelectItem>
+
+                </MudSelect>
+
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="3">
+
+                <MudDatePicker Label="From Date"
+                               Variant="Variant.Outlined"
+                               @bind-Date="_fromDate" />
+
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="3">
+
+                <MudDatePicker Label="To Date"
+                               Variant="Variant.Outlined"
+                               @bind-Date="_toDate" />
+
+            </MudItem>
+
+        </MudGrid>
+
+        <MudStack Row="true"
+                  Spacing="2"
+                  Class="mt-4">
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Search"
+                       OnClick="LoadAsync">
+                Search
+            </MudButton>
+
+            <MudButton Variant="Variant.Outlined"
+                       StartIcon="@Icons.Material.Filled.Clear"
+                       OnClick="ClearAsync">
+                Clear
+            </MudButton>
+
+        </MudStack>
+
+    </MudPaper>
+
+    @if (_loading)
+    {
+        <MudPaper Class="pa-6 d-flex justify-center">
+
+            <MudProgressCircular Indeterminate="true"
+                                 Color="Color.Primary" />
+
+        </MudPaper>
+    }
+    else if (_report is not null)
+    {
+        <MudGrid Class="mb-4">
+
+            <MudItem xs="12" sm="6" md="3">
+
+                <MudCard>
+
+                    <MudCardContent>
+
+                        <MudText Typo="Typo.body2">
+                            Total Faculty
+                        </MudText>
+
+                        <MudText Typo="Typo.h4"
+                                 Class="fw-bold">
+                            @_report.TotalFaculty
+                        </MudText>
+
+                    </MudCardContent>
+
+                </MudCard>
+
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="3">
+
+                <MudCard>
+
+                    <MudCardContent>
+
+                        <MudText Typo="Typo.body2">
+                            Faculty With Reports
+                        </MudText>
+
+                        <MudText Typo="Typo.h4"
+                                 Class="fw-bold">
+                            @_report.FacultyWithReports
+                        </MudText>
+
+                    </MudCardContent>
+
+                </MudCard>
+
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="3">
+
+                <MudCard>
+
+                    <MudCardContent>
+
+                        <MudText Typo="Typo.body2">
+                            Average Performance
+                        </MudText>
+
+                        <MudText Typo="Typo.h4"
+                                 Class="fw-bold">
+                            @_report.AveragePerformance.ToString("0.##")%
+                        </MudText>
+
+                    </MudCardContent>
+
+                </MudCard>
+
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="3">
+
+                <MudCard>
+
+                    <MudCardContent>
+
+                        <MudText Typo="Typo.body2">
+                            Average Attendance
+                        </MudText>
+
+                        <MudText Typo="Typo.h4"
+                                 Class="fw-bold">
+                            @_report.AverageAttendance.ToString("0.##")%
+                        </MudText>
+
+                    </MudCardContent>
+
+                </MudCard>
+
+            </MudItem>
+
+        </MudGrid>
+
+        @if (_report.BestFaculty is not null)
+        {
+            <MudPaper Class="pa-4 mb-4">
+
+                <MudText Typo="Typo.h6"
+                         Class="fw-bold mb-3">
+                    🏆 Best Performing Faculty
+                </MudText>
+
+                <MudGrid>
+
+                    <MudItem xs="12" sm="6" md="3">
+
+                        <MudText Typo="Typo.caption">
+                            Faculty
+                        </MudText>
+
+                        <MudText Typo="Typo.body1"
+                                 Class="fw-bold">
+                            @_report.BestFaculty.TeacherName
+                        </MudText>
+
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6" md="3">
+
+                        <MudText Typo="Typo.caption">
+                            Course
+                        </MudText>
+
+                        <MudText Typo="Typo.body1">
+                            @_report.BestFaculty.CourseName
+                        </MudText>
+
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6" md="2">
+
+                        <MudText Typo="Typo.caption">
+                            Students
+                        </MudText>
+
+                        <MudText Typo="Typo.body1"
+                                 Class="fw-bold">
+                            @_report.BestFaculty.StudentsTaught
+                        </MudText>
+
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6" md="2">
+
+                        <MudText Typo="Typo.caption">
+                            Performance
+                        </MudText>
+
+                        <MudText Typo="Typo.body1"
+                                 Class="fw-bold">
+                            @_report.BestFaculty.PerformanceScore.ToString("0.##")%
+                        </MudText>
+
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6" md="2">
+
+                        <MudText Typo="Typo.caption">
+                            Attendance
+                        </MudText>
+
+                        <MudText Typo="Typo.body1"
+                                 Class="fw-bold">
+                            @_report.BestFaculty.AttendancePercentage.ToString("0.##")%
+                        </MudText>
+
+                    </MudItem>
+
+                </MudGrid>
+
+            </MudPaper>
+        }
+
+        <MudPaper Class="pa-4">
+
+            <MudText Typo="Typo.h6"
+                     Class="fw-bold mb-3">
+                Top Performing Faculty
+            </MudText>
+
+            @if (_report.Faculty.Count == 0)
+            {
+                <MudAlert Severity="Severity.Info">
+                    No faculty performance records found for the selected filters.
+                </MudAlert>
+            }
+            else
+            {
+                <MudTable Items="@_report.Faculty"
+                          Hover="true"
+                          Dense="true"
+                          Striped="true"
+                          Bordered="true">
+
+                    <HeaderContent>
+
+                        <MudTh>#</MudTh>
+                        <MudTh>Faculty</MudTh>
+                        <MudTh>Gender</MudTh>
+                        <MudTh>Course</MudTh>
+                        <MudTh>Students</MudTh>
+                        <MudTh>Performance</MudTh>
+                        <MudTh>Attendance</MudTh>
+                        <MudTh>Classes</MudTh>
+
+                    </HeaderContent>
+
+                    <RowTemplate>
+
+                        <MudTd DataLabel="#">
+                            @context.Rank
+                        </MudTd>
+
+                        <MudTd DataLabel="Faculty">
+
+                            <MudText Class="fw-bold">
+                                @context.TeacherName
+                            </MudText>
+
+                        </MudTd>
+
+                        <MudTd DataLabel="Gender">
+                            @context.Gender
+                        </MudTd>
+
+                        <MudTd DataLabel="Course">
+                            @context.CourseName
+                        </MudTd>
+
+                        <MudTd DataLabel="Students">
+                            @context.StudentsTaught
+                        </MudTd>
+
+                        <MudTd DataLabel="Performance">
+
+                            <MudText Class="fw-bold">
+                                @context.PerformanceScore.ToString("0.##")%
+                            </MudText>
+
+                        </MudTd>
+
+                        <MudTd DataLabel="Attendance">
+                            @context.AttendancePercentage.ToString("0.##")%
+                        </MudTd>
+
+                        <MudTd DataLabel="Classes">
+                            @context.ClassesReported
+                        </MudTd>
+
+                    </RowTemplate>
+
+                </MudTable>
+            }
+
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+
+    private List<CourseResponse> _courses = new();
+
+    private BestPerformingFacultyReportResponse? _report;
+
+    private string? _courseName;
+
+    private Gender? _gender;
+
+    private DateTime? _fromDate;
+
+    private DateTime? _toDate;
+
+    private bool _loading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _courses =
+            await CourseApi.GetAllAsync();
+
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+
+        try
+        {
+            if (_fromDate.HasValue &&
+                _toDate.HasValue &&
+                _fromDate.Value.Date >
+                _toDate.Value.Date)
+            {
+                Snackbar.Add(
+                    "From Date cannot be after To Date.",
+                    Severity.Warning);
+
+                return;
+            }
+
+            _report =
+                await FacultyApi.GetAsync(
+                    _courseName,
+                    _gender.HasValue
+                        ? (int?)_gender.Value
+                        : null,
+                    _fromDate.HasValue
+                        ? DateOnly.FromDateTime(
+                            _fromDate.Value)
+                        : null,
+                    _toDate.HasValue
+                        ? DateOnly.FromDateTime(
+                            _toDate.Value)
+                        : null);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to load report: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task ClearAsync()
+    {
+        _courseName = null;
+        _gender = null;
+        _fromDate = null;
+        _toDate = null;
+
+        await LoadAsync();
+    }
+
+    private async Task DownloadImageAsync()
+    {
+        try
+        {
+            var bytes =
+                await FacultyApi.DownloadImageAsync(
+                    _courseName,
+                    _gender.HasValue
+                        ? (int?)_gender.Value
+                        : null,
+                    _fromDate.HasValue
+                        ? DateOnly.FromDateTime(
+                            _fromDate.Value)
+                        : null,
+                    _toDate.HasValue
+                        ? DateOnly.FromDateTime(
+                            _toDate.Value)
+                        : null);
+
+            await JS.InvokeVoidAsync(
+                "downloadFile",
+                $"best-performing-faculty-{DateTime.Now:yyyyMMdd-HHmmss}.png",
+                "image/png",
+                Convert.ToBase64String(bytes));
+
+            Snackbar.Add(
+                "Faculty image downloaded successfully.",
+                Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to download image: {ex.Message}",
+                Severity.Error);
+        }
+    }
+
+    private async Task DownloadPdfAsync()
+    {
+        try
+        {
+            var bytes =
+                await FacultyApi.DownloadPdfAsync(
+                    _courseName,
+                    _gender.HasValue
+                        ? (int?)_gender.Value
+                        : null,
+                    _fromDate.HasValue
+                        ? DateOnly.FromDateTime(
+                            _fromDate.Value)
+                        : null,
+                    _toDate.HasValue
+                        ? DateOnly.FromDateTime(
+                            _toDate.Value)
+                        : null);
+
+            await JS.InvokeVoidAsync(
+                "downloadFile",
+                $"best-performing-faculty-{DateTime.Now:yyyyMMdd-HHmmss}.pdf",
+                "application/pdf",
+                Convert.ToBase64String(bytes));
+
+            Snackbar.Add(
+                "Faculty PDF downloaded successfully.",
+                Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to download PDF: {ex.Message}",
+                Severity.Error);
+        }
+    }
+}

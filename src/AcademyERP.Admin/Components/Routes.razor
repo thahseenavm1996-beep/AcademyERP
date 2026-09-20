@@ -1,20 +1,87 @@
-﻿<CascadingAuthenticationState>
+﻿@using AcademyERP.Admin.Constants
+@using Microsoft.AspNetCore.Components.Authorization
 
-    <Router AppAssembly="typeof(Program).Assembly" NotFoundPage="typeof(Pages.NotFound)">
+<CascadingAuthenticationState>
+
+    <Router AppAssembly="typeof(Program).Assembly"
+            NotFoundPage="typeof(Pages.NotFound)">
 
         <Found Context="routeData">
 
-            <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
+            @if (IsPublicPage(routeData.PageType))
+            {
+                <RouteView RouteData="routeData"
+                           DefaultLayout="typeof(Layout.MainLayout)" />
+            }
+            else
+            {
+                <AuthorizeView Roles="@GetRequiredRoles(routeData.PageType)">
+                    <Authorized>
+                        <RouteView RouteData="routeData"
+                                   DefaultLayout="typeof(Layout.MainLayout)" />
+                    </Authorized>
 
-                <NotAuthorized>
-                    <p>You are not authorized.</p>
-                </NotAuthorized>
-            </AuthorizeRouteView>
+                    <NotAuthorized>
+                        <LayoutView Layout="typeof(Layout.MainLayout)">
+                            <div class="d-flex justify-center align-center"
+                                 style="min-height:60vh;">
+                                <div class="text-center">
+                                    <h2>You are not authorized.</h2>
 
-            <FocusOnNavigate RouteData="routeData" Selector="h1" />
+                                    <p class="mt-2">
+                                        You do not have permission to access this page.
+                                    </p>
+
+                                    <a href="/" class="mud-button-root mud-button mud-button-filled mud-button-filled-primary mt-4">
+                                        Go to Dashboard
+                                    </a>
+                                </div>
+                            </div>
+                        </LayoutView>
+                    </NotAuthorized>
+                </AuthorizeView>
+            }
+
+            <FocusOnNavigate RouteData="routeData"
+                             Selector="h1" />
 
         </Found>
 
     </Router>
 
 </CascadingAuthenticationState>
+
+@code
+{
+    private static bool IsPublicPage(Type pageType)
+    {
+        var name = pageType.Name;
+
+        return name is
+            "Login" or
+            "NotFound" or
+            "Error";
+    }
+
+    private static string GetRequiredRoles(Type pageType)
+    {
+        var fullName = pageType.FullName ?? string.Empty;
+
+        // Teacher portal pages
+        if (fullName.Contains(".Components.Pages.TeacherPortal.")
+            || pageType.Name == "TeacherDashboard")
+        {
+            return $"{Roles.Teacher}";
+        }
+
+        // Parent portal pages
+        if (fullName.Contains(".Components.Pages.ParentPortal."))
+        {
+            return $"{Roles.Parent}";
+        }
+
+        // Everything else in the authenticated application
+        // is restricted to SuperAdmin and Administrator.
+        return $"{Roles.SuperAdmin},{Roles.Administrator}";
+    }
+}

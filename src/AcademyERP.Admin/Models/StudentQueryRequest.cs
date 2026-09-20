@@ -9,4 +9,8 @@ public class StudentQueryRequest
     public string? Search { get; set; }
 
     public string? SortBy { get; set; }
+
+    public Guid? CourseId { get; set; }
+
+    public string? Gender { get; set; }
 }

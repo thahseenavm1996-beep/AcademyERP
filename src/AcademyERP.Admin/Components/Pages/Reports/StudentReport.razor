@@ -3,11 +3,98 @@
 @using AcademyERP.Admin.Models.Enrollments
 @using AcademyERP.Admin.Services
 @using AcademyERP.Admin.Models.StudentReports
+@using AcademyERP.Domain.Enums
 
 @inject StudentReportApiService StudentReportApi
 @inject EnrollmentApiService EnrollmentApi
 
 <PageTitle>Student Reports</PageTitle>
+
+<!-- Filters -->
+<MudPaper Class="pa-4 mb-5">
+    <MudGrid>
+
+        <MudItem xs="12" sm="6" md="4">
+
+            <MudSelect T="string"
+                       Label="Course"
+                       Variant="Variant.Outlined"
+                       @bind-Value="_courseName">
+
+                <MudSelectItem Value="@string.Empty">
+                    All Courses
+                </MudSelectItem>
+
+                @foreach (var course in CourseNames)
+                {
+                    <MudSelectItem Value="@course">
+                        @course
+                    </MudSelectItem>
+                }
+
+            </MudSelect>
+
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="4">
+
+            <MudSelect T="Gender?"
+                       Label="Gender"
+                       Variant="Variant.Outlined"
+                       @bind-Value="_gender">
+
+                <MudSelectItem T="Gender?"
+                               Value="@((Gender?)null)">
+                    All
+                </MudSelectItem>
+
+                <MudSelectItem T="Gender?"
+                               Value="@Gender.Male">
+                    Male
+                </MudSelectItem>
+
+                <MudSelectItem T="Gender?"
+                               Value="@Gender.Female">
+                    Female
+                </MudSelectItem>
+
+                <MudSelectItem T="Gender?"
+                               Value="@Gender.Other">
+                    Other
+                </MudSelectItem>
+
+            </MudSelect>
+
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="4">
+
+            <MudStack Row="true"
+                      Spacing="2"
+                      Class="mt-2">
+
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           OnClick="ApplyFilters">
+
+                    SEARCH
+
+                </MudButton>
+
+                <MudButton Variant="Variant.Outlined"
+                           OnClick="ClearFilters">
+
+                    CLEAR
+
+                </MudButton>
+
+            </MudStack>
+
+        </MudItem>
+
+    </MudGrid>
+</MudPaper>
+
 
 @if (_dashboard != null)
 {
@@ -99,6 +186,7 @@
     </MudGrid>
 }
 
+
 @if (_dashboard?.BestStudent != null)
 {
     <MudPaper Class="pa-6 mt-5 elevation-3">
@@ -107,9 +195,7 @@
             ⭐ Best Performing Student
         </MudText>
 
-
-        <MudDivider Class="my-4"/>
-
+        <MudDivider Class="my-4" />
 
         <MudGrid>
 
@@ -154,11 +240,11 @@
 
             </MudItem>
 
-
         </MudGrid>
 
     </MudPaper>
 }
+
 
 <MudGrid Class="mt-6">
 
@@ -264,8 +350,8 @@
 
     </MudItem>
 
-
 </MudGrid>
+
 
 <MudPaper Class="pa-4 mt-6">
 
@@ -273,17 +359,16 @@
         📊 Attendance Distribution
     </MudText>
 
-
-  <MudChart T="double"
-          ChartType="ChartType.Bar"
-          ChartSeries="@AttendanceDistributionSeries"
-          ChartLabels="@AttendanceDistributionLabels"
-          Height="350px" />
+    <MudChart T="double"
+              ChartType="ChartType.Bar"
+              ChartSeries="@AttendanceDistributionSeries"
+              ChartLabels="@AttendanceDistributionLabels"
+              Height="350px" />
 
 </MudPaper>
 
 
-    @if (_dashboard?.PerformanceTrend != null)
+@if (_dashboard?.PerformanceTrend?.Count > 0)
 {
     <MudPaper Class="pa-5 mt-5">
 
@@ -291,14 +376,70 @@
             📈 Student Performance Trend
         </MudText>
 
-      <MudChart T="double"
-          ChartType="ChartType.Line"
-          ChartSeries="@PerformanceSeries"
-          ChartLabels="@PerformanceLabels"
-          ChartOptions="@PerformanceChartOptions"
-          Height="400px" />
-          </MudPaper>
+        @if (_dashboard.PerformanceTrend.Count == 1)
+        {
+            var performance = _dashboard.PerformanceTrend[0];
+
+            <MudAlert Severity="Severity.Info" Class="mt-4">
+
+                Performance data is currently available for
+                <strong>@performance.Month</strong> only.
+
+                Current performance:
+                <strong>@performance.Score.ToString("0.##")%</strong>.
+
+                More data will appear as additional class reports are recorded.
+
+            </MudAlert>
+
+            <div class="d-flex justify-center align-center mt-4"
+                 style="height: 220px;">
+
+                <div class="text-center">
+
+                    <MudText Typo="Typo.h2">
+                        @performance.Score.ToString("0.##")%
+                    </MudText>
+
+                    <MudText Typo="Typo.body1">
+                        @performance.Month
+                    </MudText>
+
+                </div>
+
+            </div>
+        }
+        else
+        {
+            <MudChart T="double"
+                      ChartType="ChartType.Line"
+                      ChartSeries="@PerformanceSeries"
+                      ChartLabels="@PerformanceLabels"
+                      ChartOptions="@PerformanceChartOptions"
+                      Height="400px" />
+        }
+
+    </MudPaper>
 }
+else
+{
+    <MudPaper Class="pa-5 mt-5">
+
+        <MudText Typo="Typo.h5">
+            📈 Student Performance Trend
+        </MudText>
+
+        <MudAlert Severity="Severity.Info" Class="mt-4">
+
+            No performance data is available yet.
+            Performance trends will appear after class reports are recorded.
+
+        </MudAlert>
+
+    </MudPaper>
+}
+
+
 <MudPaper Class="pa-4 mt-6">
 
     <MudText Typo="Typo.h5">
@@ -308,11 +449,13 @@
     <MudChart T="double"
               ChartType="ChartType.Line"
               ChartSeries="@AttendanceSeries"
-             ChartLabels="@AttendanceLabels"
+              ChartLabels="@AttendanceLabels"
               ChartOptions="@AttendanceChartOptions"
               Height="400px" />
 
 </MudPaper>
+
+
 <MudPaper Class="pa-4 mt-6">
 
     <MudText Typo="Typo.h5">
@@ -327,58 +470,55 @@
               Height="400px" />
 
 </MudPaper>
+
+
 <MudPaper Class="pa-4 mt-6">
 
-<MudText Typo="Typo.h5">
-🏆 Student Ranking
-</MudText>
+    <MudText Typo="Typo.h5">
+        🏆 Student Ranking
+    </MudText>
+
+    <MudTable Items="_dashboard?.StudentRanking ?? new List<StudentRankingDto>()">
+
+        <HeaderContent>
+
+            <MudTh>Rank</MudTh>
+            <MudTh>Student</MudTh>
+            <MudTh>Course</MudTh>
+            <MudTh>Performance</MudTh>
+            <MudTh>Attendance</MudTh>
+
+        </HeaderContent>
 
 
-<MudTable Items="_dashboard?.StudentRanking ?? new List<StudentRankingDto>()">
+        <RowTemplate Context="student">
 
-<HeaderContent>
+            <MudTd>
+                @student.Rank
+            </MudTd>
 
-<MudTh>Rank</MudTh>
-<MudTh>Student</MudTh>
-<MudTh>Course</MudTh>
-<MudTh>Performance</MudTh>
-<MudTh>Attendance</MudTh>
+            <MudTd>
+                <b>@student.StudentName</b>
+            </MudTd>
 
-</HeaderContent>
+            <MudTd>
+                @student.CourseName
+            </MudTd>
 
+            <MudTd>
+                @student.PerformanceScore%
+            </MudTd>
 
-<RowTemplate Context="student">
+            <MudTd>
+                @student.Attendance%
+            </MudTd>
 
-<MudTd>
-@student.Rank
-</MudTd>
+        </RowTemplate>
 
-
-<MudTd>
-<b>@student.StudentName</b>
-</MudTd>
-
-
-<MudTd>
-@student.CourseName
-</MudTd>
-
-
-<MudTd>
-@student.PerformanceScore%
-</MudTd>
-
-
-<MudTd>
-@student.Attendance%
-</MudTd>
-
-
-</RowTemplate>
-
-</MudTable>
+    </MudTable>
 
 </MudPaper>
+
 
 <MudPaper Class="pa-4 mt-6">
 
@@ -386,7 +526,7 @@
         📚 Learning Progress Overview
     </MudText>
 
-    <MudTable Items="_dashboard?.LearningProgress 
+    <MudTable Items="_dashboard?.LearningProgress
         ?? new List<StudentLearningProgressDto>()">
 
         <HeaderContent>
@@ -406,21 +546,17 @@
                 <b>@student.StudentName</b>
             </MudTd>
 
-
             <MudTd>
                 @student.CourseName
             </MudTd>
-
 
             <MudTd>
                 @student.LessonsCompleted
             </MudTd>
 
-
             <MudTd>
                 @student.PagesCovered
             </MudTd>
-
 
             <MudTd>
 
@@ -436,10 +572,10 @@
 
         </RowTemplate>
 
-
     </MudTable>
 
 </MudPaper>
+
 
 <MudPaper Class="pa-4 mt-6">
 
@@ -447,22 +583,16 @@
         💰 Fee Status Overview
     </MudText>
 
-
-    <MudTable Items="_dashboard?.FeeStatus 
+    <MudTable Items="_dashboard?.FeeStatus
         ?? new List<StudentFeeStatusDto>()">
 
         <HeaderContent>
 
             <MudTh>Student</MudTh>
-
             <MudTh>Course</MudTh>
-
             <MudTh>Monthly Fee</MudTh>
-
             <MudTh>Last Payment</MudTh>
-
             <MudTh>Next Due Date</MudTh>
-
             <MudTh>Status</MudTh>
 
         </HeaderContent>
@@ -470,31 +600,25 @@
 
         <RowTemplate Context="fee">
 
-
             <MudTd>
                 <b>@fee.StudentName</b>
             </MudTd>
-
 
             <MudTd>
                 @fee.CourseName
             </MudTd>
 
-
             <MudTd>
                 ₹ @fee.MonthlyFee
             </MudTd>
-
 
             <MudTd>
                 @fee.LastPaymentDate
             </MudTd>
 
-
             <MudTd>
                 @fee.NextDueDate
             </MudTd>
-
 
             <MudTd>
 
@@ -522,121 +646,167 @@
 
             </MudTd>
 
-
         </RowTemplate>
-
 
     </MudTable>
 
 </MudPaper>
 
+
 @code {
 
     private List<EnrollmentResponse> _enrollments = new();
+
     private StudentReportDashboardResponse? _dashboard;
-   
-private List<ChartSeries<double>> PerformanceSeries = new();
-private string[] PerformanceLabels =
-[
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr"
-];
 
-private List<ChartSeries<double>> AttendanceSeries = new();
+    private string _courseName = string.Empty;
 
-private string[] AttendanceLabels = Array.Empty<string>();
+    private Gender? _gender;
 
-private ChartOptions AttendanceChartOptions = new ChartOptions();
+    private List<string> CourseNames = new();
 
-private List<ChartSeries<double>> CourseSeries = new();
 
-private string[] CourseLabels = Array.Empty<string>();
+    private List<ChartSeries<double>> PerformanceSeries = new();
 
-private ChartOptions CourseChartOptions = new();
+    private string[] PerformanceLabels = Array.Empty<string>();
 
-private List<ChartSeries<double>> AttendanceDistributionSeries = new();
 
-private string[] AttendanceDistributionLabels =
-[
-    "Present",
-    "Absent",
-    "Leave",
-    "Late"
-];
+    private List<ChartSeries<double>> AttendanceSeries = new();
 
-protected override async Task OnInitializedAsync()
-{
-    _dashboard =
-        await StudentReportApi.GetDashboardAsync();
-if (_dashboard == null)
+    private string[] AttendanceLabels = Array.Empty<string>();
+
+    private ChartOptions AttendanceChartOptions = new();
+
+
+    private List<ChartSeries<double>> CourseSeries = new();
+
+    private string[] CourseLabels = Array.Empty<string>();
+
+    private BarChartOptions CourseChartOptions = new()
     {
-        _dashboard = new StudentReportDashboardResponse();
+        XAxisLabelRotation = 45,
+        XAxisTitle = "Courses",
+        YAxisTitle = "Students"
+    };
+
+
+    private List<ChartSeries<double>> AttendanceDistributionSeries = new();
+
+    private string[] AttendanceDistributionLabels =
+    [
+        "Present",
+        "Absent",
+        "Leave",
+        "Late"
+    ];
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Load enrollments so we can populate the Course filter.
+        _enrollments = await EnrollmentApi.GetAllAsync();
+
+        CourseNames = _enrollments
+            .Where(x => !string.IsNullOrWhiteSpace(x.CourseName))
+            .Select(x => x.CourseName!)
+            .Distinct()
+            .OrderBy(x => x)
+            .ToList();
+
+        // Load the dashboard using the current filters.
+        await LoadDashboardAsync();
     }
 
-    if (_dashboard?.PerformanceTrend != null)
+
+    private async Task LoadDashboardAsync()
     {
-        PerformanceLabels =
-            _dashboard.PerformanceTrend
-            .Select(x => x.Month)
-            .ToArray();
+        _dashboard =
+            await StudentReportApi.GetDashboardAsync(
+                string.IsNullOrWhiteSpace(_courseName)
+                    ? null
+                    : _courseName,
+                _gender.HasValue
+                    ? (int)_gender.Value
+                    : null);
 
 
-       PerformanceSeries =
-[
-    new ChartSeries<double>
-    {
-        Name = "Performance",
-
-        Data =
-            _dashboard.PerformanceTrend
-            .Select(x =>
-                (double)x.Score)
-            .ToArray()
-    }
-];
-    }
-
-    AttendanceLabels =
-    _dashboard.AttendanceTrend
-    .Select(x => x.Month)
-    .ToArray();
+        if (_dashboard == null)
+        {
+            _dashboard = new StudentReportDashboardResponse();
+        }
 
 
-AttendanceSeries =
-[
-    new ChartSeries<double>
-    {
-        Name = "Attendance",
+        // Performance chart
+        if (_dashboard.PerformanceTrend != null)
+        {
+            PerformanceLabels =
+                _dashboard.PerformanceTrend
+                    .Select(x => x.Month)
+                    .ToArray();
 
-        Data =
+            PerformanceSeries =
+            [
+                new ChartSeries<double>
+                {
+                    Name = "Performance",
+
+                    Data =
+                        _dashboard.PerformanceTrend
+                            .Select(x => (double)x.Score)
+                            .ToArray()
+                }
+            ];
+        }
+        else
+        {
+            PerformanceLabels = Array.Empty<string>();
+            PerformanceSeries = new List<ChartSeries<double>>();
+        }
+
+
+        // Attendance chart
+        AttendanceLabels =
             _dashboard.AttendanceTrend
-            .Select(x => (double)x.Attendance)
-            .ToArray()
-    }
-];
+                .Select(x => x.Month)
+                .ToArray();
 
-CourseLabels =
-    _dashboard.CourseDistribution
-    .Select(x => x.CourseName)
-    .ToArray();
+        AttendanceSeries =
+        [
+            new ChartSeries<double>
+            {
+                Name = "Attendance",
+
+                Data =
+                    _dashboard.AttendanceTrend
+                        .Select(x => (double)x.Attendance)
+                        .ToArray()
+            }
+        ];
 
 
-CourseSeries =
-[
-    new ChartSeries<double>
-    {
-        Name = "Students",
-
-        Data =
+        // Course distribution chart
+        CourseLabels =
             _dashboard.CourseDistribution
-            .Select(x => (double)x.Students)
-            .ToArray()
-    }
-];
+                .Select(x => x.CourseName)
+                .ToArray();
 
-AttendanceDistributionSeries =
+        CourseSeries =
+        [
+            new ChartSeries<double>
+            {
+                Name = "Students",
+
+                Data =
+                    _dashboard.CourseDistribution
+                        .Select(x => (double)x.Students)
+                        .ToArray()
+            }
+        ];
+
+
+        // Attendance distribution
+        // Keeping the existing values for now.
+        AttendanceDistributionSeries =
 [
     new ChartSeries<double>
     {
@@ -651,12 +821,30 @@ AttendanceDistributionSeries =
         }.ToArray()
     }
 ];
+    }
 
-}
-private LineChartOptions PerformanceChartOptions = new()
-{
-    XAxisLabelRotation = 45,
-    XAxisTitle = "Month",
-    YAxisTitle = "Performance %"
-};
+
+    private async Task ApplyFilters()
+    {
+        await LoadDashboardAsync();
+    }
+
+
+    private async Task ClearFilters()
+    {
+        _courseName = string.Empty;
+
+        _gender = null;
+
+        await LoadDashboardAsync();
+    }
+
+
+    private LineChartOptions PerformanceChartOptions = new()
+    {
+        XAxisLabelRotation = 45,
+        XAxisTitle = "Month",
+        YAxisTitle = "Performance %"
+    };
+
 }

@@ -5,243 +5,280 @@
 @using AcademyERP.Admin.Services
 
 @inject ParentPortalApiService ParentPortalApi
+@inject NavigationManager Navigation
 
+<PageTitle>Parent Dashboard</PageTitle>
 
-<MudText Typo="Typo.h4">
-    Parent Dashboard
-</MudText>
-
-
-@if (_dashboard == null)
+@if (_loading)
 {
-    <MudProgressCircular Indeterminate="true" />
+    <MudGrid Spacing="3">
+        @for (var i = 0; i < 3; i++)
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <MudSkeleton Height="130px" Animation="Animation.Wave" />
+            </MudItem>
+        }
+    </MudGrid>
+}
+else if (_dashboard == null)
+{
+    <MudAlert Severity="Severity.Error">
+        Unable to load your dashboard.
+    </MudAlert>
 }
 else
 {
+    <MudText Typo="Typo.h4">
+        Parent Dashboard
+    </MudText>
 
-    <MudText Typo="Typo.h5" Class="mt-4">
-    Assalamu Alaikum @_dashboard.ParentName 👋
-</MudText>
+    <MudText Typo="Typo.h5" Class="mt-3">
+        Assalamu Alaikum @_dashboard.ParentName 👋
+    </MudText>
 
-<MudText Typo="Typo.subtitle1">
-    Welcome back to Mueenu Ssalik International Academy
-</MudText>
+    <MudText Typo="Typo.body2"
+             Color="Color.Secondary"
+             Class="mb-6">
+        Welcome back to MS Academy.
+    </MudText>
 
-
-    <MudGrid Class="mt-6">
-
-
-        <MudItem xs="12" sm="6" md="4">
-
-            <MudCard>
-
-                <MudCardContent>
-
-                    <MudText Typo="Typo.subtitle2">
-                        My Children
-                    </MudText>
-
-                    <MudText Typo="Typo.h4">
-                        @_dashboard.ChildrenCount
-                    </MudText>
-
-                </MudCardContent>
-
-            </MudCard>
-
-        </MudItem>
-
-
+    <MudGrid Spacing="3">
 
         <MudItem xs="12" sm="6" md="4">
+            <MudCard Class="h-100">
+                <MudCardContent Class="pa-5">
+                    <div class="d-flex align-center">
+                        <MudAvatar Color="Color.Primary">
+                            <MudIcon Icon="@Icons.Material.Filled.FamilyRestroom" />
+                        </MudAvatar>
 
-            <MudCard>
+                        <div class="ml-4">
+                            <MudText Typo="Typo.body2"
+                                     Color="Color.Secondary">
+                                My Children
+                            </MudText>
 
-                <MudCardContent>
-
-                    <MudText Typo="Typo.subtitle2">
-                        Pending Fees
-                    </MudText>
-
-                    <MudText Typo="Typo.h4">
-                        ₹ @_dashboard.PendingFeeAmount
-                    </MudText>
-
+                            <MudText Typo="Typo.h4">
+                                @_dashboard.ChildrenCount
+                            </MudText>
+                        </div>
+                    </div>
                 </MudCardContent>
-
             </MudCard>
-
         </MudItem>
 
+        <MudItem xs="12" sm="6" md="4">
+            <MudCard Class="h-100">
+                <MudCardContent Class="pa-5">
+                    <div class="d-flex align-center">
+                        <MudAvatar Color="Color.Warning">
+                            <MudIcon Icon="@Icons.Material.Filled.Payment" />
+                        </MudAvatar>
+
+                        <div class="ml-4">
+                            <MudText Typo="Typo.body2"
+                                     Color="Color.Secondary">
+                                Outstanding Fees
+                            </MudText>
+
+                            <MudText Typo="Typo.h4">
+                                ₹ @_dashboard.PendingFeeAmount.ToString("N2")
+                            </MudText>
+                        </div>
+                    </div>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="4">
+            <MudCard Class="h-100">
+                <MudCardContent Class="pa-5">
+                    <div class="d-flex align-center">
+                        <MudAvatar Color="Color.Info">
+                            <MudIcon Icon="@Icons.Material.Filled.CalendarMonth" />
+                        </MudAvatar>
+
+                        <div class="ml-4">
+                            <MudText Typo="Typo.body2"
+                                     Color="Color.Secondary">
+                                Upcoming Classes
+                            </MudText>
+
+                            <MudText Typo="Typo.h4">
+                                @_dashboard.UpcomingClasses.Count
+                            </MudText>
+                        </div>
+                    </div>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
 
     </MudGrid>
 
+    <div class="d-flex align-center justify-space-between mt-8 mb-3">
+        <MudText Typo="Typo.h5">
+            My Children
+        </MudText>
 
+        <MudButton Variant="Variant.Text"
+                   Color="Color.Primary"
+                   OnClick="@(() => Navigation.NavigateTo("/parent/children"))">
+            View All
+        </MudButton>
+    </div>
 
-    <MudText Typo="Typo.h5" Class="mt-6">
-        My Children
-    </MudText>
-
-
-
-    <MudGrid Class="mt-3">
+    <MudGrid Spacing="3">
 
         @foreach (var child in _dashboard.Children)
         {
-
             <MudItem xs="12" md="6">
 
-                <MudCard>
+                <MudCard Class="h-100">
 
-                    <MudCardContent>
+                    <MudCardContent Class="pa-5">
 
-                        <MudText Typo="Typo.h5">
-                            @child.StudentName
+                        <div class="d-flex align-center mb-4">
+
+                            <MudAvatar Color="Color.Primary"
+                                       Size="Size.Large">
+                                <MudIcon Icon="@Icons.Material.Filled.Person" />
+                            </MudAvatar>
+
+                            <div class="ml-3">
+                                <MudText Typo="Typo.h6">
+                                    @child.StudentName
+                                </MudText>
+
+                                <MudText Typo="Typo.body2"
+                                         Color="Color.Secondary">
+                                    @child.CourseName
+                                </MudText>
+                            </div>
+
+                        </div>
+
+                        <MudText Typo="Typo.body2">
+                            <strong>Teacher:</strong> @child.TeacherName
                         </MudText>
 
+                        <MudDivider Class="my-4" />
 
-                        <MudText>
-                            Course:
-                            @child.CourseName
+                        <MudText Typo="Typo.subtitle2">
+                            Attendance
                         </MudText>
 
+                        @if (child.HasAttendanceRecords)
+                        {
+                            <MudProgressLinear
+                                Value="@((double)child.AttendancePercentage)"
+                                Rounded="true"
+                                Color="Color.Primary"
+                                Class="mt-2 mb-1" />
 
-                        <MudText>
-                            Teacher:
-                            @child.TeacherName
+                            <MudText Typo="Typo.caption">
+                                @child.AttendancePercentage.ToString("0.##")%
+                            </MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2"
+                                     Color="Color.Secondary">
+                                No attendance records yet.
+                            </MudText>
+                        }
+
+                        <MudText Typo="Typo.subtitle2"
+                                 Class="mt-4">
+                            Learning Progress
                         </MudText>
 
+                        @if (child.HasProgressRecords)
+                        {
+                            <MudProgressLinear
+                                Value="@((double)child.ProgressPercentage)"
+                                Rounded="true"
+                                Color="Color.Info"
+                                Class="mt-2 mb-1" />
 
-                       <MudText Class="mt-3">
-    Attendance
-</MudText>
-
-@if (child.HasAttendanceRecords)
-{
-    <MudProgressLinear
-        Value="@((double)child.AttendancePercentage)"
-        Class="mb-3" />
-
-    <MudText>
-        @child.AttendancePercentage%
-    </MudText>
-}
-else
-{
-    <MudText Color="Color.Secondary">
-        No attendance records available
-    </MudText>
-}
-
-
-
-                        <MudText Class="mt-3">
-    Progress
-</MudText>
-
-@if (child.HasProgressRecords)
-{
-    <MudProgressLinear
-        Value="@((double)child.ProgressPercentage)" />
-
-    <MudText>
-        @child.ProgressPercentage%
-    </MudText>
-}
-else
-{
-    <MudText Typo="Typo.body2" Class="text-secondary">
-    No progress records available
-</MudText>
-}
+                            <MudText Typo="Typo.caption">
+                                @child.ProgressPercentage.ToString("0.##")%
+                            </MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2"
+                                     Color="Color.Secondary">
+                                No progress records yet.
+                            </MudText>
+                        }
 
                     </MudCardContent>
 
                 </MudCard>
 
             </MudItem>
-
         }
 
     </MudGrid>
 
-
-
-
-    <MudText Typo="Typo.h5" Class="mt-6">
+    <MudText Typo="Typo.h5" Class="mt-8 mb-3">
         Upcoming Classes
     </MudText>
 
+    @if (!_dashboard.UpcomingClasses.Any())
+    {
+        <MudPaper Class="pa-6 text-center">
+            <MudIcon Icon="@Icons.Material.Filled.EventAvailable"
+                     Size="Size.Large"
+                     Color="Color.Primary" />
 
-    <MudTable Items="_dashboard.UpcomingClasses"
-              Class="mt-3">
+            <MudText Typo="Typo.h6" Class="mt-2">
+                No upcoming classes
+            </MudText>
+        </MudPaper>
+    }
+    else
+    {
+        <MudTable Items="_dashboard.UpcomingClasses"
+                  Hover="true"
+                  Dense="true"
+                  Striped="true">
 
+            <HeaderContent>
+                <MudTh>Date</MudTh>
+                <MudTh>Student</MudTh>
+                <MudTh>Course</MudTh>
+                <MudTh>Teacher</MudTh>
+                <MudTh>Time</MudTh>
+                <MudTh>Duration</MudTh>
+            </HeaderContent>
 
-       <HeaderContent>
+            <RowTemplate Context="item">
+                <MudTd>@item.ClassDate</MudTd>
+                <MudTd>@item.StudentName</MudTd>
+                <MudTd>@item.CourseName</MudTd>
+                <MudTd>@item.TeacherName</MudTd>
+                <MudTd>@item.StartTime</MudTd>
+                <MudTd>@item.DurationMinutes min</MudTd>
+            </RowTemplate>
 
-    <MudTh>
-        Date
-    </MudTh>
-
-    <MudTh>
-        Student
-    </MudTh>
-
-    <MudTh>
-        Course
-    </MudTh>
-
-    <MudTh>
-        Teacher
-    </MudTh>
-
-    <MudTh>
-        Time
-    </MudTh>
-
-</HeaderContent>
-
-
-       <RowTemplate Context="item">
-
-    <MudTd>
-        @item.ClassDate
-    </MudTd>
-
-    <MudTd>
-        @item.StudentName
-    </MudTd>
-
-    <MudTd>
-        @item.CourseName
-    </MudTd>
-
-    <MudTd>
-        @item.TeacherName
-    </MudTd>
-
-    <MudTd>
-        @item.StartTime
-    </MudTd>
-
-</RowTemplate>
-
-
-    </MudTable>
-
+        </MudTable>
+    }
 }
 
-
-
 @code {
-
     private ParentDashboardResponse? _dashboard;
-
+    private bool _loading = true;
 
     protected override async Task OnInitializedAsync()
     {
-        _dashboard =
-            await ParentPortalApi.GetDashboardAsync();
+        try
+        {
+            _dashboard = await ParentPortalApi.GetDashboardAsync();
+        }
+        finally
+        {
+            _loading = false;
+        }
     }
-
 }

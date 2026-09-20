@@ -13,4 +13,6 @@ public interface IScheduledClassService
     Task CompleteClassAsync(
     Guid id,
     CompleteScheduledClassRequest request);
+
+    Task MarkStudentAbsentAsync(Guid id);
 }

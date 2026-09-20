@@ -12,6 +12,12 @@ public class FeeInvoiceResponse
 
     public string CourseName { get; set; } = string.Empty;
 
+    public string Gender { get; set; } = string.Empty;
+
+    public string? ParentName { get; set; }
+
+    public string? ParentPhoneNumber { get; set; }
+
     public decimal Amount { get; set; }
 
     public decimal DiscountAmount { get; set; }

@@ -8,6 +8,7 @@ public class CreateClassReportRequest
     [Required]
     public Guid ScheduledClassId { get; set; }
 
+public AttendanceStatus AttendanceStatus { get; set; } = AttendanceStatus.Present;
 
     [Required]
     public PerformanceRating PerformanceRating { get; set; }
@@ -40,4 +41,5 @@ public class CreateClassReportRequest
 
     [Range(1,300)]
     public int ActualDurationMinutes { get; set; }
+    
 }

@@ -420,6 +420,9 @@ public class AttendanceService : IAttendanceService
                 x.TeachingSchedule)
 .ThenInclude(x => x.ClassDuration)
 
+.Include(x => x.ScheduledClass)
+    .ThenInclude(x => x.TeachingSchedule)
+    .ThenInclude(x => x.Teacher)
 
         .Include(x => x.ScheduledClass)
 
@@ -488,16 +491,29 @@ public class AttendanceService : IAttendanceService
 
 
 
-        if(request.Status.HasValue)
+        if (request.Status.HasValue)
+    query = query.Where(x =>
+        x.Status == request.Status.Value);
 
-            query =
-            query.Where(x =>
-            x.Status ==
-            request.Status.Value);
+if (request.ProgramId.HasValue)
+    query = query.Where(x =>
+        x.ScheduledClass
+            .TeachingSchedule
+            .Enrollment
+            .Course
+            .ProgramId == request.ProgramId.Value);
 
+if (request.FromDate.HasValue)
+    query = query.Where(x =>
+        x.ScheduledClass.ClassDate >=
+        DateOnly.FromDateTime(request.FromDate.Value));
 
+if (request.ToDate.HasValue)
+    query = query.Where(x =>
+        x.ScheduledClass.ClassDate <=
+        DateOnly.FromDateTime(request.ToDate.Value));
 
-        return query;
+return query;
     }
 public async Task<AttendanceResponse?> GetByEnrollmentDateAsync(
     Guid enrollmentId,
@@ -513,4 +529,157 @@ public async Task<AttendanceResponse?> GetByEnrollmentDateAsync(
         ? null
         : _mapper.Map<AttendanceResponse>(attendance);
 }
+
+public async Task<List<
+    AcademyERP.Application.DTOs.AttendanceAlerts.StudentAbsenceAlertResponse>>
+    GetStudentAbsenceAlertsAsync(int minimumConsecutiveClasses = 2)
+{
+    var attendances = await _context.Attendances
+        .AsNoTracking()
+        .Include(x => x.ScheduledClass)
+            .ThenInclude(x => x.TeachingSchedule)
+                .ThenInclude(x => x.Enrollment)
+                    .ThenInclude(x => x.Student)
+                        .ThenInclude(x => x.StudentParents)
+                            .ThenInclude(x => x.Parent)
+                            .Include(x => x.ScheduledClass)
+    .ThenInclude(x => x.TeachingSchedule)
+        .ThenInclude(x => x.Enrollment)
+            .ThenInclude(x => x.Course)
+        .Where(x =>
+            x.ScheduledClass.TeachingSchedule.Enrollment.Student != null)
+        .OrderByDescending(x => x.ScheduledClass.ClassDate)
+        .ThenByDescending(x => x.ScheduledClass.StartTime)
+        .ToListAsync();
+
+    var results = new List<
+        AcademyERP.Application.DTOs.AttendanceAlerts.StudentAbsenceAlertResponse>();
+
+    var grouped = attendances
+        .GroupBy(x => new
+        {
+            StudentId =
+                x.ScheduledClass.TeachingSchedule.Enrollment.Student.Id,
+
+            EnrollmentId =
+                x.ScheduledClass.TeachingSchedule.Enrollment.Id
+        });
+
+    foreach (var group in grouped)
+    {
+        var ordered = group
+            .OrderByDescending(x => x.ScheduledClass.ClassDate)
+            .ThenByDescending(x => x.ScheduledClass.StartTime)
+            .ToList();
+
+        if (!ordered.Any())
+            continue;
+
+        var latest = ordered.First();
+
+        // No active absence streak if the latest class was attended.
+        if (latest.Status != AttendanceStatus.Absent &&
+            latest.Status != AttendanceStatus.Leave)
+        {
+            continue;
+        }
+
+        var consecutive = 0;
+
+        foreach (var attendance in ordered)
+        {
+            if (attendance.Status == AttendanceStatus.Absent ||
+                attendance.Status == AttendanceStatus.Leave)
+            {
+                consecutive++;
+                continue;
+            }
+
+            // Present/Late breaks the current consecutive streak.
+            break;
+        }
+
+        if (consecutive < minimumConsecutiveClasses)
+            continue;
+
+        var enrollment =
+            latest.ScheduledClass.TeachingSchedule.Enrollment;
+
+        var student = enrollment.Student;
+
+        var parent = student.StudentParents
+            .OrderByDescending(x => x.IsPrimaryContact)
+            .FirstOrDefault();
+
+        var teacher = await _context.Teachers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x =>
+                x.Id == latest.ScheduledClass.TeachingSchedule.TeacherId);
+
+        var lastAttendedDate = await _context.Attendances
+            .AsNoTracking()
+            .Where(x =>
+                x.ScheduledClass.TeachingSchedule.Enrollment.Id ==
+                    enrollment.Id &&
+                (x.Status == AttendanceStatus.Present ||
+                 x.Status == AttendanceStatus.Late) &&
+                (
+                    x.ScheduledClass.ClassDate <
+                        latest.ScheduledClass.ClassDate
+                    ||
+                    (
+                        x.ScheduledClass.ClassDate ==
+                            latest.ScheduledClass.ClassDate &&
+                        x.ScheduledClass.StartTime <
+                            latest.ScheduledClass.StartTime
+                    )
+                ))
+            .OrderByDescending(x => x.ScheduledClass.ClassDate)
+            .ThenByDescending(x => x.ScheduledClass.StartTime)
+            .Select(x => (DateOnly?)x.ScheduledClass.ClassDate)
+            .FirstOrDefaultAsync();
+
+        results.Add(
+            new AcademyERP.Application.DTOs.AttendanceAlerts
+                .StudentAbsenceAlertResponse
+            {
+                StudentId = student.Id,
+                StudentName = student.FullName,
+
+                ParentId = parent?.ParentId,
+                ParentName = parent?.Parent?.FullName ?? string.Empty,
+                ParentPhoneNumber =
+                    parent?.Parent?.PhoneNumber ?? string.Empty,
+
+                TeacherId =
+                    latest.ScheduledClass.TeachingSchedule.TeacherId,
+
+                TeacherName =
+                    teacher?.FullName ?? string.Empty,
+
+                CourseName =
+                    enrollment.Course?.CourseName ?? string.Empty,
+
+                ConsecutiveMissedClasses = consecutive,
+
+                LastMissedDate =
+                    latest.ScheduledClass.ClassDate,
+
+                LastAttendedDate = lastAttendedDate,
+
+                LastAttendanceStatus =
+                    latest.Status.ToString(),
+
+                AlertLevel = consecutive >= 3
+                    ? "Critical"
+                    : "Warning"
+            });
+    }
+
+    return results
+        .OrderByDescending(x => x.ConsecutiveMissedClasses)
+        .ThenByDescending(x => x.LastMissedDate)
+        .ToList();
+}
+
 }

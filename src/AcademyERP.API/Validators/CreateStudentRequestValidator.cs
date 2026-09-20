@@ -17,12 +17,11 @@ public class CreateStudentRequestValidator : AbstractValidator<CreateStudentRequ
             .MaximumLength(100);
 
         RuleFor(x => x.TimeZone)
-            .NotEmpty()
-            .MaximumLength(100);
+    .MaximumLength(100);
 
         RuleFor(x => x.DateOfBirth)
-     .LessThanOrEqualTo(DateTime.Today.AddYears(-4))
-     .WithMessage("Student must be at least 4 years old.");
+     .LessThanOrEqualTo(DateTime.Today.AddYears(-3))
+     .WithMessage("Student must be at least 3 years old.");
 
         RuleFor(x => x.AdmissionDate)
             .LessThanOrEqualTo(DateTime.Today)

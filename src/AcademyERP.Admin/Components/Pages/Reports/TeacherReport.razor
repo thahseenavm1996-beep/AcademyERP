@@ -195,7 +195,7 @@ Completed Classes
 
     </MudPaper>
 }
-@if (_dashboard?.PerformanceTrend.Any() == true)
+@if (_dashboard?.PerformanceTrend?.Count > 0)
 {
     <MudDivider Class="my-6" />
 
@@ -203,15 +203,63 @@ Completed Classes
         Teacher Performance Trend
     </MudText>
 
+    <MudPaper Class="pa-5 mt-4">
+
+        @if (_dashboard.PerformanceTrend.Count == 1)
+        {
+            var performance = _dashboard.PerformanceTrend[0];
+
+            <MudAlert Severity="Severity.Info" Class="mt-4">
+                Performance data is currently available for
+                <strong>@performance.Month</strong> only.
+                Current teacher performance:
+                <strong>@performance.Score.ToString("0.##")%</strong>.
+                More data will appear as additional class reports are recorded.
+            </MudAlert>
+
+            <div class="d-flex justify-center align-center mt-4"
+                 style="height: 220px;">
+
+                <div class="text-center">
+
+                    <MudText Typo="Typo.h2">
+                        @performance.Score.ToString("0.##")%
+                    </MudText>
+
+                    <MudText Typo="Typo.body1">
+                        @performance.Month
+                    </MudText>
+
+                </div>
+
+            </div>
+        }
+        else
+        {
+            <MudChart T="double"
+                      ChartType="ChartType.Line"
+                      ChartSeries="@_performanceSeries"
+                      ChartLabels="@_performanceLabels"
+                      ChartOptions="@TeacherPerformanceOptions"
+                      Height="400px" />
+        }
+
+    </MudPaper>
+}
+else
+{
+    <MudDivider Class="my-6" />
+
+    <MudText Typo="Typo.h5">
+        Teacher Performance Trend
+    </MudText>
 
     <MudPaper Class="pa-5 mt-4">
 
-        <MudChart T="double"
-          ChartType="ChartType.Line"
-          ChartSeries="@_performanceSeries"
-          ChartLabels="@_performanceLabels"
-          ChartOptions="@TeacherPerformanceOptions"
-          Height="400px" />
+        <MudAlert Severity="Severity.Info">
+            No teacher performance data is available yet.
+            Performance trends will appear after class reports are recorded.
+        </MudAlert>
 
     </MudPaper>
 }
@@ -360,10 +408,12 @@ else
 
         <MudTd DataLabel="Workload">
 
-            <MudProgressLinear
-                Value="@context.ActiveClasses"
-                Max="150"
-                Rounded="true" />
+           <MudProgressLinear
+    Value="@context.ActiveClasses"
+    Max="@(_dashboard.TeacherWorkload.Count == 0
+        ? 1
+        : _dashboard.TeacherWorkload.Max(x => x.ActiveClasses))"
+    Rounded="true" />
 
         </MudTd>
 
@@ -417,12 +467,7 @@ else
     private TeacherReportDashboardResponse? _dashboard;
     private List<ChartSeries<double>> _performanceSeries = new();
 
-private string[] _performanceLabels = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr"
-];
+private string[] _performanceLabels = Array.Empty<string>();
 private List<ChartSeries<double>> _joiningSeries = new();
 
 private string[] _joiningLabels = Array.Empty<string>();

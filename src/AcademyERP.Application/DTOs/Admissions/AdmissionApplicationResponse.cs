@@ -36,5 +36,9 @@ public class AdmissionApplicationResponse
 
     public Guid? StudentId { get; set; }
 
+    public Guid? AssignedTeacherId { get; set; }
+
     public DateTime CreatedAt { get; set; }
+    public DateTime? DemoStartedAt { get; set; }
+    
 }

@@ -16,7 +16,6 @@ public class UpdateStudentRequestValidator : AbstractValidator<UpdateStudentRequ
             .MaximumLength(100);
 
         RuleFor(x => x.TimeZone)
-            .NotEmpty()
             .MaximumLength(100);
 
         RuleFor(x => x.AdmissionDate)

@@ -8,18 +8,26 @@ using AcademyERP.Admin.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddMudServices();
-builder.Services.AddTransient<JwtAuthorizationMessageHandler>();
+builder.Services.AddScoped<JwtAuthorizationMessageHandler>();
 
 builder.Services.AddScoped(sp =>
 {
-    var handler = sp.GetRequiredService<JwtAuthorizationMessageHandler>();
+    var tokenService = sp.GetRequiredService<TokenService>();
 
-    handler.InnerHandler = new HttpClientHandler();
+    var handler = new JwtAuthorizationMessageHandler(tokenService)
+    {
+        InnerHandler = new HttpClientHandler()
+    };
 
     return new HttpClient(handler)
     {
         BaseAddress = new Uri("http://localhost:5235/")
     };
+});
+
+builder.Services.AddHttpClient("AcademyERPAuthApi", client =>
+{
+    client.BaseAddress = new Uri("http://localhost:5235/");
 });
 builder.Services.AddScoped<StudentApiService>();
 builder.Services.AddScoped<TeacherApiService>();
@@ -46,6 +54,10 @@ builder.Services.AddScoped<TeacherReportApiService>();
 builder.Services.AddScoped<AttendanceReportApiService>();
 builder.Services.AddScoped<FinanceReportApiService>();
 builder.Services.AddScoped<ParentPortalApiService>();
+builder.Services.AddScoped<TeacherPortalApiService>();
+builder.Services.AddScoped<TeacherPaymentApiService>();
+builder.Services.AddScoped<CommunicationApiService>();
+builder.Services.AddScoped<ReportUnlockRequestApiService>();
 builder.Services.AddScoped<
     RegistrationRequestApiService>();
 builder.Services.AddScoped<
@@ -53,6 +65,7 @@ builder.Services.AddScoped<
 
 builder.Services.AddScoped<
     FeePaymentApiService>();
+    builder.Services.AddScoped<FeePaymentSubmissionApiService>();
 
 builder.Services.AddScoped<AuthenticationStateProvider,
     JwtAuthenticationStateProvider>();
@@ -102,6 +115,10 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.AddScoped<AcademyERP.Admin.Services.BestPerformingStudentsApiService>();
+
+builder.Services.AddScoped<AcademyERP.Admin.Services.BestPerformingFacultyApiService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -117,6 +134,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
 
 
 

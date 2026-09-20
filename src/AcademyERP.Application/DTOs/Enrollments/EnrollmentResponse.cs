@@ -37,6 +37,12 @@ public class EnrollmentResponse
 
     public DateTime NextBillingDate { get; set; }
 
+    public bool IsFeePaused { get; set; }
+
+    public DateTime? FeePauseStartDate { get; set; }
+
+    public string? FeePauseReason { get; set; }
+
     public EnrollmentStatus Status { get; set; }
 
     public string? Remarks { get; set; }
@@ -45,4 +51,5 @@ public class EnrollmentResponse
     public string? TimeSlotName { get; set; }
 
 public string? ClassDurationName { get; set; }
+public string Gender { get; set; } = string.Empty;
 }

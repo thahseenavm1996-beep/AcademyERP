@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using AcademyERP.Admin.Models;
+using AcademyERP.Admin.Models.Lookups;
 
 namespace AcademyERP.Admin.Services;
 
@@ -12,14 +13,19 @@ public class TeacherApiService
         _httpClient = httpClient;
     }
 
-    public async Task<TeacherListResponse?> GetTeachersAsync(TeacherQueryRequest request)
-    {
-        var response =
-            await _httpClient.GetFromJsonAsync<TeacherListResponse>(
-    $"api/Teachers?page={request.Page}&pageSize={request.PageSize}&search={request.Search}");
+    public async Task<TeacherListResponse?> GetTeachersAsync(
+    TeacherQueryRequest request)
+{
+    var response =
+        await _httpClient.GetFromJsonAsync<TeacherListResponse>(
+            $"api/Teachers?page={request.Page}" +
+$"&pageSize={request.PageSize}" +
+$"&search={Uri.EscapeDataString(request.Search ?? string.Empty)}" +
+$"&gender={request.Gender}" +
+$"&department={Uri.EscapeDataString(request.Department ?? string.Empty)}");
 
-        return response;
-    }
+    return response;
+}
     public async Task<ApiResult<TeacherResponse>> CreateTeacherAsync(CreateTeacherRequest request)
     {
         var response = await _httpClient.PostAsJsonAsync("api/Teachers", request);
@@ -126,4 +132,10 @@ public class TeacherApiService
 
         return true;
     }
+
+    public async Task<List<TimeSlotResponse>> GetTimeSlotsAsync()
+{
+    return await _httpClient.GetFromJsonAsync<List<TimeSlotResponse>>(
+        "api/timeslots") ?? new List<TimeSlotResponse>();
+}
 }

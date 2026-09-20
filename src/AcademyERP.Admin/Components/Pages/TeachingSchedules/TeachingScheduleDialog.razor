@@ -3,9 +3,9 @@
 @using AcademyERP.Admin.Models.Lookups
 @using AcademyERP.Admin.Services
 @using MudBlazor
+@using System.Globalization
 
 @inject EnrollmentApiService EnrollmentApi
-@inject TeacherApiService TeacherApi
 @inject LookupApiService LookupApi
 @inject TeachingScheduleApiService TeachingScheduleApi
 @inject ISnackbar Snackbar
@@ -17,20 +17,13 @@
         <MudText Typo="Typo.h5" Class="mb-4">
             Create Teaching Schedule
         </MudText>
-<MudText>
-    Enrollments Loaded: @_enrollments.Count
-</MudText>
 
-<MudText>
-    Teachers Loaded: @_teachers.Count
-</MudText>
-
-<MudText>
-    Durations Loaded: @_durations.Count
-</MudText>
         <MudSelect T="Guid"
                    Label="Enrollment"
-                   @bind-Value="_model.EnrollmentId">
+                   Variant="Variant.Outlined"
+                   Required="true"
+                   @bind-Value="_model.EnrollmentId"
+                   @bind-Value:after="OnEnrollmentChanged">
 
             @foreach (var enrollment in _enrollments)
             {
@@ -41,70 +34,123 @@
 
         </MudSelect>
 
-        <MudSelect T="Guid"
-                   Label="Teacher"
-                   Class="mt-3"
-                   @bind-Value="_model.TeacherId">
+        @if (_selectedEnrollment != null)
+        {
+            <MudPaper Class="pa-4 mt-4"
+                      Outlined="true">
 
-            @foreach (var teacher in _teachers)
+                <MudText Typo="Typo.subtitle1"
+                         Class="mb-3">
+                    Enrollment Details
+                </MudText>
+
+                <MudTextField T="string"
+                              Label="Student"
+                              Variant="Variant.Outlined"
+                              Value="_selectedEnrollment.StudentName"
+                              ReadOnly="true"
+                              Class="mb-3" />
+
+                <MudTextField T="string"
+                              Label="Course"
+                              Variant="Variant.Outlined"
+                              Value="_selectedEnrollment.CourseName"
+                              ReadOnly="true"
+                              Class="mb-3" />
+
+                <MudTextField T="string"
+                              Label="Teacher"
+                              Variant="Variant.Outlined"
+                              Value="@(_selectedEnrollment.TeacherName ?? "Not Assigned")"
+                              ReadOnly="true"
+                              Class="mb-3" />
+
+                <MudTextField T="string"
+                              Label="Time Slot"
+                              Variant="Variant.Outlined"
+                              Value="@(_selectedEnrollment.TimeSlotName ?? "Not Assigned")"
+                              ReadOnly="true"
+                              Class="mb-3" />
+
+                <MudTextField T="string"
+                              Label="Duration"
+                              Variant="Variant.Outlined"
+                              Value="@(_selectedEnrollment.ClassDurationName ?? "Not Assigned")"
+                              ReadOnly="true"
+                              Class="mb-3" />
+
+                <MudTextField T="string"
+                              Label="Effective From"
+                              Variant="Variant.Outlined"
+                              Value="@_selectedEnrollment.StartDate.ToString("dd/MM/yyyy")"
+                              ReadOnly="true"
+                              Class="mb-3" />
+
+                <MudTextField T="string"
+                              Label="Start Time"
+                              Variant="Variant.Outlined"
+                              Value="@_startTimeText"
+                              ReadOnly="true"
+                              Class="mb-3" />
+
+            </MudPaper>
+
+            <MudSelect T="DayOfWeek"
+                       Label="Days Of Week"
+                       Variant="Variant.Outlined"
+                       Required="true"
+                       MultiSelection="true"
+                       SelectedValues="_selectedDays"
+                       SelectedValuesChanged="OnSelectedDaysChanged"
+                       Class="mt-4">
+
+                @foreach (var day in Enum.GetValues<DayOfWeek>())
+                {
+                    <MudSelectItem T="DayOfWeek"
+                                   Value="@day">
+                        @day
+                    </MudSelectItem>
+                }
+
+            </MudSelect>
+
+            @if (_selectedDays.Count > 0)
             {
-                <MudSelectItem Value="@teacher.Id">
-                    @teacher.FullName
-                </MudSelectItem>
+                <MudText Typo="Typo.caption"
+                         Class="mt-2">
+                    @_selectedDays.Count day(s) selected
+                </MudText>
             }
-
-        </MudSelect>
-
-        <MudSelect T="DayOfWeek"
-                   Label="Day Of Week"
-                   Class="mt-3"
-                   @bind-Value="_model.DayOfWeek">
-
-            <MudSelectItem Value="@DayOfWeek.Sunday">Sunday</MudSelectItem>
-            <MudSelectItem Value="@DayOfWeek.Monday">Monday</MudSelectItem>
-            <MudSelectItem Value="@DayOfWeek.Tuesday">Tuesday</MudSelectItem>
-            <MudSelectItem Value="@DayOfWeek.Wednesday">Wednesday</MudSelectItem>
-            <MudSelectItem Value="@DayOfWeek.Thursday">Thursday</MudSelectItem>
-            <MudSelectItem Value="@DayOfWeek.Friday">Friday</MudSelectItem>
-            <MudSelectItem Value="@DayOfWeek.Saturday">Saturday</MudSelectItem>
-
-        </MudSelect>
-
-        <MudSelect T="Guid"
-                   Label="Duration"
-                   Class="mt-3"
-                   @bind-Value="_model.ClassDurationId">
-
-            @foreach (var duration in _durations)
-            {
-                <MudSelectItem Value="@duration.Id">
-                    @duration.Name
-                </MudSelectItem>
-            }
-
-        </MudSelect>
-
-        <MudDatePicker Label="Effective From"
-                       Class="mt-3"
-                       @bind-Date="_effectiveFrom" />
-
-        <MudTimePicker Label="Start Time"
-                       Class="mt-3"
-                       @bind-Time="_startTime" />
+        }
 
     </DialogContent>
 
     <DialogActions>
 
         <MudButton Color="Color.Default"
-                   OnClick="Cancel">
+                   OnClick="Cancel"
+                   Disabled="_saving">
             Cancel
         </MudButton>
 
         <MudButton Color="Color.Primary"
                    Variant="Variant.Filled"
+                   Disabled="@(_selectedEnrollment == null || _selectedDays.Count == 0 || _saving)"
                    OnClick="Save">
-            Save
+
+            @if (_saving)
+            {
+                <MudProgressCircular Size="Size.Small"
+                                     Indeterminate="true"
+                                     Class="me-2" />
+
+                <span>Saving...</span>
+            }
+            else
+            {
+                <span>Save</span>
+            }
+
         </MudButton>
 
     </DialogActions>
@@ -124,32 +170,215 @@
     };
 
     private List<EnrollmentResponse> _enrollments = new();
-    private List<TeacherResponse> _teachers = new();
-    private List<ClassDurationResponse> _durations = new();
 
-    private DateTime? _effectiveFrom = DateTime.Today;
-    private TimeSpan? _startTime = TimeSpan.FromHours(9);
+    private List<TimeSlotResponse> _timeSlots = new();
 
-   protected override async Task OnInitializedAsync()
-{
-    _enrollments = await EnrollmentApi.GetAllAsync();
+    private EnrollmentResponse? _selectedEnrollment;
 
-    var teacherResult = await TeacherApi.GetTeachersAsync(
-        new TeacherQueryRequest
+    private HashSet<DayOfWeek> _selectedDays = new();
+
+    private string _startTimeText = string.Empty;
+
+    private bool _saving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
         {
-            Page = 1,
-            PageSize = 100,
-            Search = ""
-        });
+            _enrollments =
+                await EnrollmentApi.GetAllAsync();
 
-    _teachers = teacherResult?.Data?.Items ?? new();
+            _timeSlots =
+                await LookupApi.GetTimeSlotsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to load enrollment data: {ex.Message}",
+                Severity.Error);
+        }
+    }
 
-    _durations = await LookupApi.GetClassDurationsAsync();
+    private void OnSelectedDaysChanged(IEnumerable<DayOfWeek> days)
+    {
+        _selectedDays = days.ToHashSet();
+    }
 
-    Console.WriteLine($"Enrollments: {_enrollments.Count}");
-    Console.WriteLine($"Teachers: {_teachers.Count}");
-    Console.WriteLine($"Durations: {_durations.Count}");
-}
+    private void OnEnrollmentChanged()
+    {
+        _selectedEnrollment =
+            _enrollments.FirstOrDefault(
+                x => x.Id == _model.EnrollmentId);
+
+        _selectedDays.Clear();
+
+        if (_selectedEnrollment == null)
+        {
+            _startTimeText = string.Empty;
+
+            _model.TeacherId = Guid.Empty;
+            _model.ClassDurationId = Guid.Empty;
+            _model.EffectiveFrom = DateTime.Today;
+            _model.StartTime = TimeOnly.MinValue;
+
+            return;
+        }
+
+        var enrollmentSchedule =
+            _selectedEnrollment.Schedules?
+                .FirstOrDefault();
+
+        if (enrollmentSchedule == null)
+        {
+            Snackbar.Add(
+                "This enrollment does not have a class schedule assigned.",
+                Severity.Error);
+
+            return;
+        }
+
+        /*
+         * Everything below comes directly from the enrollment.
+         * The admin does NOT select these again.
+         */
+
+        _model.EnrollmentId =
+            _selectedEnrollment.Id;
+
+        _model.TeacherId =
+            _selectedEnrollment.TeacherId ?? Guid.Empty;
+
+        _model.ClassDurationId =
+            enrollmentSchedule.ClassDurationId;
+
+        _model.EffectiveFrom =
+            _selectedEnrollment.StartDate;
+
+        /*
+         * IMPORTANT:
+         *
+         * The enrollment already contains the correct
+         * human-readable time slot.
+         *
+         * Example:
+         * 04:00 PM - 05:00 PM
+         *
+         * We parse the START time from this text so that
+         * the actual request also receives 04:00 PM.
+         */
+
+        var timeSlotName =
+            enrollmentSchedule.TimeSlotName
+            ?? _selectedEnrollment.TimeSlotName;
+
+        if (string.IsNullOrWhiteSpace(timeSlotName))
+        {
+            _startTimeText = "Not Assigned";
+            _model.StartTime = TimeOnly.MinValue;
+            return;
+        }
+
+        _startTimeText = timeSlotName;
+
+        var parsedStartTime =
+            ParseStartTime(timeSlotName);
+
+        if (parsedStartTime.HasValue)
+        {
+            _model.StartTime = parsedStartTime.Value;
+        }
+        else
+        {
+            /*
+             * Fallback to the TimeSlot object only if
+             * parsing the displayed time failed.
+             */
+
+            var timeSlot =
+                _timeSlots.FirstOrDefault(
+                    x => x.Id == enrollmentSchedule.TimeSlotId);
+
+            if (timeSlot != null)
+            {
+                _model.StartTime =
+                    timeSlot.StartTime;
+            }
+            else
+            {
+                _model.StartTime =
+                    TimeOnly.MinValue;
+            }
+        }
+    }
+
+    private static TimeOnly? ParseStartTime(string timeSlotName)
+    {
+        if (string.IsNullOrWhiteSpace(timeSlotName))
+            return null;
+
+        var separatorIndex =
+            timeSlotName.IndexOf(
+                " - ",
+                StringComparison.Ordinal);
+
+        if (separatorIndex < 0)
+        {
+            separatorIndex =
+                timeSlotName.IndexOf(
+                    "–",
+                    StringComparison.Ordinal);
+        }
+
+        if (separatorIndex < 0)
+        {
+            separatorIndex =
+                timeSlotName.IndexOf(
+                    "—",
+                    StringComparison.Ordinal);
+        }
+
+        var startText =
+            separatorIndex > 0
+                ? timeSlotName[..separatorIndex].Trim()
+                : timeSlotName.Trim();
+
+        /*
+         * Try normal culture parsing first.
+         */
+        if (TimeOnly.TryParse(
+                startText,
+                CultureInfo.CurrentCulture,
+                DateTimeStyles.AllowWhiteSpaces,
+                out var currentCultureTime))
+        {
+            return currentCultureTime;
+        }
+
+        /*
+         * Explicitly handle 12-hour values such as:
+         * 04:00 PM
+         * 09:00 AM
+         */
+        string[] formats =
+        {
+            "hh:mm tt",
+            "h:mm tt",
+            "HH:mm",
+            "H:mm"
+        };
+
+        if (TimeOnly.TryParseExact(
+                startText,
+                formats,
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.AllowWhiteSpaces,
+                out var exactTime))
+        {
+            return exactTime;
+        }
+
+        return null;
+    }
 
     private void Cancel()
     {
@@ -158,23 +387,187 @@
 
     private async Task Save()
     {
-        _model.EffectiveFrom =
-            _effectiveFrom ?? DateTime.Today;
-
-        _model.StartTime =
-            TimeOnly.FromTimeSpan(
-                _startTime ?? TimeSpan.Zero);
-
-        var result =
-            await TeachingScheduleApi.CreateAsync(_model);
-
-        if (result != null)
+        if (_selectedEnrollment == null)
         {
             Snackbar.Add(
-                "Teaching Schedule created successfully.",
+                "Please select an enrollment.",
+                Severity.Warning);
+
+            return;
+        }
+
+        if (!_selectedEnrollment.TeacherId.HasValue)
+        {
+            Snackbar.Add(
+                "This enrollment does not have a teacher assigned.",
+                Severity.Error);
+
+            return;
+        }
+
+        if (_selectedDays == null ||
+            !_selectedDays.Any())
+        {
+            Snackbar.Add(
+                "Please select at least one day.",
+                Severity.Warning);
+
+            return;
+        }
+
+        var enrollmentSchedule =
+            _selectedEnrollment.Schedules?
+                .FirstOrDefault();
+
+        if (enrollmentSchedule == null)
+        {
+            Snackbar.Add(
+                "This enrollment does not have a class schedule assigned.",
+                Severity.Error);
+
+            return;
+        }
+
+        /*
+         * Get the enrollment's time slot.
+         */
+        var timeSlotName =
+            enrollmentSchedule.TimeSlotName
+            ?? _selectedEnrollment.TimeSlotName;
+
+        if (string.IsNullOrWhiteSpace(timeSlotName))
+        {
+            Snackbar.Add(
+                "The enrollment does not have a time slot assigned.",
+                Severity.Error);
+
+            return;
+        }
+
+        /*
+         * IMPORTANT:
+         *
+         * Parse the actual start time again immediately
+         * before saving.
+         *
+         * This prevents the request from accidentally
+         * sending 12:00 AM.
+         */
+        var startTime =
+            ParseStartTime(timeSlotName);
+
+        if (!startTime.HasValue)
+        {
+            Snackbar.Add(
+                $"Unable to determine the start time from '{timeSlotName}'.",
+                Severity.Error);
+
+            return;
+        }
+
+        /*
+         * Make absolutely sure the model contains
+         * the enrollment's values.
+         */
+
+        _model.EnrollmentId =
+            _selectedEnrollment.Id;
+
+        _model.TeacherId =
+            _selectedEnrollment.TeacherId.Value;
+
+        _model.ClassDurationId =
+            enrollmentSchedule.ClassDurationId;
+
+        _model.StartTime =
+            startTime.Value;
+
+        _model.EffectiveFrom =
+            _selectedEnrollment.StartDate;
+
+        _model.EffectiveTo =
+            _selectedEnrollment.EndDate;
+
+        _model.IsActive = true;
+        _model.MaximumStudents = 1;
+
+        try
+        {
+            _saving = true;
+
+            /*
+             * Create one TeachingSchedule for EACH
+             * selected day.
+             *
+             * Example:
+             *
+             * Monday
+             * Tuesday
+             * Wednesday
+             * Thursday
+             * Friday
+             * Saturday
+             *
+             * = 6 schedules.
+             */
+
+            foreach (var day in _selectedDays.OrderBy(x => x))
+            {
+                var request =
+                    new CreateTeachingScheduleRequest
+                    {
+                        EnrollmentId =
+                            _selectedEnrollment.Id,
+
+                        TeacherId =
+                            _selectedEnrollment.TeacherId.Value,
+
+                        DayOfWeek =
+                            day,
+
+                        StartTime =
+                            startTime.Value,
+
+                        ClassDurationId =
+                            enrollmentSchedule.ClassDurationId,
+
+                        EffectiveFrom =
+                            _selectedEnrollment.StartDate,
+
+                        EffectiveTo =
+                            _selectedEnrollment.EndDate,
+
+                        IsActive = true,
+
+                        MaximumStudents = 1
+                    };
+
+                await TeachingScheduleApi.CreateAsync(
+                    request);
+            }
+
+            Snackbar.Add(
+                $"Teaching schedule created for {_selectedDays.Count} day(s).",
                 Severity.Success);
 
-            MudDialog.Close(DialogResult.Ok(true));
+            MudDialog.Close(
+                DialogResult.Ok(true));
+        }
+        catch (HttpRequestException ex)
+        {
+            Snackbar.Add(
+                ex.Message,
+                Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to create teaching schedule: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
         }
     }
 }

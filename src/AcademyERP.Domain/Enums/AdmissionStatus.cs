@@ -8,5 +8,6 @@ public enum AdmissionStatus
     DemoCompleted = 4,
     Approved = 5,
     Rejected = 6,
-    Cancelled = 7
+    Cancelled = 7,
+    DemoStarted = 8
 }

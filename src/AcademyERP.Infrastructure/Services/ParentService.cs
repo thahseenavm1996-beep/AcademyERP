@@ -91,7 +91,12 @@ public class ParentService : IParentService
                 x.PhoneNumber.Contains(request.Search) ||
                 x.Email.Contains(request.Search));
         }
-
+if (!string.IsNullOrWhiteSpace(request.StudentName))
+{
+    query = query.Where(x =>
+        x.StudentParents.Any(sp =>
+            sp.Student.FullName.Contains(request.StudentName)));
+}
         var totalCount = await query.CountAsync();
 
         var parents = await query
@@ -179,33 +184,37 @@ public class ParentService : IParentService
         return _mapper.Map<ParentResponse>(parent);
     }
     public async Task<bool> DeleteAsync(Guid id)
+{
+    var parent = await _context.Parents.FindAsync(id);
+
+    if (parent == null)
+        return false;
+
+    // Find the Identity user before deleting the parent.
+    var user = await _userManager.FindByIdAsync(
+        parent.ApplicationUserId.ToString());
+
+    // Delete Parent first.
+    // StudentParent records will be deleted automatically
+    // because ParentConfiguration uses Cascade delete.
+    _context.Parents.Remove(parent);
+
+    await _context.SaveChangesAsync();
+
+    // Delete the Identity user after the Parent is deleted.
+    if (user != null)
     {
-        var parent = await _context.Parents.FindAsync(id);
+        var result = await _userManager.DeleteAsync(user);
 
-        if (parent == null)
-            return false;
-
-        // Delete Identity User first
-        var user = await _userManager.FindByIdAsync(parent.ApplicationUserId.ToString());
-
-        if (user != null)
+        if (!result.Succeeded)
         {
-            var result = await _userManager.DeleteAsync(user);
-
-            if (!result.Succeeded)
-            {
-                throw new Exception(string.Join(", ",
-                    result.Errors.Select(x => x.Description)));
-            }
+            throw new Exception(string.Join(", ",
+                result.Errors.Select(x => x.Description)));
         }
-
-        // Delete Parent
-        _context.Parents.Remove(parent);
-
-        await _context.SaveChangesAsync();
-
-        return true;
     }
+
+    return true;
+}
     public async Task<bool> ResetPasswordAsync(Guid id, ResetParentPasswordRequest request)
     {
         var parent = await _context.Parents.FindAsync(id);

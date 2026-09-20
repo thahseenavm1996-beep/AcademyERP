@@ -5,22 +5,25 @@ namespace AcademyERP.Admin.Services;
 
 public class AuthApiService
 {
-    private readonly HttpClient _httpClient;
+    private readonly IHttpClientFactory _httpClientFactory;
 
-    public AuthApiService(HttpClient httpClient)
+    public AuthApiService(IHttpClientFactory httpClientFactory)
     {
-        _httpClient = httpClient;
+        _httpClientFactory = httpClientFactory;
     }
 
     public async Task<LoginResponse?> LoginAsync(LoginRequest request)
     {
-        var response = await _httpClient.PostAsJsonAsync(
-            "api/Auth/login",
+        var http = _httpClientFactory.CreateClient("AcademyERPAuthApi");
+
+        var response = await http.PostAsJsonAsync(
+            "api/auth/login",
             request);
 
         if (!response.IsSuccessStatusCode)
             return null;
 
-        return await response.Content.ReadFromJsonAsync<LoginResponse>();
+        return await response.Content
+            .ReadFromJsonAsync<LoginResponse>();
     }
 }

@@ -6,6 +6,7 @@ using AcademyERP.Domain.Entities.TeacherAvailabilities;
 using AcademyERP.Domain.Entities.ClassReports;
 using AcademyERP.Domain.Entities.Identity;
 using AttendanceEntity = AcademyERP.Domain.Entities.Attendance.Attendance;
+using AcademyERP.Domain.Entities.TeacherPayments;
 
 namespace AcademyERP.Domain.Entities.Teachers;
 
@@ -56,4 +57,11 @@ public class Teacher : BaseEntity
         = new List<TeacherAvailability>();
        public ICollection<AttendanceEntity> Attendances { get; set; }
     = new List<AttendanceEntity>();
+
+public ICollection<TeacherPayment> TeacherPayments { get; set; }
+    = new List<TeacherPayment>();
+
+public ICollection<TeacherPaymentConfiguration> TeacherPaymentConfigurations { get; set; }
+    = new List<TeacherPaymentConfiguration>();
+
 }

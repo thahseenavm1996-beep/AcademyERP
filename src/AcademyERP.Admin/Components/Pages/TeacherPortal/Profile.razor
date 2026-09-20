@@ -1,0 +1,84 @@
+@page "/teacher/profile"
+@layout TeacherLayout
+
+@using AcademyERP.Admin.Models.TeacherPortal
+@using AcademyERP.Admin.Services
+
+@inject TeacherPortalApiService TeacherApi
+
+
+<MudText Typo="Typo.h4">
+    My Profile 👤
+</MudText>
+
+
+@if(_profile == null)
+{
+    <MudProgressCircular Indeterminate="true"/>
+}
+else
+{
+
+<MudCard Class="mt-5"
+         Elevation="3">
+
+<MudCardContent>
+
+
+<MudAvatar Color="Color.Primary"
+           Size="Size.Large">
+
+@_profile.Name.Substring(0,1)
+
+</MudAvatar>
+
+
+<MudText Typo="Typo.h5"
+         Class="mt-3">
+
+@_profile.Name
+
+</MudText>
+
+
+<MudDivider Class="my-3"/>
+
+
+<MudText>
+Role:
+<b>@_profile.Role</b>
+</MudText>
+
+
+<MudText>
+Email:
+<b>@_profile.Email</b>
+</MudText>
+
+
+<MudText>
+Status:
+<b>@_profile.Status</b>
+</MudText>
+
+
+</MudCardContent>
+
+</MudCard>
+
+}
+
+
+
+@code {
+
+private TeacherProfileDto? _profile;
+
+
+protected override async Task OnInitializedAsync()
+{
+    _profile =
+        await TeacherApi.GetProfileAsync();
+}
+
+}

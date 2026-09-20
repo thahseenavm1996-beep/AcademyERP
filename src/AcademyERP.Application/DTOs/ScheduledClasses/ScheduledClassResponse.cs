@@ -5,6 +5,11 @@ public class ScheduledClassResponse
     public Guid Id { get; set; }
 
     public Guid TeachingScheduleId { get; set; }
+    public Guid EnrollmentId { get; set; }
+
+public Guid StudentId { get; set; }
+
+public Guid TeacherId { get; set; }
 
     public DateOnly ClassDate { get; set; }
 

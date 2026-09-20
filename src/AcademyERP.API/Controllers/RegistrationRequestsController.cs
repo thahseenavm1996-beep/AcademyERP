@@ -76,4 +76,16 @@ public async Task<IActionResult>
 
     return Ok(result);
 }
+
+[Authorize]
+[HttpPut("{id:guid}/viewed")]
+public async Task<IActionResult> MarkAsViewed(Guid id)
+{
+    var result = await _registrationService.MarkAsViewedAsync(id);
+
+    if (!result)
+        return NotFound();
+
+    return Ok();
+}
 }

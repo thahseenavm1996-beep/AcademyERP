@@ -1,0 +1,541 @@
+@page "/teacher/fee-payment"
+@layout TeacherLayout
+
+@using AcademyERP.Admin.Models.FeePaymentSubmissions
+@using AcademyERP.Admin.Models.Payments
+@using AcademyERP.Admin.Services
+@using AcademyERP.Domain.Enums
+@using AcademyERP.Admin.Models
+@using Microsoft.AspNetCore.Components.Forms
+
+@inject FeeInvoiceApiService FeeInvoiceApi
+@inject FeePaymentSubmissionApiService SubmissionApi
+@inject PaymentMethodApiService PaymentMethodApi
+@inject ISnackbar Snackbar
+
+<PageTitle>Fee Payment Submission</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-1">
+    Fee Payment Submission
+</MudText>
+
+<MudText Typo="Typo.body2"
+         Color="Color.Secondary"
+         Class="mb-5">
+    Submit student fee payments for admin verification.
+</MudText>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" />
+}
+else
+{
+    <MudGrid Spacing="3">
+
+        <MudItem xs="12" md="5">
+
+            <MudPaper Class="pa-5">
+
+                <MudText Typo="Typo.h6" Class="mb-4">
+                    Submit Payment
+                </MudText>
+
+                @if (!_invoices.Any())
+                {
+                    <MudAlert Severity="Severity.Info">
+                        No outstanding student invoices are currently
+                        available for payment submission.
+                    </MudAlert>
+                }
+                else
+                {
+                    <MudSelect T="Guid?"
+                               Label="Student / Invoice"
+                               Variant="Variant.Outlined"
+                               Value="_invoiceId"
+                               ValueChanged="OnInvoiceChanged"
+                               Class="mb-4">
+
+                        @foreach (var invoice in _invoices)
+                        {
+                            <MudSelectItem T="Guid?"
+                                           Value="@((Guid?)invoice.Id)">
+                                @invoice.StudentName
+                                — @invoice.InvoiceNumber
+                                — Balance ₹@invoice.BalanceAmount.ToString("N2")
+                            </MudSelectItem>
+                        }
+
+                    </MudSelect>
+
+                    @if (_selectedInvoice != null)
+                    {
+                        <MudPaper Outlined="true"
+                                  Class="pa-3 mb-4">
+
+                            <MudText Typo="Typo.body2">
+                                <b>Student:</b>
+                                @_selectedInvoice.StudentName
+                            </MudText>
+
+                            <MudText Typo="Typo.body2">
+                                <b>Invoice:</b>
+                                @_selectedInvoice.InvoiceNumber
+                            </MudText>
+
+                            <MudText Typo="Typo.body2">
+                                <b>Invoice Amount:</b>
+                                ₹ @_selectedInvoice.Amount.ToString("N2")
+                            </MudText>
+
+                            <MudText Typo="Typo.body2">
+                                <b>Paid:</b>
+                                ₹ @_selectedInvoice.PaidAmount.ToString("N2")
+                            </MudText>
+
+                            <MudText Typo="Typo.h6" Class="mt-2">
+                                Outstanding:
+                                ₹ @_selectedInvoice.BalanceAmount.ToString("N2")
+                            </MudText>
+
+                            <MudText Typo="Typo.body2">
+                                <b>Due Date:</b>
+                                @_selectedInvoice.DueDate.ToString("dd MMM yyyy")
+                            </MudText>
+
+                        </MudPaper>
+                    }
+
+                    <MudNumericField T="decimal"
+                                     Label="Payment Amount"
+                                     Variant="Variant.Outlined"
+                                     @bind-Value="_amount"
+                                     Min="0"
+                                     Step="0.01m"
+                                     Adornment="Adornment.Start"
+                                     AdornmentText="₹"
+                                     Class="mb-4" />
+
+                    <MudSelect T="Guid?"
+                               Label="Payment Method"
+                               Variant="Variant.Outlined"
+                               @bind-Value="_paymentMethodId"
+                               Class="mb-4">
+
+                        @foreach (var method in _paymentMethods)
+                        {
+                            <MudSelectItem T="Guid?"
+                                           Value="@((Guid?)method.Id)">
+                                @method.Name
+                            </MudSelectItem>
+                        }
+
+                    </MudSelect>
+
+                    <MudDatePicker Label="Payment Date"
+                                   Variant="Variant.Outlined"
+                                   @bind-Date="_paymentDate"
+                                   Class="mb-4" />
+                    <InputFile OnChange="OnProofSelected"
+           accept=".jpg,.jpeg,.png,.webp" />
+
+@if (_proofFile != null)
+{
+    <MudText Typo="Typo.caption">
+        Selected: @_proofFile.Name
+    </MudText>
+}
+                    <MudTextField T="string"
+                                  Label="Transaction Reference"
+                                  Variant="Variant.Outlined"
+                                  @bind-Value="_transactionReference"
+                                  Class="mb-4" />
+
+                    <MudTextField T="string"
+                                  Label="Remarks"
+                                  Variant="Variant.Outlined"
+                                  Lines="3"
+                                  @bind-Value="_remarks"
+                                  Class="mb-4" />
+
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               FullWidth="true"
+                               Disabled="@_submitting"
+                               OnClick="SubmitPayment">
+
+                        @if (_submitting)
+                        {
+                            <MudProgressCircular Size="Size.Small"
+                                                 Indeterminate="true"
+                                                 Class="mr-2" />
+                            <span>Submitting...</span>
+                        }
+                        else
+                        {
+                            <span>Submit Payment</span>
+                        }
+
+                    </MudButton>
+                }
+
+            </MudPaper>
+
+        </MudItem>
+
+        <MudItem xs="12" md="7">
+
+            <MudPaper Class="pa-5">
+
+                <MudText Typo="Typo.h6" Class="mb-4">
+                    My Payment Submissions
+                </MudText>
+
+                @if (!_submissions.Any())
+                {
+                    <MudAlert Severity="Severity.Info">
+                        You have not submitted any payments yet.
+                    </MudAlert>
+                }
+                else
+                {
+                    <MudGrid Spacing="2">
+
+    @foreach (var item in _submissions)
+    {
+        <MudItem xs="12">
+
+            <MudPaper Class="pa-3"
+                      Outlined="true"
+                      Elevation="0">
+
+                <!-- Header -->
+                <MudStack Row="true"
+                          Justify="Justify.SpaceBetween"
+                          AlignItems="AlignItems.Center"
+                          Class="mb-2">
+
+                    <MudStack Spacing="0">
+
+                        <MudText Typo="Typo.subtitle2">
+                            @item.StudentName
+                        </MudText>
+
+                        <MudText Typo="Typo.caption"
+                                 Color="Color.Secondary">
+                            @item.InvoiceNumber
+                        </MudText>
+
+                    </MudStack>
+
+                    <MudChip T="string"
+                             Size="Size.Small"
+                             Color="@GetStatusColor(item.Status)">
+                        @item.Status
+                    </MudChip>
+
+                </MudStack>
+
+                <MudDivider Class="mb-3" />
+
+                <!-- Payment details -->
+                <MudGrid Spacing="1">
+
+                    <MudItem xs="6" sm="3">
+                        <MudText Typo="Typo.caption"
+                                 Color="Color.Secondary">
+                            Date
+                        </MudText>
+
+                        <MudText Typo="Typo.body2">
+                            @item.PaymentDate.ToString("dd MMM yyyy")
+                        </MudText>
+                    </MudItem>
+
+                    <MudItem xs="6" sm="3">
+                        <MudText Typo="Typo.caption"
+                                 Color="Color.Secondary">
+                            Amount
+                        </MudText>
+
+                        <MudText Typo="Typo.body2">
+                            ₹ @item.Amount.ToString("N2")
+                        </MudText>
+                    </MudItem>
+
+                    <MudItem xs="6" sm="3">
+                        <MudText Typo="Typo.caption"
+                                 Color="Color.Secondary">
+                            Method
+                        </MudText>
+
+                        <MudText Typo="Typo.body2">
+                            @item.PaymentMethodName
+                        </MudText>
+                    </MudItem>
+
+                    <MudItem xs="6" sm="3">
+                        <MudText Typo="Typo.caption"
+                                 Color="Color.Secondary">
+                            Proof
+                        </MudText>
+
+                        @if (!string.IsNullOrWhiteSpace(item.ProofFilePath))
+                        {
+                            <MudChip T="string"
+                                     Size="Size.Small"
+                                     Color="Color.Success">
+                                Uploaded
+                            </MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string"
+                                     Size="Size.Small"
+                                     Color="Color.Warning">
+                                Not Uploaded
+                            </MudChip>
+                        }
+                    </MudItem>
+
+                </MudGrid>
+
+                @if (!string.IsNullOrWhiteSpace(item.Remarks))
+                {
+                    <MudPaper Class="pa-2 mt-3"
+                              Outlined="true">
+
+                        <MudText Typo="Typo.caption"
+                                 Color="Color.Secondary">
+                            Remarks
+                        </MudText>
+
+                        <MudText Typo="Typo.body2">
+                            @item.Remarks
+                        </MudText>
+
+                    </MudPaper>
+                }
+
+                @if (item.Status ==
+                     FeePaymentSubmissionStatus.Rejected &&
+                    !string.IsNullOrWhiteSpace(item.RejectionReason))
+                {
+                    <MudAlert Severity="Severity.Error"
+                              Dense="true"
+                              Class="mt-3">
+
+                        <MudText Typo="Typo.body2">
+                            <strong>Rejection reason:</strong>
+                            @item.RejectionReason
+                        </MudText>
+
+                    </MudAlert>
+                }
+
+            </MudPaper>
+
+        </MudItem>
+    }
+
+</MudGrid>
+                }
+
+            </MudPaper>
+
+        </MudItem>
+
+    </MudGrid>
+}
+
+@code {
+
+private IBrowserFile? _proofFile;
+
+private void OnProofSelected(InputFileChangeEventArgs e)
+{
+    _proofFile = e.File;
+}
+    private List<FeeInvoiceResponse> _invoices = new();
+    private List<PaymentMethodResponse> _paymentMethods = new();
+    private List<FeePaymentSubmissionResponse> _submissions = new();
+
+    private FeeInvoiceResponse? _selectedInvoice;
+
+    private Guid? _invoiceId;
+    private Guid? _paymentMethodId;
+
+    private decimal _amount;
+
+    private DateTime? _paymentDate = DateTime.Today;
+
+    private string? _transactionReference;
+    private string? _remarks;
+
+    private bool _loading;
+    private bool _submitting;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _loading = true;
+
+        try
+        {
+            _invoices =
+                await FeeInvoiceApi.GetTeacherOutstandingAsync();
+
+            _paymentMethods =
+                await PaymentMethodApi.GetAllAsync();
+
+            _submissions =
+                await SubmissionApi.GetMyAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to load fee payment information: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private Task OnInvoiceChanged(Guid? value)
+    {
+        _invoiceId = value;
+
+        _selectedInvoice =
+            _invoices.FirstOrDefault(x =>
+                x.Id == value);
+
+        _amount =
+            _selectedInvoice?.BalanceAmount ?? 0;
+
+        return Task.CompletedTask;
+    }
+
+    private async Task SubmitPayment()
+    {
+        if (!_invoiceId.HasValue)
+        {
+            Snackbar.Add(
+                "Please select an invoice.",
+                Severity.Warning);
+            return;
+        }
+
+        if (!_paymentMethodId.HasValue)
+        {
+            Snackbar.Add(
+                "Please select a payment method.",
+                Severity.Warning);
+            return;
+        }
+
+        if (_amount <= 0)
+        {
+            Snackbar.Add(
+                "Please enter a valid payment amount.",
+                Severity.Warning);
+            return;
+        }
+
+        if (_selectedInvoice != null &&
+            _amount > _selectedInvoice.BalanceAmount)
+        {
+            Snackbar.Add(
+                "Payment amount cannot exceed the outstanding balance.",
+                Severity.Warning);
+            return;
+        }
+
+        if (!_paymentDate.HasValue)
+        {
+            Snackbar.Add(
+                "Please select the payment date.",
+                Severity.Warning);
+            return;
+        }
+if (_proofFile == null)
+{
+    Snackbar.Add(
+        "Please upload payment proof.",
+        Severity.Warning);
+
+    return;
+}
+        _submitting = true;
+
+       try
+{
+    var request = new CreateFeePaymentSubmissionRequest
+    {
+        FeeInvoiceId = _invoiceId.Value,
+        Amount = _amount,
+        PaymentDate = _paymentDate.Value,
+        PaymentMethodId = _paymentMethodId.Value,
+        TransactionReference = _transactionReference,
+        Remarks = _remarks
+    };
+
+    var submission = await SubmissionApi.SubmitAsync(request);
+
+    if (submission != null && _proofFile != null)
+    {
+        await SubmissionApi.UploadProofAsync(
+            submission.Id,
+            _proofFile);
+    }
+
+    Snackbar.Add(
+        "Payment submitted successfully for admin verification.",
+        Severity.Success);
+
+    _invoiceId = null;
+    _selectedInvoice = null;
+    _amount = 0;
+    _transactionReference = null;
+    _remarks = null;
+    _paymentDate = DateTime.Today;
+    _proofFile = null;
+
+    await LoadData();
+}
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Payment submission failed: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _submitting = false;
+        }
+    }
+
+    private static Color GetStatusColor(
+        FeePaymentSubmissionStatus status)
+    {
+        return status switch
+        {
+            FeePaymentSubmissionStatus.Pending =>
+                Color.Warning,
+
+            FeePaymentSubmissionStatus.Approved =>
+                Color.Success,
+
+            FeePaymentSubmissionStatus.Rejected =>
+                Color.Error,
+
+            _ => Color.Default
+        };
+    }
+}

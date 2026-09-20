@@ -22,6 +22,8 @@ public class RegistrationRequest : BaseEntity
 
     public DateTime? ReviewedAt { get; set; }
 
+    public DateTime? ViewedByAdminAt { get; set; }
+
     public string? ReviewRemarks { get; set; }
 
     public ICollection<RegistrationRequestStudent>

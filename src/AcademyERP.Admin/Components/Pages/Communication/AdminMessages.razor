@@ -1,0 +1,739 @@
+@page "/admin/messages"
+
+@using AcademyERP.Admin.Models.Communication
+@using AcademyERP.Admin.Services
+@using MessageRecipientDto =
+    AcademyERP.Application.DTOs.Communication.MessageRecipientDto
+
+@using StartConversationRequest =
+    AcademyERP.Application.DTOs.Communication.StartConversationRequest
+
+    @using AdminConversationDto =
+    AcademyERP.Application.DTOs.Communication.AdminConversationDto
+
+@inject CommunicationApiService CommunicationApi
+@inject ISnackbar Snackbar
+
+<PageTitle>Communication Center</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">
+    Communication Center 💬
+</MudText>
+
+<MudGrid>
+
+    <!-- LEFT SIDE -->
+    <MudItem xs="12" md="4">
+
+        <MudPaper Class="pa-4" Elevation="3">
+
+           <div class="d-flex justify-space-between align-center flex-wrap"
+     style="gap:8px;">
+
+                <MudText Typo="Typo.h6">
+                    Conversations
+                </MudText>
+
+                <MudButton
+    Variant="Variant.Filled"
+    Color="Color.Primary"
+    StartIcon="@Icons.Material.Filled.Add"
+    OnClick="OpenNewMessage"
+    Style="white-space:nowrap; flex-shrink:0;">
+
+    New Message
+
+</MudButton>
+
+            </div>
+
+            <MudDivider Class="my-3" />
+
+            @if (_loadingConversations)
+            {
+                <MudProgressLinear
+                    Indeterminate="true"
+                    Color="Color.Primary" />
+            }
+            else if (_conversations.Count == 0)
+            {
+                <MudText Color="Color.Secondary">
+                    No conversations yet.
+                </MudText>
+            }
+            else
+            {
+                @foreach (var item in _conversations)
+                {
+                    <MudCard
+                        Class="mt-3"
+                        Style="cursor:pointer"
+                        @onclick="() => LoadMessages(item)">
+
+                        <MudCardContent>
+
+                            <MudText Typo="Typo.subtitle1">
+                                @item.OtherUserName
+                            </MudText>
+
+                            <MudText
+                                Typo="Typo.body2"
+                                Color="Color.Secondary">
+
+                                @item.LastMessage
+
+                            </MudText>
+
+                            <MudText Typo="Typo.caption">
+
+                                @(item.LastMessageAt.ToLocalTime().ToString("dd MMM yyyy, hh:mm tt"))
+
+                            </MudText>
+
+                        </MudCardContent>
+
+                    </MudCard>
+                }
+            }
+
+        </MudPaper>
+
+    </MudItem>
+
+
+    <!-- RIGHT SIDE -->
+    <MudItem xs="12" md="8">
+
+        <MudPaper Class="pa-4" Elevation="3">
+
+            @if (_selected == null)
+            {
+                <MudText Color="Color.Secondary">
+                    Select a conversation or start a new message.
+                </MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.h6">
+                    @_selected.OtherUserName
+                </MudText>
+
+                <MudDivider Class="my-3" />
+
+                @if (_loadingMessages)
+                {
+                    <MudProgressLinear
+                        Indeterminate="true"
+                        Color="Color.Primary" />
+                }
+                else if (_messages.Count == 0)
+                {
+                    <MudText Color="Color.Secondary">
+                        No messages yet.
+                    </MudText>
+                }
+                else
+                {
+                    <div style="max-height:500px; overflow-y:auto;">
+
+                        @foreach (var message in _messages)
+                        {
+                            <MudPaper
+                                Class="pa-3 my-2"
+                                Elevation="1">
+
+                                <MudText Typo="Typo.subtitle2">
+                                    @message.SenderName
+                                </MudText>
+
+                                <MudText Class="mt-1">
+                                    @message.MessageText
+                                </MudText>
+
+                                <MudText
+                                    Typo="Typo.caption"
+                                    Color="Color.Secondary">
+
+                                   @(message.SentAt.ToLocalTime().ToString("dd MMM yyyy, hh:mm tt"))
+
+                                </MudText>
+
+                            </MudPaper>
+                        }
+
+                    </div>
+                }
+
+                <MudDivider Class="my-4" />
+
+                <MudTextField
+                    T="string"
+                    Label="Message"
+                    Lines="3"
+                    Variant="Variant.Outlined"
+                    @bind-Value="_newMessage" />
+
+                <MudButton
+                    Color="Color.Primary"
+                    Variant="Variant.Filled"
+                    StartIcon="@Icons.Material.Filled.Send"
+                    Class="mt-3"
+                    Disabled="@string.IsNullOrWhiteSpace(_newMessage)"
+                    OnClick="Send">
+
+                    Send
+
+                </MudButton>
+            }
+
+        </MudPaper>
+
+    </MudItem>
+
+</MudGrid>
+
+
+<!-- PARENT-TEACHER MONITORING -->
+
+<MudPaper Class="pa-4 mt-6" Elevation="3">
+
+    <div class="d-flex justify-space-between align-center">
+
+        <MudText Typo="Typo.h6">
+            Parent–Teacher Monitoring
+        </MudText>
+
+        <MudChip T="string"
+                 Color="Color.Info"
+                 Variant="Variant.Outlined">
+
+            @(_monitoredConversations.Count) Conversations
+
+        </MudChip>
+
+    </div>
+
+    <MudDivider Class="my-3" />
+
+    @if (_loadingMonitoredConversations)
+    {
+        <MudProgressLinear
+            Indeterminate="true"
+            Color="Color.Primary" />
+    }
+    else if (_monitoredConversations.Count == 0)
+    {
+        <MudText Color="Color.Secondary">
+            No parent–teacher conversations found.
+        </MudText>
+    }
+    else
+    {
+        <MudTable
+            Items="_monitoredConversations"
+            Hover="true"
+            Dense="true"
+            Striped="true">
+
+            <HeaderContent>
+
+                <MudTh>
+                    Parent
+                </MudTh>
+
+                <MudTh>
+                    Student
+                </MudTh>
+
+                <MudTh>
+                    Teacher
+                </MudTh>
+
+                <MudTh>
+                    Last Message
+                </MudTh>
+
+                <MudTh>
+                    Last Activity
+                </MudTh>
+
+            </HeaderContent>
+<RowTemplate>
+    <MudTd DataLabel="Parent"
+           Style="cursor:pointer"
+           @onclick="() => LoadMonitoredConversation(context)">
+
+        @context.ParentName
+
+    </MudTd>
+
+    <MudTd DataLabel="Student"
+           Style="cursor:pointer"
+           @onclick="() => LoadMonitoredConversation(context)">
+
+        @context.StudentName
+
+    </MudTd>
+
+    <MudTd DataLabel="Teacher"
+           Style="cursor:pointer"
+           @onclick="() => LoadMonitoredConversation(context)">
+
+        @context.TeacherName
+
+    </MudTd>
+
+    <MudTd DataLabel="Last Message"
+           Style="cursor:pointer"
+           @onclick="() => LoadMonitoredConversation(context)">
+
+        <MudText Typo="Typo.body2">
+            @context.LastMessage
+        </MudText>
+
+        @if (context.HasUnreadMessages)
+        {
+            <MudChip T="string"
+                     Size="Size.Small"
+                     Color="Color.Error"
+                     Class="mt-1">
+
+                Unread
+
+            </MudChip>
+        }
+
+    </MudTd>
+
+    <MudTd DataLabel="Last Activity"
+           Style="cursor:pointer"
+           @onclick="() => LoadMonitoredConversation(context)">
+
+        @(context.LastMessageAt.ToLocalTime()
+    .ToString("dd MMM yyyy, hh:mm tt"))
+
+    </MudTd>
+</RowTemplate>
+        </MudTable>
+        @if (_selectedMonitored != null)
+{
+    <MudDivider Class="my-5" />
+
+    <MudText Typo="Typo.h6">
+        Monitored Conversation
+    </MudText>
+
+    <MudText Typo="Typo.body2"
+             Color="Color.Secondary"
+             Class="mt-1">
+
+        Parent: @_selectedMonitored.ParentName
+        &nbsp; | &nbsp;
+        Student: @_selectedMonitored.StudentName
+        &nbsp; | &nbsp;
+        Teacher: @_selectedMonitored.TeacherName
+
+    </MudText>
+
+    <MudPaper
+        Class="pa-4 mt-4"
+        Outlined="true"
+        Style="max-height:500px; overflow-y:auto;">
+
+        @if (_loadingMonitoredMessages)
+        {
+            <MudProgressLinear
+                Indeterminate="true"
+                Color="Color.Primary" />
+        }
+        else if (_monitoredMessages.Count == 0)
+        {
+            <MudText Color="Color.Secondary">
+                No messages found.
+            </MudText>
+        }
+        else
+        {
+            @foreach (var message in _monitoredMessages)
+            {
+                <MudPaper
+                    Class="pa-3 my-2"
+                    Elevation="1">
+
+                    <MudText Typo="Typo.subtitle2">
+                        @message.SenderName
+                    </MudText>
+
+                    <MudText Class="mt-1">
+                        @message.MessageText
+                    </MudText>
+
+                    <MudText
+    Typo="Typo.caption"
+    Color="Color.Secondary">
+
+    @($"{message.SentAt.ToLocalTime():dd MMM yyyy, hh:mm tt}")
+
+</MudText>
+
+                </MudPaper>
+            }
+        }
+
+    </MudPaper>
+}
+    }
+
+</MudPaper>
+
+<!-- NEW MESSAGE DIALOG -->
+@if (_showNewMessage)
+{
+    <MudOverlay Visible="true"
+                DarkBackground="true"
+                AutoClose="false"
+                ZIndex="1300">
+
+        <div class="d-flex justify-center align-center"
+             style="width:100%; height:100%;">
+
+            <MudPaper Class="pa-6"
+                      Elevation="8"
+                      Style="width:420px; max-width:90vw;">
+
+                <MudText Typo="Typo.h6">
+                    New Message
+                </MudText>
+
+                <MudSelect T="Guid"
+                           Label="Select Teacher"
+                           Variant="Variant.Outlined"
+                           Class="mt-4"
+                           @bind-Value="_selectedTeacherUserId">
+
+                    @foreach (var teacher in _teachers)
+                    {
+                        <MudSelectItem T="Guid"
+                                       Value="@teacher.UserId">
+
+                            @teacher.Name
+
+                        </MudSelectItem>
+                    }
+
+                </MudSelect>
+
+                <MudTextField T="string"
+                              Label="Message"
+                              Lines="4"
+                              Variant="Variant.Outlined"
+                              Class="mt-4"
+                              @bind-Value="_newMessage" />
+
+                <div class="d-flex justify-end mt-4">
+
+                    <MudButton OnClick="CloseNewMessage"
+                               Class="mr-2">
+
+                        Cancel
+
+                    </MudButton>
+
+                    <MudButton Color="Color.Primary"
+                               Variant="Variant.Filled"
+                               Disabled="@(!CanStartConversation)"
+                               OnClick="StartConversation">
+
+                        Send
+
+                    </MudButton>
+
+                </div>
+
+            </MudPaper>
+
+        </div>
+
+    </MudOverlay>
+}
+
+
+@code {
+
+    private List<ConversationDto> _conversations = [];
+
+    private List<AdminConversationDto> _monitoredConversations = [];
+
+private bool _loadingMonitoredConversations;
+
+private AdminConversationDto? _selectedMonitored;
+
+private List<MessageDto> _monitoredMessages = [];
+
+private bool _loadingMonitoredMessages;
+
+    private List<MessageDto> _messages = [];
+
+    private List<MessageRecipientDto> _teachers = [];
+
+    private ConversationDto? _selected;
+
+    private string _newMessage = string.Empty;
+
+    private bool _loadingConversations;
+
+    private bool _loadingMessages;
+
+    private bool _showNewMessage;
+
+    private Guid _selectedTeacherUserId;
+
+
+    private bool CanStartConversation =>
+        _selectedTeacherUserId != Guid.Empty &&
+        !string.IsNullOrWhiteSpace(_newMessage);
+
+
+  protected override async Task OnInitializedAsync()
+{
+    await LoadConversations();
+    await LoadMonitoredConversations();
+}
+
+
+    private async Task LoadConversations()
+    {
+        try
+        {
+            _loadingConversations = true;
+
+            _conversations =
+                await CommunicationApi
+                    .GetAdminConversationsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to load conversations: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _loadingConversations = false;
+        }
+    }
+private async Task LoadMonitoredConversations()
+{
+    try
+    {
+        _loadingMonitoredConversations = true;
+
+        _monitoredConversations =
+            await CommunicationApi
+                .GetAdminMonitoredConversationsAsync();
+    }
+    catch (Exception ex)
+    {
+        Snackbar.Add(
+            $"Unable to load monitored conversations: {ex.Message}",
+            Severity.Error);
+    }
+    finally
+    {
+        _loadingMonitoredConversations = false;
+    }
+}
+
+private async Task LoadMonitoredConversation(
+    AdminConversationDto conversation)
+{
+    try
+    {
+        _selectedMonitored = conversation;
+
+        _loadingMonitoredMessages = true;
+
+        _monitoredMessages =
+            await CommunicationApi
+                .GetAdminMonitoredMessagesAsync(
+                    conversation.ConversationId);
+    }
+    catch (Exception ex)
+    {
+        Snackbar.Add(
+            $"Unable to load monitored conversation: {ex.Message}",
+            Severity.Error);
+    }
+    finally
+    {
+        _loadingMonitoredMessages = false;
+    }
+}
+
+    private async Task LoadMessages(
+        ConversationDto conversation)
+    {
+        try
+        {
+            _selected = conversation;
+
+            _loadingMessages = true;
+
+            _messages =
+                await CommunicationApi
+                    .GetMessagesAsync(
+                        conversation.Id,
+                        "admin");
+
+            _newMessage = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to load messages: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _loadingMessages = false;
+        }
+    }
+
+
+    private async Task OpenNewMessage()
+    {
+        try
+        {
+            _teachers =
+                await CommunicationApi
+                    .GetTeacherRecipientsAsync();
+
+            _selectedTeacherUserId = Guid.Empty;
+
+            _newMessage = string.Empty;
+
+            _showNewMessage = true;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to load teachers: {ex.Message}",
+                Severity.Error);
+        }
+    }
+
+
+
+   private async Task StartConversation()
+{
+    if (!CanStartConversation)
+        return;
+
+    try
+    {
+        var conversationId =
+            await CommunicationApi
+                .StartConversationAsync(
+                    new StartConversationRequest
+                    {
+                        ReceiverUserId =
+                            _selectedTeacherUserId,
+
+                        MessageText =
+                            _newMessage
+                    });
+
+        // Close the dialog immediately
+        _showNewMessage = false;
+
+        // Clear the form
+        _newMessage = string.Empty;
+        _selectedTeacherUserId = Guid.Empty;
+
+        // Force the UI to render the closed dialog immediately
+        await InvokeAsync(StateHasChanged);
+
+        // Refresh conversations
+        await LoadConversations();
+
+        // Select the conversation that was just created
+        var conversation =
+            _conversations.FirstOrDefault(
+                x => x.Id == conversationId);
+
+        if (conversation != null)
+        {
+            await LoadMessages(conversation);
+        }
+
+        Snackbar.Add(
+            "Message sent successfully.",
+            Severity.Success);
+    }
+    catch (Exception ex)
+    {
+        Snackbar.Add(
+            $"Unable to send message: {ex.Message}",
+            Severity.Error);
+    }
+}
+
+    private async Task Send()
+    {
+        if (_selected == null ||
+            string.IsNullOrWhiteSpace(_newMessage))
+            return;
+
+        try
+        {
+            await CommunicationApi.SendAsync(
+                new SendMessageRequest
+                {
+                    ConversationId =
+                        _selected.Id,
+
+                    ReceiverUserId =
+                        _selected.OtherUserId,
+
+                    MessageText =
+                        _newMessage
+                },
+                "admin");
+
+            _newMessage = string.Empty;
+
+            _messages =
+                await CommunicationApi
+                    .GetMessagesAsync(
+                        _selected.Id,
+                        "admin");
+
+            await LoadConversations();
+
+            var updatedConversation =
+                _conversations
+                    .FirstOrDefault(
+                        x => x.Id == _selected.Id);
+
+            if (updatedConversation != null)
+            {
+                _selected = updatedConversation;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to send message: {ex.Message}",
+                Severity.Error);
+        }
+    }
+
+    private void CloseNewMessage()
+{
+    _showNewMessage = false;
+
+    _selectedTeacherUserId = Guid.Empty;
+
+    _newMessage = string.Empty;
+}
+}

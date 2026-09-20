@@ -63,4 +63,15 @@ public class AttendanceApiService
     return await response.Content
         .ReadFromJsonAsync<AttendanceResponse>();
 }
+
+public async Task<List<
+    AcademyERP.Admin.Models.AttendanceAlerts.StudentAbsenceAlertResponse>>
+    GetStudentAbsenceAlertsAsync(int minimumConsecutiveClasses = 2)
+{
+   return await _http.GetFromJsonAsync<
+    List<AcademyERP.Admin.Models.AttendanceAlerts.StudentAbsenceAlertResponse>>(
+    $"api/attendance/absence-alerts?minimumConsecutiveClasses={minimumConsecutiveClasses}")
+    ?? new List<
+        AcademyERP.Admin.Models.AttendanceAlerts.StudentAbsenceAlertResponse>();
+}
 }

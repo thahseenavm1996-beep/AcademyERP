@@ -1,12 +1,16 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
 @using AcademyERP.Admin.Constants
-
+@using AcademyERP.Admin.Services
+@inject DashboardApiService DashboardApi
 <MudNavMenu>
 
-    <MudNavLink Href="/" Match="NavLinkMatch.All"
+    <AuthorizeView Roles="@($"{Roles.SuperAdmin},{Roles.Administrator}")">
+    <MudNavLink Href="/"
+                Match="NavLinkMatch.All"
                 Icon="@Icons.Material.Filled.Dashboard">
         Dashboard
     </MudNavLink>
+</AuthorizeView>
 
     <AuthorizeView Roles="@($"{Roles.SuperAdmin},{Roles.Administrator}")">
 
@@ -29,13 +33,31 @@
                 Teachers
             </MudNavLink>
 
-            <MudNavLink Href="/admissions"
-                        Icon="@Icons.Material.Filled.HowToReg">
-                Admissions
-            </MudNavLink>
+          <MudNavLink Href="/admissions"
+            Icon="@Icons.Material.Filled.HowToReg">
+    <div class="academy-nav-notification-item">
+        <span>Admissions</span>
+
+        @if (_newAdmissions > 0)
+        {
+            <span class="academy-notification-count">
+                @_newAdmissions
+            </span>
+        }
+    </div>
+</MudNavLink>
 <MudNavLink Href="/registration-requests"
             Icon="@Icons.Material.Filled.PersonAdd">
-    Registration Requests
+    <div class="academy-nav-notification-item">
+        <span>Registration Requests</span>
+
+        @if (_newRegistrations > 0)
+        {
+            <span class="academy-notification-count">
+                @_newRegistrations
+            </span>
+        }
+    </div>
 </MudNavLink>
             <MudNavLink Href="/programs"
                         Icon="@Icons.Material.Filled.School">
@@ -71,22 +93,34 @@
                         Icon="@Icons.Material.Filled.FactCheck">
                 Attendance
             </MudNavLink>
-            <MudNavLink Href="/Teachers/TeacherDashboard"
-            Icon="@Icons.Material.Filled.Person">
-    Teacher Dashboard (Test)
+<MudNavLink Href="/attendance/absence-alerts"
+            Icon="@Icons.Material.Filled.Warning">
+    Student Absence Alerts
 </MudNavLink>
-
         </MudNavGroup>
 
-        <MudNavGroup Title="Finance"
-                     Icon="@Icons.Material.Filled.Payments">
+       <MudNavGroup Title="Finance"
+             Icon="@Icons.Material.Filled.Payments">
 
-            <MudNavLink Href="/fees"
-                        Icon="@Icons.Material.Filled.Payments">
-                Fees
-            </MudNavLink>
+    <MudNavLink Href="/fees"
+                Icon="@Icons.Material.Filled.Payments">
+        Fees
+    </MudNavLink>
+<MudNavLink Href="/fee-payment-submissions"
+            Icon="@Icons.Material.Filled.FactCheck">
+    Fee Payment Submissions
+</MudNavLink>
+    <MudNavLink Href="/TeacherPaymentConfigurations"
+                Icon="@Icons.Material.Filled.Settings">
+        Teacher Payment Configuration
+    </MudNavLink>
 
-        </MudNavGroup>
+    <MudNavLink Href="/TeacherPayments"
+                Icon="@Icons.Material.Filled.AccountBalanceWallet">
+        Teacher Payments
+    </MudNavLink>
+
+</MudNavGroup>
 
         <MudNavGroup Title="Reports"
                      Icon="@Icons.Material.Filled.Assessment">
@@ -96,9 +130,25 @@
                 Student Reports
             </MudNavLink>
 
+            <MudNavLink Href="/reports/best-performing-students"
+                        Icon="@Icons.Material.Filled.EmojiEvents">
+                Best Performing Students
+            </MudNavLink>
+
             <MudNavLink Href="/reports/teachers"
                         Icon="@Icons.Material.Filled.Person">
                 Teacher Reports
+            </MudNavLink>
+
+             <MudNavLink Href="/reports/best-performing-faculty"
+                        Icon="@Icons.Material.Filled.EmojiEvents">
+                Best Performing Faculty
+            </MudNavLink>
+
+
+            <MudNavLink Href="/reports/teacher-monitoring"
+                        Icon="@Icons.Material.Filled.FactCheck">
+                Teacher Report Monitoring
             </MudNavLink>
 
             <MudNavLink Href="/reports/attendance"
@@ -113,6 +163,7 @@
 
         </MudNavGroup>
 
+
         <MudNavGroup Title="Academic Monitoring"
                      Icon="@Icons.Material.Filled.Assessment">
 
@@ -120,9 +171,21 @@
                         Icon="@Icons.Material.Filled.Description">
                 Class Reports
             </MudNavLink>
+            <MudNavLink Href="/report-unlock-requests"
+            Icon="@Icons.Material.Filled.LockOpen">
+    Report Unlock Requests
+</MudNavLink>
 
         </MudNavGroup>
+<MudNavGroup Title="Communication"
+             Icon="@Icons.Material.Filled.Chat">
 
+    <MudNavLink Href="/admin/messages"
+                Icon="@Icons.Material.Filled.Message">
+        Messages
+    </MudNavLink>
+
+</MudNavGroup>
     </AuthorizeView>
 
     <AuthorizeView Roles="@Roles.SuperAdmin">
@@ -141,4 +204,41 @@
     </MudNavLink>
 
 </AuthorizeView>
+@code
+{
+    private int _newAdmissions;
+    private int _newRegistrations;
+
+   protected override async Task OnAfterRenderAsync(bool firstRender)
+{
+    if (!firstRender)
+        return;
+
+    await LoadNotificationCounts();
+    StateHasChanged();
+}
+    private async Task LoadNotificationCounts()
+{
+    try
+    {
+        var summary = await DashboardApi.GetSummaryAsync();
+
+        if (summary != null)
+        {
+            _newAdmissions = summary.NewAdmissions;
+            _newRegistrations = summary.NewRegistrations;
+        }
+    }
+    catch (HttpRequestException)
+    {
+        _newAdmissions = 0;
+        _newRegistrations = 0;
+    }
+    catch (InvalidOperationException)
+    {
+        _newAdmissions = 0;
+        _newRegistrations = 0;
+    }
+}
+}
 </MudNavMenu>

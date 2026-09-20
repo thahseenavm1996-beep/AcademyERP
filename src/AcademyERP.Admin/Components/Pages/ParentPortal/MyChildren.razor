@@ -1,0 +1,200 @@
+@page "/parent/children"
+@layout ParentLayout
+
+@using AcademyERP.Admin.Models.ParentPortal
+@using AcademyERP.Admin.Services
+
+@inject ParentPortalApiService ParentPortalApi
+
+<PageTitle>My Children</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-1">
+    My Children
+</MudText>
+
+<MudText Typo="Typo.body2"
+         Color="Color.Secondary"
+         Class="mb-6">
+    View your children's courses, teachers, attendance and learning progress.
+</MudText>
+
+@if (_loading)
+{
+    <MudGrid>
+        @for (var i = 0; i < 3; i++)
+        {
+            <MudItem xs="12" md="6" lg="4">
+                <MudSkeleton Height="280px"
+                             Animation="Animation.Wave"
+                             Class="rounded-lg" />
+            </MudItem>
+        }
+    </MudGrid>
+}
+else if (_children == null)
+{
+    <MudAlert Severity="Severity.Error">
+        Unable to load your children's information.
+    </MudAlert>
+}
+else if (!_children.Any())
+{
+    <MudPaper Class="pa-8 text-center">
+        <MudIcon Icon="@Icons.Material.Filled.FamilyRestroom"
+                 Size="Size.Large"
+                 Color="Color.Primary" />
+
+        <MudText Typo="Typo.h6" Class="mt-3">
+            No children found
+        </MudText>
+
+        <MudText Typo="Typo.body2"
+                 Color="Color.Secondary">
+            No children are currently linked to your parent account.
+        </MudText>
+    </MudPaper>
+}
+else
+{
+    <MudGrid Spacing="3">
+
+        @foreach (var child in _children)
+        {
+            <MudItem xs="12" md="6" lg="4">
+
+                <MudCard Class="child-card h-100">
+
+                    <MudCardContent Class="pa-5">
+
+                        <div class="d-flex align-center mb-4">
+
+                            <MudAvatar Color="Color.Primary"
+                                       Size="Size.Large">
+                                <MudIcon Icon="@Icons.Material.Filled.Person" />
+                            </MudAvatar>
+
+                            <div class="ml-3">
+                                <MudText Typo="Typo.h6">
+                                    @child.StudentName
+                                </MudText>
+
+                                <MudText Typo="Typo.body2"
+                                         Color="Color.Secondary">
+                                    @child.CourseName
+                                </MudText>
+                            </div>
+
+                        </div>
+
+                        <MudDivider Class="mb-4" />
+
+                        <MudText Typo="Typo.body2">
+                            <strong>Course:</strong> @child.CourseName
+                        </MudText>
+
+                        <MudText Typo="Typo.body2" Class="mt-2">
+                            <strong>Teacher:</strong> @child.TeacherName
+                        </MudText>
+
+                        <MudDivider Class="my-4" />
+
+                        <MudText Typo="Typo.subtitle2">
+                            Attendance
+                        </MudText>
+
+                        @if (child.HasAttendanceRecords)
+                        {
+                            <MudProgressLinear
+                                Value="@((double)child.AttendancePercentage)"
+                                Rounded="true"
+                                Color="Color.Primary"
+                                Class="mt-2" />
+
+                            <div class="d-flex justify-space-between mt-1">
+                                <MudText Typo="Typo.caption">
+                                    Attendance rate
+                                </MudText>
+
+                                <MudText Typo="Typo.caption">
+                                    @child.AttendancePercentage.ToString("0.##")%
+                                </MudText>
+                            </div>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2"
+                                     Color="Color.Secondary"
+                                     Class="mt-2">
+                                No attendance records yet.
+                            </MudText>
+                        }
+
+                        <MudText Typo="Typo.subtitle2"
+                                 Class="mt-5">
+                            Learning Progress
+                        </MudText>
+
+                        @if (child.HasProgressRecords)
+                        {
+                            <MudProgressLinear
+                                Value="@((double)child.ProgressPercentage)"
+                                Rounded="true"
+                                Color="Color.Info"
+                                Class="mt-2" />
+
+                            <div class="d-flex justify-space-between mt-1">
+                                <MudText Typo="Typo.caption">
+                                    Recorded progress
+                                </MudText>
+
+                                <MudText Typo="Typo.caption">
+                                    @child.ProgressPercentage.ToString("0.##")%
+                                </MudText>
+                            </div>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2"
+                                     Color="Color.Secondary"
+                                     Class="mt-2">
+                                No progress records yet.
+                            </MudText>
+                        }
+
+                    </MudCardContent>
+
+                </MudCard>
+
+            </MudItem>
+        }
+
+    </MudGrid>
+}
+
+<style>
+    .child-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .child-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px rgba(7, 31, 77, 0.10);
+    }
+</style>
+
+@code {
+    private List<ParentChildSummaryDto>? _children;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _children = await ParentPortalApi.GetChildrenAsync();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

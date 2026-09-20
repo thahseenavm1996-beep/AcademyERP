@@ -8,6 +8,14 @@ public class ClassReportQueryRequest
 
     public Guid? StudentId { get; set; }
 
+    public string? TeacherName { get; set; }
+
+    public string? StudentName { get; set; }
+
+    public string? CourseName { get; set; }
+
+public Gender? Gender { get; set; }
+
     public DateTime? FromDate { get; set; }
 
     public DateTime? ToDate { get; set; }

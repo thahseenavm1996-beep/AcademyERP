@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AcademyERP.API.Controllers;
 
-//[Authorize(Roles = Roles.SuperAdmin + "," + Roles.Administrator)]
+[Authorize(Roles = Roles.SuperAdmin + "," + Roles.Administrator)]
 [ApiController]
 [Route("api/[controller]")]
 public class FeePaymentsController : ControllerBase

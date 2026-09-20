@@ -42,9 +42,17 @@ public class AdmissionApplication : BaseEntity
 
     public Guid? StudentId { get; set; }
 
+    public Guid? AssignedTeacherId { get; set; }
+
     public string? Message { get; set; }
 
 
     // Admission workflow
     public AdmissionStatus Status { get; set; } = AdmissionStatus.New;
+
+    public DateTime? DemoStartedAt { get; set; }
+
+public DateTime? DemoFeeReminderSentAt { get; set; }
+
+public DateTime? ViewedByAdminAt { get; set; }
 }

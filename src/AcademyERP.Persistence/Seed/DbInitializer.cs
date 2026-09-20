@@ -115,67 +115,36 @@ public static class DbInitializer
         // Seed Initial Time Slots
         // -------------------------
 
-        if (!await context.TimeSlots.AnyAsync())
-        {
-            context.TimeSlots.AddRange(
-                new TimeSlot
-                {
-                    Name = "06:00 AM - 07:00 AM",
-                    StartTime = new TimeOnly(6, 0),
-                    EndTime = new TimeOnly(7, 0),
-                    IsActive = true
-                },
-                new TimeSlot
-                {
-                    Name = "07:00 AM - 08:00 AM",
-                    StartTime = new TimeOnly(7, 0),
-                    EndTime = new TimeOnly(8, 0),
-                    IsActive = true
-                },
-                new TimeSlot
-                {
-                    Name = "08:00 AM - 09:00 AM",
-                    StartTime = new TimeOnly(8, 0),
-                    EndTime = new TimeOnly(9, 0),
-                    IsActive = true
-                },
-                new TimeSlot
-                {
-                    Name = "04:00 PM - 05:00 PM",
-                    StartTime = new TimeOnly(16, 0),
-                    EndTime = new TimeOnly(17, 0),
-                    IsActive = true
-                },
-                new TimeSlot
-                {
-                    Name = "05:00 PM - 06:00 PM",
-                    StartTime = new TimeOnly(17, 0),
-                    EndTime = new TimeOnly(18, 0),
-                    IsActive = true
-                },
-                new TimeSlot
-                {
-                    Name = "06:00 PM - 07:00 PM",
-                    StartTime = new TimeOnly(18, 0),
-                    EndTime = new TimeOnly(19, 0),
-                    IsActive = true
-                },
-                new TimeSlot
-                {
-                    Name = "07:00 PM - 08:00 PM",
-                    StartTime = new TimeOnly(19, 0),
-                    EndTime = new TimeOnly(20, 0),
-                    IsActive = true
-                },
-                new TimeSlot
-                {
-                    Name = "08:00 PM - 09:00 PM",
-                    StartTime = new TimeOnly(20, 0),
-                    EndTime = new TimeOnly(21, 0),
-                    IsActive = true
-                }
-            );
-        }
+        // -------------------------
+// Ensure Time Slots
+// -------------------------
+
+var requiredTimeSlots = Enumerable.Range(5, 19)
+    .Select(hour => new
+    {
+        StartTime = new TimeOnly(hour % 24, 0),
+        EndTime = new TimeOnly((hour + 1) % 24, 0)
+    })
+    .ToList();
+
+foreach (var slot in requiredTimeSlots)
+{
+    var exists = await context.TimeSlots.AnyAsync(x =>
+        x.StartTime == slot.StartTime &&
+        x.EndTime == slot.EndTime);
+
+    if (!exists)
+    {
+        context.TimeSlots.Add(
+            new TimeSlot
+            {
+                Name = $"{slot.StartTime:hh\\:mm tt} - {slot.EndTime:hh\\:mm tt}",
+                StartTime = slot.StartTime,
+                EndTime = slot.EndTime,
+                IsActive = true
+            });
+    }
+}
 
         await context.SaveChangesAsync();
     }

@@ -6,7 +6,7 @@ namespace AcademyERP.API.Controllers;
 
 [ApiController]
 [Route("api/classdurations")]
-//[Authorize]
+[Authorize]
 public class ClassDurationsController : ControllerBase
 {
     private readonly IClassDurationService _service;

@@ -1,0 +1,432 @@
+@page "/parent/progress"
+@layout ParentLayout
+
+@using AcademyERP.Admin.Models.ParentPortal
+@using AcademyERP.Admin.Services
+
+@inject ParentPortalApiService ParentPortalApi
+
+<PageTitle>Learning Progress</PageTitle>
+
+<MudText Typo="Typo.h4">
+    Learning Progress
+</MudText>
+
+<MudText Typo="Typo.body2"
+         Color="Color.Secondary"
+         Class="mb-5">
+    Review class reports and learning progress recorded by teachers.
+</MudText>
+
+<MudPaper Class="pa-4 mb-5">
+
+    <MudSelect T="Guid?"
+               Label="Child"
+               @bind-Value="_studentId"
+               Variant="Variant.Outlined"
+               Clearable="true"
+               Style="max-width:400px">
+
+        <MudSelectItem T="Guid?"
+                       Value="@((Guid?)null)">
+            All Children
+        </MudSelectItem>
+
+        @foreach (var child in _children)
+        {
+            <MudSelectItem T="Guid?"
+                           Value="@((Guid?)child.StudentId)">
+                @child.StudentName
+            </MudSelectItem>
+        }
+
+    </MudSelect>
+
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.FilterAlt"
+               Class="mt-3"
+               OnClick="LoadProgress">
+        Apply Filter
+    </MudButton>
+
+</MudPaper>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" />
+}
+else if (_progress == null)
+{
+    <MudAlert Severity="Severity.Error">
+        Unable to load learning progress.
+    </MudAlert>
+}
+else if (!_progress.Any())
+{
+    <MudPaper Class="pa-8 text-center">
+        <MudIcon Icon="@Icons.Material.Filled.MenuBook"
+                 Size="Size.Large"
+                 Color="Color.Primary" />
+
+        <MudText Typo="Typo.h6" Class="mt-3">
+            No progress records found
+        </MudText>
+
+        <MudText Typo="Typo.body2"
+                 Color="Color.Secondary">
+            Learning reports will appear here after teachers complete classes.
+        </MudText>
+    </MudPaper>
+}
+else
+{
+    <MudPaper Class="progress-table-container"
+          Elevation="0"
+          Outlined="true">
+
+    <MudTable Items="_progress"
+              Hover="true"
+              Dense="false"
+              Striped="false"
+              Bordered="false"
+              Breakpoint="Breakpoint.None"
+              Class="modern-progress-table">
+
+        <HeaderContent>
+
+            <MudTh Class="progress-date-column">
+                Date
+            </MudTh>
+
+            <MudTh>
+                Student
+            </MudTh>
+
+            <MudTh>
+                Course
+            </MudTh>
+
+            <MudTh>
+                Teacher
+            </MudTh>
+
+            <MudTh>
+                Attendance
+            </MudTh>
+
+            <MudTh>
+                Performance
+            </MudTh>
+
+            <MudTh>
+                Homework
+            </MudTh>
+
+            <MudTh>
+                Behaviour
+            </MudTh>
+
+            <MudTh>
+                Duration
+            </MudTh>
+
+        </HeaderContent>
+
+        <RowTemplate Context="item">
+
+            <MudTd DataLabel="Date"
+                   Class="progress-date-column">
+
+                <MudText Typo="Typo.body2"
+                         Class="progress-date">
+                    @item.ClassDate
+                </MudText>
+
+            </MudTd>
+
+            <MudTd DataLabel="Student">
+
+                <MudText Typo="Typo.body2"
+                         Class="progress-student">
+                    @item.StudentName
+                </MudText>
+
+            </MudTd>
+
+            <MudTd DataLabel="Course">
+
+                <MudText Typo="Typo.body2"
+                         Class="progress-course">
+                    @item.CourseName
+                </MudText>
+
+            </MudTd>
+
+            <MudTd DataLabel="Teacher">
+
+                <MudText Typo="Typo.body2">
+                    @item.TeacherName
+                </MudText>
+
+            </MudTd>
+
+            <MudTd DataLabel="Attendance">
+
+                <MudChip T="string"
+                         Size="Size.Small"
+                         Variant="Variant.Outlined"
+                         Color="@GetAttendanceColor(item.AttendanceStatus)">
+                    @item.AttendanceStatus
+                </MudChip>
+
+            </MudTd>
+
+            <MudTd DataLabel="Performance">
+
+                <MudText Typo="Typo.body2"
+                         Class="progress-rating">
+                    @item.PerformanceRating / 5
+                </MudText>
+
+            </MudTd>
+
+            <MudTd DataLabel="Homework">
+
+                <MudText Typo="Typo.body2">
+                    @item.HomeworkStatus
+                </MudText>
+
+            </MudTd>
+
+            <MudTd DataLabel="Behaviour">
+
+                <MudText Typo="Typo.body2"
+                         Class="progress-rating">
+                    @item.BehaviourRating / 5
+                </MudText>
+
+            </MudTd>
+
+            <MudTd DataLabel="Duration">
+
+                <MudChip T="string"
+                         Size="Size.Small"
+                         Variant="Variant.Outlined">
+                    @item.ActualDurationMinutes min
+                </MudChip>
+
+            </MudTd>
+
+        </RowTemplate>
+
+    </MudTable>
+
+</MudPaper>
+    <MudText Typo="Typo.h5" Class="mt-8 mb-4">
+        Teacher Feedback
+    </MudText>
+
+    <MudGrid Spacing="3">
+
+        @foreach (var item in _progress)
+        {
+            <MudItem xs="12" md="6">
+
+                <MudCard>
+
+                    <MudCardContent>
+
+                        <MudText Typo="Typo.h6">
+                            @item.StudentName — @item.ClassDate
+                        </MudText>
+
+                        <MudText Typo="Typo.body2"
+                                 Color="Color.Secondary">
+                            @item.CourseName · @item.TeacherName
+                        </MudText>
+
+                        <MudDivider Class="my-3" />
+
+                        <MudText Typo="Typo.subtitle2">
+                            Lesson Taken
+                        </MudText>
+
+                        <MudText Typo="Typo.body2" Class="mb-3">
+                            @(string.IsNullOrWhiteSpace(item.LessonTaken)
+                                ? "-"
+                                : item.LessonTaken)
+                        </MudText>
+
+                        <MudText Typo="Typo.subtitle2">
+                            Class Outcome
+                        </MudText>
+
+                        <MudText Typo="Typo.body2" Class="mb-3">
+                            @(string.IsNullOrWhiteSpace(item.ClassOutcome)
+                                ? "-"
+                                : item.ClassOutcome)
+                        </MudText>
+
+                        <MudText Typo="Typo.subtitle2">
+                            Next Homework
+                        </MudText>
+
+                        <MudText Typo="Typo.body2" Class="mb-3">
+                            @(string.IsNullOrWhiteSpace(item.NextHomework)
+                                ? "-"
+                                : item.NextHomework)
+                        </MudText>
+
+                        <MudText Typo="Typo.subtitle2">
+                            Teacher Remarks
+                        </MudText>
+
+                        <MudText Typo="Typo.body2">
+                            @(string.IsNullOrWhiteSpace(item.TeacherRemarks)
+                                ? "-"
+                                : item.TeacherRemarks)
+                        </MudText>
+
+                    </MudCardContent>
+
+                </MudCard>
+
+            </MudItem>
+        }
+
+    </MudGrid>
+}
+
+<style>
+    .progress-table-container {
+        overflow-x: auto;
+        border-radius: 12px;
+    }
+
+    .modern-progress-table {
+        min-width: 1000px;
+    }
+
+    .modern-progress-table .mud-table-head {
+        background-color: #f8fafc;
+    }
+
+    .modern-progress-table .mud-table-head .mud-table-cell {
+        font-weight: 600;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+        padding: 14px 16px;
+    }
+
+    .modern-progress-table .mud-table-body .mud-table-cell {
+        padding: 16px;
+        vertical-align: middle;
+    }
+
+    .modern-progress-table .mud-table-row {
+        transition: background-color 0.15s ease;
+    }
+
+    .modern-progress-table .mud-table-row:hover {
+        background-color: #f8fafc;
+    }
+
+    .progress-date-column {
+        min-width: 120px;
+        white-space: nowrap;
+    }
+
+    .progress-date {
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .progress-student {
+        font-weight: 600;
+    }
+
+    .progress-course {
+        font-weight: 500;
+    }
+
+    .progress-rating {
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    @@media (max-width: 1100px) {
+        .modern-progress-table {
+            min-width: 900px;
+        }
+
+        .modern-progress-table .mud-table-head .mud-table-cell,
+        .modern-progress-table .mud-table-body .mud-table-cell {
+            padding: 12px;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .progress-table-container {
+            margin-left: -4px;
+            margin-right: -4px;
+            border-radius: 10px;
+        }
+
+        .modern-progress-table {
+            min-width: 900px;
+        }
+    }
+</style>
+
+@code {
+    private List<ParentChildSummaryDto> _children = [];
+    private List<ParentProgressDto>? _progress;
+
+    private Guid? _studentId;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _children =
+                await ParentPortalApi.GetChildrenAsync() ?? [];
+
+            await LoadProgress();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task LoadProgress()
+    {
+        _loading = true;
+
+        try
+        {
+            _progress =
+                await ParentPortalApi.GetProgressAsync(_studentId);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static Color GetAttendanceColor(string status)
+    {
+        return status switch
+        {
+            "Present" => Color.Success,
+            "Late" => Color.Warning,
+            "Absent" => Color.Error,
+            "Leave" => Color.Info,
+            _ => Color.Default
+        };
+    }
+}

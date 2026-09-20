@@ -1,16 +1,16 @@
 @page "/students"
 
 @using Microsoft.AspNetCore.Authorization
-
-
 @using AcademyERP.Admin.Models
+@using AcademyERP.Admin.Models.Courses
 @using AcademyERP.Admin.Services
-@inject StudentApiService StudentApi
 @using AcademyERP.Admin.Components.Pages.Students
+
+@inject StudentApiService StudentApi
+@inject CourseApiService CourseApi
 @inject IDialogService DialogService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
-@inject NavigationManager Navigation
 
 <PageTitle>Students</PageTitle>
 
@@ -20,51 +20,143 @@
 
 <MudPaper Class="pa-4 mb-4">
 
-    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+    <MudGrid Spacing="2" AlignItems="AlignItems.Center">
 
-        <MudTextField T="string" Value="@_search" ValueChanged="OnSearchChanged"
-                      Placeholder="Search by name or admission no..." Adornment="Adornment.Start"
-                      AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" Clearable="true" Style="width:350px" />
+        <!-- SEARCH -->
+        <MudItem xs="12" sm="6" md="4">
+            <MudTextField T="string"
+                          Value="@_search"
+                          ValueChanged="OnSearchChanged"
+                          Placeholder="Search by name or admission no..."
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Immediate="true"
+                          Clearable="true"
+                          FullWidth="true" />
+        </MudItem>
 
-        
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add"
-                   OnClick="OpenAddStudentDialog">
+        <!-- COURSE -->
+        <MudItem xs="12" sm="6" md="3">
+            <MudSelect T="Guid?"
+                       Value="@_selectedCourseId"
+                       ValueChanged="OnCourseChanged"
+                       Label="Course"
+                       Variant="Variant.Outlined"
+                       Dense="true"
+                       Clearable="true"
+                       FullWidth="true">
 
-            Add Student
+                <MudSelectItem T="Guid?" Value="@((Guid?)null)">
+                    All Courses
+                </MudSelectItem>
 
-        </MudButton>
+                @foreach (var course in _courses)
+                {
+                    <MudSelectItem T="Guid?" Value="@course.Id">
+                        @course.CourseName
+                    </MudSelectItem>
+                }
 
-    </MudStack>
+            </MudSelect>
+        </MudItem>
+
+        <!-- GENDER -->
+        <MudItem xs="12" sm="6" md="2">
+            <MudSelect T="string"
+                       Value="@_selectedGender"
+                       ValueChanged="OnGenderChanged"
+                       Label="Gender"
+                       Variant="Variant.Outlined"
+                       Dense="true"
+                       Clearable="true"
+                       FullWidth="true">
+
+                <MudSelectItem T="string" Value="@((string?)null)">
+                    All
+                </MudSelectItem>
+
+                <MudSelectItem T="string" Value="@("Male")">
+                    Male
+                </MudSelectItem>
+
+                <MudSelectItem T="string" Value="@("Female")">
+                    Female
+                </MudSelectItem>
+
+            </MudSelect>
+        </MudItem>
+
+        <!-- CLEAR -->
+        <MudItem xs="12" sm="6" md="1">
+            @if (_selectedCourseId.HasValue ||
+                 !string.IsNullOrWhiteSpace(_selectedGender) ||
+                 !string.IsNullOrWhiteSpace(_search))
+            {
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Default"
+                           StartIcon="@Icons.Material.Filled.Clear"
+                           OnClick="ClearFilters"
+                           FullWidth="true">
+
+                    Clear
+
+                </MudButton>
+            }
+        </MudItem>
+
+        <!-- ADD STUDENT -->
+        <MudItem xs="12" sm="6" md="2">
+            <MudButton Color="Color.Primary"
+                       Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenAddStudentDialog"
+                       FullWidth="true">
+
+                Add Student
+
+            </MudButton>
+        </MudItem>
+
+    </MudGrid>
 
 </MudPaper>
 
-<MudTable T="StudentResponse" Items="_students" Loading="_loading" Hover="true" Dense="true" Striped="true">
+<MudTable T="StudentResponse"
+          Items="_students"
+          Loading="_loading"
+          Hover="true"
+          Dense="true"
+          Striped="true">
 
-    
-    <!-- <HeaderContent>
-
-        <MudTh>Admission No</MudTh>
-        <MudTh>Name</MudTh>
-        <MudTh>Admission Date</MudTh>
-        <MudTh>Country</MudTh>
-
-    </HeaderContent>-->
     <HeaderContent>
 
         <MudTh>Admission No</MudTh>
+
         <MudTh>Name</MudTh>
+
+        <MudTh>Gender</MudTh>
+
         <MudTh>Admission Date</MudTh>
+
         <MudTh>Country</MudTh>
+
         <MudTh>Actions</MudTh>
 
     </HeaderContent>
 
     <RowTemplate>
 
-        <MudTd>@context.AdmissionNumber</MudTd>
+        <MudTd>
+            @context.AdmissionNumber
+        </MudTd>
 
-        <MudTd>@context.FullName</MudTd>
+        <MudTd>
+            @context.FullName
+        </MudTd>
 
+        <MudTd>
+    @GetGenderText(context.Gender)
+</MudTd>
         <MudTd>
             @context.AdmissionDate.ToString("dd MMM yyyy")
         </MudTd>
@@ -72,28 +164,45 @@
         <MudTd>
             @context.Country
         </MudTd>
+
         <MudTd>
+
             <MudTooltip Text="View Student">
-                <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" Size="Size.Small"
+
+                <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                               Color="Color.Info"
+                               Size="Size.Small"
                                OnClick="@(() => ViewStudent(context.Id))" />
+
             </MudTooltip>
+
             <MudTooltip Text="Edit Student">
-                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small"
+
+                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                               Color="Color.Primary"
+                               Size="Size.Small"
                                OnClick="@(() => EditStudent(context))" />
+
             </MudTooltip>
 
             <MudTooltip Text="Reset Password">
-                <MudIconButton Icon="@Icons.Material.Filled.LockReset" Color="Color.Warning" Size="Size.Small"
+
+                <MudIconButton Icon="@Icons.Material.Filled.LockReset"
+                               Color="Color.Warning"
+                               Size="Size.Small"
                                OnClick="@(() => OpenResetPasswordDialog(context.Id))" />
+
             </MudTooltip>
-<MudIconButton
-    Icon="@Icons.Material.Filled.Assessment"
-    Color="Color.Success"
-    OnClick="@(() => OpenReport(context.Id))"
-/>
+
+            
+
             <MudTooltip Text="Delete Student">
-                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+
+                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                               Color="Color.Error"
+                               Size="Size.Small"
                                OnClick="@(() => DeleteStudent(context))" />
+
             </MudTooltip>
 
         </MudTd>
@@ -101,49 +210,63 @@
     </RowTemplate>
 
 </MudTable>
+
 @if (!_loading && !_students.Any())
 {
     <MudAlert Severity="Severity.Info">
-
         No students found.
-
     </MudAlert>
 }
 
-<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-4">
+<MudStack Row="true"
+          AlignItems="AlignItems.Center"
+          Spacing="2"
+          Class="mt-4">
 
-    <MudButton Variant="Variant.Outlined" Disabled="@(_page.Page <= 1)" OnClick="PreviousPage">
+    <MudButton Variant="Variant.Outlined"
+               Disabled="@(_page.Page <= 1)"
+               OnClick="PreviousPage">
 
         Previous
 
     </MudButton>
 
     <MudText>
-
-        Page @_page.Page of @_page.TotalPages
-
+        Page @_page.Page of @DisplayTotalPages
     </MudText>
 
-    <MudButton Variant="Variant.Outlined" Disabled="@(_page.Page >= _page.TotalPages)" OnClick="NextPage">
+    <MudButton Variant="Variant.Outlined"
+               Disabled="@(_page.Page >= _page.TotalPages)"
+               OnClick="NextPage">
 
         Next
 
     </MudButton>
 
 </MudStack>
+
 <MudText Class="mt-4">
 
     Showing @_students.Count of @_page.TotalCount students
-    (Page @_page.Page of @_page.TotalPages)
+    (Page @_page.Page of @DisplayTotalPages)
 
 </MudText>
+
 @code
 {
     private List<StudentResponse> _students = new();
+
+    private List<CourseResponse> _courses = new();
+
     private StudentData _page = new();
 
     private bool _loading = true;
+
     private string _search = string.Empty;
+
+    private Guid? _selectedCourseId;
+
+    private string? _selectedGender;
 
     private readonly StudentQueryRequest _request = new()
     {
@@ -151,53 +274,120 @@
         PageSize = 10
     };
 
+    private int DisplayTotalPages =>
+        _page.TotalPages > 0 ? _page.TotalPages : 1;
+
     protected override async Task OnInitializedAsync()
     {
+        await LoadCoursesAsync();
         await LoadStudentsAsync();
     }
+
+    private async Task LoadCoursesAsync()
+    {
+        try
+        {
+            _courses = await CourseApi.GetAllAsync();
+
+            _courses = _courses
+                .Where(x => x.IsActive)
+                .OrderBy(x => x.CourseName)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+
+            Snackbar.Add(
+                "Unable to load courses.",
+                Severity.Error);
+        }
+    }
+
     private async Task LoadStudentsAsync()
     {
         try
         {
-            Console.WriteLine("LoadStudentsAsync started");
-
             _loading = true;
 
-            var response = await StudentApi.GetStudentsAsync(_request);
-
-            Console.WriteLine("API call finished");
+            var response =
+                await StudentApi.GetStudentsAsync(_request);
 
             if (response != null)
             {
-                Console.WriteLine("Response received");
-
                 _page = response.Data;
+
                 _students = _page.Items;
             }
-
-            _loading = false;
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.ToString());
+            Console.WriteLine(ex);
 
-            Snackbar.Add(ex.ToString(), Severity.Error);
+            Snackbar.Add(
+                "Unable to load students.",
+                Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
         }
     }
-    /* private async Task LoadStudentsAsync()
-      {
-          _loading = true;
 
-          var response = await StudentApi.GetStudentsAsync(_request);
+    private async Task OnCourseChanged(Guid? value)
+    {
+        _selectedCourseId = value;
 
-          if (response is not null)
-          {
-              _page = response.Data;
-              _students = _page.Items;
-          }
+        _request.CourseId = value;
 
-          _loading = false;
-      }*/
+        _request.Page = 1;
+
+        await LoadStudentsAsync();
+    }
+
+    private async Task OnGenderChanged(string? value)
+    {
+        _selectedGender = value;
+
+        _request.Gender = value;
+
+        _request.Page = 1;
+
+        await LoadStudentsAsync();
+    }
+
+    private async Task ClearFilters()
+    {
+        _search = string.Empty;
+
+        _selectedCourseId = null;
+
+        _selectedGender = null;
+
+        _request.Search = null;
+
+        _request.CourseId = null;
+
+        _request.Gender = null;
+
+        _request.Page = 1;
+
+        await LoadStudentsAsync();
+    }
+
+    private async Task OnSearchChanged(string value)
+    {
+        _search = value;
+
+        _request.Search = string.IsNullOrWhiteSpace(value)
+            ? null
+            : value;
+
+        _request.Page = 1;
+
+        await LoadStudentsAsync();
+    }
+
     private async Task NextPage()
     {
         if (_page.Page >= _page.TotalPages)
@@ -218,25 +408,6 @@
         await LoadStudentsAsync();
     }
 
-    private async Task SearchStudents()
-    {
-        Console.WriteLine("Search button clicked");
-
-        _request.Page = 1;
-        _request.Search = _search;
-
-        await LoadStudentsAsync();
-    }
-    private async Task OnSearchChanged(string value)
-    {
-        Console.WriteLine($"Searching for: {value}");
-        _search = value;
-
-        _request.Page = 1;
-        _request.Search = _search;
-
-        await LoadStudentsAsync();
-    }
     private async Task OpenAddStudentDialog()
     {
         var options = new DialogOptions
@@ -257,17 +428,19 @@
             await LoadStudentsAsync();
         }
     }
+
     private void ViewStudent(Guid id)
     {
         Navigation.NavigateTo($"/students/{id}");
     }
+
     private async Task EditStudent(StudentResponse student)
     {
         var parameters = new DialogParameters<StudentDialog>
-    {
-        { x => x.Student, student },
-        { x => x.IsEdit, true }
-    };
+        {
+            { x => x.Student, student },
+            { x => x.IsEdit, true }
+        };
 
         var dialog = await DialogService.ShowAsync<StudentDialog>(
             "Update Student",
@@ -280,38 +453,59 @@
             await LoadStudentsAsync();
         }
     }
+
     private async Task DeleteStudent(StudentResponse student)
     {
-        var success = await StudentApi.DeleteStudentAsync(student.Id);
+        var success =
+            await StudentApi.DeleteStudentAsync(student.Id);
 
         if (success)
         {
-            Snackbar.Add("Student deleted successfully.", Severity.Success);
+            Snackbar.Add(
+                "Student deleted successfully.",
+                Severity.Success);
+
             await LoadStudentsAsync();
         }
         else
         {
-            Snackbar.Add("Failed to delete student.", Severity.Error);
+            Snackbar.Add(
+                "Failed to delete student.",
+                Severity.Error);
         }
     }
+
     private async Task OpenResetPasswordDialog(Guid studentId)
     {
-        Snackbar.Add("Reset button clicked!", Severity.Success);
-
         var parameters = new DialogParameters
         {
             ["StudentId"] = studentId
         };
 
-        var dialog = await DialogService.ShowAsync<ResetStudentPasswordDialog>(
-            "Reset Password",
-            parameters);
+        var dialog =
+            await DialogService.ShowAsync<ResetStudentPasswordDialog>(
+                "Reset Password",
+                parameters);
 
         await dialog.Result;
     }
-    private void OpenReport(Guid studentId)
+
+
+
+    private static string GetGenderText(string? gender)
 {
-    Navigation.NavigateTo(
-        $"/students/report/{studentId}");
+    if (string.IsNullOrWhiteSpace(gender))
+        return "—";
+
+    return gender switch
+    {
+        "0" => "Male",
+        "1" => "Female",
+        "2" => "Other",
+        "Male" => "Male",
+        "Female" => "Female",
+        "Other" => "Other",
+        _ => gender
+    };
 }
 }

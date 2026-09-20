@@ -21,9 +21,23 @@ public class StudentReportApiService
             $"api/reports/students/{studentId}");
     }
 
-    public async Task<StudentReportDashboardResponse?> GetDashboardAsync()
-    {
-        return await _http.GetFromJsonAsync<StudentReportDashboardResponse>(
-            "api/reports/students/dashboard");
-    }
+  public async Task<StudentReportDashboardResponse?> GetDashboardAsync(
+    string? courseName = null,
+    int? gender = null)
+{
+    var url = "api/reports/students/dashboard";
+
+    var parameters = new List<string>();
+
+    if (!string.IsNullOrWhiteSpace(courseName))
+        parameters.Add($"courseName={Uri.EscapeDataString(courseName)}");
+
+    if (gender.HasValue)
+        parameters.Add($"gender={gender.Value}");
+
+    if (parameters.Count > 0)
+        url += "?" + string.Join("&", parameters);
+
+    return await _http.GetFromJsonAsync<StudentReportDashboardResponse>(url);
+}
 }

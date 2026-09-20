@@ -1,120 +1,671 @@
 @page "/registration-requests"
 
+@using System.Globalization
+@using System.Text
 @using AcademyERP.Admin.Models.Registration
 @using AcademyERP.Admin.Services
+@using AcademyERP.Admin.Components.Pages.Registration
 @using MudBlazor
+@using ClosedXML.Excel
+@using Microsoft.JSInterop
 
 @inject IDialogService DialogService
 @inject RegistrationRequestApiService Api
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
 
 <PageTitle>
     Registration Requests
 </PageTitle>
 
-<MudPaper Class="pa-4">
+<MudText Typo="Typo.h4" Class="mb-4">
+    Registration Requests
+</MudText>
 
-    <MudText Typo="Typo.h5"
-             Class="mb-4">
-        Registration Requests
+<!-- SUMMARY CARDS -->
+<MudGrid Class="mb-4">
+
+    <MudItem xs="12" sm="6" md="4">
+        <MudCard Elevation="2">
+            <MudCardContent>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Total Registrations
+                </MudText>
+
+                <MudText Typo="Typo.h4" Color="Color.Primary">
+                    @_requests.Count
+                </MudText>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="4">
+        <MudCard Elevation="2">
+            <MudCardContent>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Approved
+                </MudText>
+
+                <MudText Typo="Typo.h4" Color="Color.Success">
+                    @ApprovedCount
+                </MudText>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="4">
+        <MudCard Elevation="2">
+            <MudCardContent>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Rejected
+                </MudText>
+
+                <MudText Typo="Typo.h4" Color="Color.Error">
+                    @RejectedCount
+                </MudText>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+</MudGrid>
+
+<!-- FILTERS -->
+<MudPaper Class="pa-4 mb-4">
+
+    <MudText Typo="Typo.h6" Class="mb-3">
+        Filters
     </MudText>
 
-    <MudTable Items="_requests"
-          Hover="true"
-          Dense="true">
-        <HeaderContent>
+    <MudGrid>
 
-            <MudTh>Parent</MudTh>
-            <MudTh>Email</MudTh>
-            <MudTh>Country</MudTh>
-            <MudTh>Students</MudTh>
-            <MudTh>Status</MudTh>
-            <MudTh>Actions</MudTh>
+        <!-- MONTH -->
+        <MudItem xs="12" sm="6" md="3">
 
-        </HeaderContent>
+            <MudSelect T="int?"
+                       @bind-Value="_selectedMonth"
+                       Label="Month"
+                       Variant="Variant.Outlined"
+                       Dense="true">
 
-        <RowTemplate>
+                <MudSelectItem T="int?" Value="@((int?)null)">
+                    All Months
+                </MudSelectItem>
 
-            <MudTd>
-                @context.ParentName
-            </MudTd>
+                @foreach (var month in Enumerable.Range(1, 12))
+                {
+                    <MudSelectItem T="int?" Value="@((int?)month)">
+                        @CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month)
+                    </MudSelectItem>
+                }
 
-            <MudTd>
-                @context.Email
-            </MudTd>
+            </MudSelect>
 
-            <MudTd>
-                @context.Country
-            </MudTd>
+        </MudItem>
 
-            <MudTd>
-                @context.Students.Count
-            </MudTd>
+        <!-- YEAR -->
+        <MudItem xs="12" sm="6" md="3">
 
-            <MudTd>
+            <MudSelect T="int?"
+                       @bind-Value="_selectedYear"
+                       Label="Year"
+                       Variant="Variant.Outlined"
+                       Dense="true">
 
-    @if (context.Status == 1)
-    {
-        <MudChip T="string" Color="Color.Warning">
-    Pending
-</MudChip>
-    }
-    else if (context.Status == 2)
-    {
-        <MudChip T="string" Color="Color.Success">
-    Approved
-</MudChip>
-    }
-    else if (context.Status == 3)
-    {
-       <MudChip T="string" Color="Color.Error">
-    Rejected
-</MudChip>
-    }
+                <MudSelectItem T="int?" Value="@((int?)null)">
+                    All Years
+                </MudSelectItem>
 
-</MudTd>
-<MudTd>
+                @foreach (var year in AvailableYears)
+                {
+                    <MudSelectItem T="int?" Value="@year">
+                        @year
+                    </MudSelectItem>
+                }
 
-    <MudIconButton
-        Icon="@Icons.Material.Filled.Visibility"
-        Color="Color.Primary"
-        OnClick="@(() => ViewRequest(context.Id))" />
+            </MudSelect>
 
-</MudTd>
-        </RowTemplate>
+        </MudItem>
 
-    </MudTable>
+        <!-- STATUS -->
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudSelect T="int?"
+                       @bind-Value="_selectedStatus"
+                       Label="Status"
+                       Variant="Variant.Outlined"
+                       Dense="true">
+
+                <MudSelectItem T="int?" Value="@((int?)null)">
+                    All Statuses
+                </MudSelectItem>
+
+                <MudSelectItem T="int?" Value="1">
+                    Pending
+                </MudSelectItem>
+
+                <MudSelectItem T="int?" Value="2">
+                    Approved
+                </MudSelectItem>
+
+                <MudSelectItem T="int?" Value="3">
+                    Rejected
+                </MudSelectItem>
+
+            </MudSelect>
+
+        </MudItem>
+
+        <!-- GENDER -->
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudSelect T="int?"
+                       @bind-Value="_selectedGender"
+                       Label="Gender"
+                       Variant="Variant.Outlined"
+                       Dense="true">
+
+                <MudSelectItem T="int?" Value="@((int?)null)">
+                    All Genders
+                </MudSelectItem>
+
+                <MudSelectItem T="int?" Value="1">
+    Male
+</MudSelectItem>
+
+<MudSelectItem T="int?" Value="2">
+    Female
+</MudSelectItem>
+
+<MudSelectItem T="int?" Value="3">
+    Other
+</MudSelectItem>
+
+            </MudSelect>
+
+        </MudItem>
+
+        <!-- COURSE -->
+        <MudItem xs="12" sm="6" md="4">
+
+            <MudSelect T="string"
+                       @bind-Value="_selectedCourse"
+                       Label="Course"
+                       Variant="Variant.Outlined"
+                       Dense="true"
+                       Clearable="true">
+
+                <MudSelectItem Value="@string.Empty">
+                    All Courses
+                </MudSelectItem>
+
+                @foreach (var course in AvailableCourses)
+                {
+                    <MudSelectItem Value="@course">
+                        @course
+                    </MudSelectItem>
+                }
+
+            </MudSelect>
+
+        </MudItem>
+
+    </MudGrid>
+
+   <MudStack Row="true"
+          Justify="Justify.SpaceBetween"
+          AlignItems="AlignItems.Center"
+          Class="mt-4"
+          Style="width:100%; flex-wrap:wrap; gap:12px;">
+
+    <MudText Typo="Typo.body2">
+        Showing <strong>@FilteredRequests.Count</strong>
+        of <strong>@_requests.Count</strong> registrations
+    </MudText>
+
+    <MudStack Row="true"
+              Spacing="2"
+              Style="flex-wrap:wrap;">
+
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Default"
+                   StartIcon="@Icons.Material.Filled.FilterAltOff"
+                   OnClick="ClearFilters">
+            Clear Filters
+        </MudButton>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Success"
+                   StartIcon="@Icons.Material.Filled.Download"
+                   Disabled="@(!FilteredRequests.Any())"
+                   OnClick="DownloadExcelAsync">
+            Download Excel
+        </MudButton>
+
+    </MudStack>
+
+</MudStack>
 
 </MudPaper>
 
-@code {
+<!-- PAGE HEADER -->
+<MudPaper Class="pa-4 mb-4">
 
-    private List<RegistrationRequestResponse>
-        _requests = new();
+   <MudStack Row="true"
+          Justify="Justify.SpaceBetween"
+          AlignItems="AlignItems.Center"
+          Style="width:100%; flex-wrap:wrap; gap:12px;">
 
-    protected override async Task
-        OnInitializedAsync()
-    {
-        _requests =
-            await Api.GetAllAsync();
-    }
- private async Task ViewRequest(Guid id)
+    <div style="min-width:0;">
+
+        <MudText Typo="Typo.h6">
+            Registration Requests
+        </MudText>
+
+        <MudText Typo="Typo.body2" Color="Color.Secondary">
+            Registration requests submitted by parents.
+        </MudText>
+
+    </div>
+
+    <MudStack Row="true"
+              Spacing="2"
+              Style="flex-wrap:wrap;">
+
+        <MudButton Color="Color.Primary"
+                   Variant="Variant.Outlined"
+                   StartIcon="@Icons.Material.Filled.Refresh"
+                   OnClick="LoadRequestsAsync">
+            Refresh
+        </MudButton>
+
+        <MudButton Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="CreateRegistrationRequest">
+            Create New Registration Request
+        </MudButton>
+
+    </MudStack>
+
+</MudStack>
+
+</MudPaper>
+
+<!-- TABLE -->
+<MudTable Items="FilteredRequests"
+          Hover="true"
+          Dense="true"
+          Striped="true">
+
+    <HeaderContent>
+
+        <MudTh>Parent</MudTh>
+        <MudTh>Email</MudTh>
+        <MudTh>Country</MudTh>
+        <MudTh>Students</MudTh>
+        <MudTh>Courses</MudTh>
+        <MudTh>Submitted</MudTh>
+        <MudTh>Status</MudTh>
+        <MudTh>Actions</MudTh>
+
+    </HeaderContent>
+
+    <RowTemplate>
+
+        <MudTd DataLabel="Parent">
+            @context.ParentName
+        </MudTd>
+
+        <MudTd DataLabel="Email">
+            @context.Email
+        </MudTd>
+
+        <MudTd DataLabel="Country">
+            @context.Country
+        </MudTd>
+
+        <MudTd DataLabel="Students">
+            @context.Students.Count
+        </MudTd>
+
+        <MudTd DataLabel="Courses">
+            @{
+                var courses = context.Students
+                    .Where(x => !string.IsNullOrWhiteSpace(x.CourseName))
+                    .Select(x => x.CourseName!)
+                    .Distinct()
+                    .ToList();
+            }
+
+            @(courses.Any()
+                ? string.Join(", ", courses)
+                : "Not assigned")
+        </MudTd>
+
+        <MudTd DataLabel="Submitted">
+            @context.SubmittedAt.ToLocalTime().ToString("dd MMM yyyy")
+        </MudTd>
+
+        <MudTd DataLabel="Status">
+
+            @if (context.Status == 1)
+            {
+                <MudChip T="string"
+                         Size="Size.Small"
+                         Color="Color.Warning">
+                    Pending
+                </MudChip>
+            }
+            else if (context.Status == 2)
+            {
+                <MudChip T="string"
+                         Size="Size.Small"
+                         Color="Color.Success">
+                    Approved
+                </MudChip>
+            }
+            else if (context.Status == 3)
+            {
+                <MudChip T="string"
+                         Size="Size.Small"
+                         Color="Color.Error">
+                    Rejected
+                </MudChip>
+            }
+
+        </MudTd>
+
+        <MudTd DataLabel="Actions">
+
+            <MudIconButton
+                Icon="@Icons.Material.Filled.Visibility"
+                Color="Color.Primary"
+                Size="Size.Small"
+                OnClick="@(() => ViewRequest(context.Id))" />
+
+        </MudTd>
+
+    </RowTemplate>
+
+</MudTable>
+
+@if (!_loading && !FilteredRequests.Any())
 {
-    var parameters = new DialogParameters
-    {
-        ["RequestId"] = id
-    };
-
-    var dialog = await DialogService.ShowAsync<RegistrationRequestDetailsDialog>(
-        "Registration Request Details",
-        parameters);
-
-    var result = await dialog.Result;
-
-    if (result != null && !result.Canceled)
-    {
-        _requests = await Api.GetAllAsync();
-        StateHasChanged();
-    }
+    <MudAlert Severity="Severity.Info" Class="mt-4">
+        No registration requests match the selected filters.
+    </MudAlert>
 }
 
+@code
+{
+    private List<RegistrationRequestResponse> _requests = new();
+
+    private bool _loading;
+
+    private int? _selectedMonth;
+    private int? _selectedYear;
+    private int? _selectedStatus;
+    private int? _selectedGender;
+
+    private string _selectedCourse = string.Empty;
+
+    private IEnumerable<int> AvailableYears =>
+        _requests
+            .Select(x => x.SubmittedAt.ToLocalTime().Year)
+            .Distinct()
+            .OrderByDescending(x => x);
+
+    private IEnumerable<string> AvailableCourses =>
+        _requests
+            .SelectMany(x => x.Students)
+            .Where(x => !string.IsNullOrWhiteSpace(x.CourseName))
+            .Select(x => x.CourseName!)
+            .Distinct()
+            .OrderBy(x => x);
+
+    private int ApprovedCount =>
+        _requests.Count(x => x.Status == 2);
+
+    private int RejectedCount =>
+        _requests.Count(x => x.Status == 3);
+
+    private List<RegistrationRequestResponse> FilteredRequests =>
+        _requests
+            .Where(x =>
+                !_selectedMonth.HasValue ||
+                x.SubmittedAt.ToLocalTime().Month == _selectedMonth.Value)
+
+            .Where(x =>
+                !_selectedYear.HasValue ||
+                x.SubmittedAt.ToLocalTime().Year == _selectedYear.Value)
+
+            .Where(x =>
+                !_selectedStatus.HasValue ||
+                x.Status == _selectedStatus.Value)
+
+            .Where(x =>
+                !_selectedGender.HasValue ||
+                x.Students.Any(s =>
+                    s.Gender == _selectedGender.Value))
+
+            .Where(x =>
+                string.IsNullOrWhiteSpace(_selectedCourse) ||
+                x.Students.Any(s =>
+                    string.Equals(
+                        s.CourseName,
+                        _selectedCourse,
+                        StringComparison.OrdinalIgnoreCase)))
+
+            .OrderByDescending(x => x.SubmittedAt)
+            .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRequestsAsync();
+    }
+
+    private async Task LoadRequestsAsync()
+    {
+        try
+        {
+            _loading = true;
+
+            _requests =
+                await Api.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                ex.Message,
+                Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void ClearFilters()
+    {
+        _selectedMonth = null;
+        _selectedYear = null;
+        _selectedStatus = null;
+        _selectedGender = null;
+        _selectedCourse = string.Empty;
+    }
+
+    private async Task ViewRequest(Guid id)
+    {
+        await Api.MarkAsViewedAsync(id);
+
+        var parameters = new DialogParameters
+        {
+            ["RequestId"] = id
+        };
+
+        var dialog =
+            await DialogService.ShowAsync<
+                RegistrationRequestDetailsDialog>(
+                "Registration Request Details",
+                parameters);
+
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await LoadRequestsAsync();
+        }
+    }
+
+    private async Task CreateRegistrationRequest()
+    {
+        var dialog =
+            await DialogService.ShowAsync<
+                RegistrationRequestCreateDialog>(
+                "Create Registration Request");
+
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await LoadRequestsAsync();
+
+            Snackbar.Add(
+                "Registration request added.",
+                Severity.Success);
+        }
+    }
+
+    private async Task DownloadExcelAsync()
+    {
+        try
+        {
+            using var workbook = new XLWorkbook();
+
+            var worksheet =
+                workbook.Worksheets.Add("Registrations");
+
+            worksheet.Cell(1, 1).Value = "Parent";
+            worksheet.Cell(1, 2).Value = "Email";
+            worksheet.Cell(1, 3).Value = "Phone";
+            worksheet.Cell(1, 4).Value = "Country";
+            worksheet.Cell(1, 5).Value = "Student";
+            worksheet.Cell(1, 6).Value = "Gender";
+            worksheet.Cell(1, 7).Value = "Program";
+            worksheet.Cell(1, 8).Value = "Course";
+            worksheet.Cell(1, 9).Value = "Teacher";
+            worksheet.Cell(1, 10).Value = "Time Slot";
+            worksheet.Cell(1, 11).Value = "Class Duration";
+            worksheet.Cell(1, 12).Value = "Status";
+            worksheet.Cell(1, 13).Value = "Submitted";
+
+            var header =
+                worksheet.Range(1, 1, 1, 13);
+
+            header.Style.Font.Bold = true;
+
+            var row = 2;
+
+            foreach (var request in FilteredRequests)
+            {
+                foreach (var student in request.Students)
+                {
+                    worksheet.Cell(row, 1).Value =
+                        request.ParentName;
+
+                    worksheet.Cell(row, 2).Value =
+                        request.Email;
+
+                    worksheet.Cell(row, 3).Value =
+                        request.PhoneNumber;
+
+                    worksheet.Cell(row, 4).Value =
+                        request.Country;
+
+                    worksheet.Cell(row, 5).Value =
+                        student.StudentName;
+
+                    worksheet.Cell(row, 6).Value =
+                        GetGenderText(student.Gender);
+
+                    worksheet.Cell(row, 7).Value =
+                        student.ProgramName;
+
+                    worksheet.Cell(row, 8).Value =
+                        student.CourseName ?? "Not assigned";
+
+                    worksheet.Cell(row, 9).Value =
+                        student.TeacherName ?? "Not assigned";
+
+                    worksheet.Cell(row, 10).Value =
+                        student.TimeSlotName ?? "Not assigned";
+
+                    worksheet.Cell(row, 11).Value =
+                        student.ClassDurationName ?? "Not assigned";
+
+                    worksheet.Cell(row, 12).Value =
+                        GetStatusText(request.Status);
+
+                    worksheet.Cell(row, 13).Value =
+                        request.SubmittedAt
+                            .ToLocalTime()
+                            .ToString("dd MMM yyyy");
+
+                    row++;
+                }
+            }
+
+            worksheet.Columns().AdjustToContents();
+
+            using var stream = new MemoryStream();
+
+            workbook.SaveAs(stream);
+
+            var bytes = stream.ToArray();
+
+            var base64 =
+                Convert.ToBase64String(bytes);
+
+            var fileName =
+                $"RegistrationRequests_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+
+            await JS.InvokeVoidAsync(
+    "downloadFile",
+    fileName,
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    base64);
+
+            Snackbar.Add(
+                "Excel file downloaded.",
+                Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to download Excel: {ex.Message}",
+                Severity.Error);
+        }
+    }
+
+   private static string GetGenderText(int gender)
+{
+    return gender switch
+    {
+        1 => "Male",
+        2 => "Female",
+        3 => "Other",
+        _ => "Unknown"
+    };
+}
+
+    private static string GetStatusText(int status)
+    {
+        return status switch
+        {
+            1 => "Pending",
+            2 => "Approved",
+            3 => "Rejected",
+            _ => "Unknown"
+        };
+    }
 }

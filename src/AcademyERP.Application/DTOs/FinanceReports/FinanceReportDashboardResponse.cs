@@ -9,7 +9,7 @@ public class FinanceReportDashboardResponse
     public decimal PendingAmount { get; set; }
 
     public decimal MonthlyAverageCollection { get; set; }
-
+ public decimal CustomerCredit { get; set; }
 
     public List<RevenueTrendDto> RevenueTrend { get; set; }
         = new();

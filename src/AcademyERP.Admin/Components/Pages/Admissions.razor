@@ -1,13 +1,15 @@
 @page "/admissions"
 
-
-@using Microsoft.AspNetCore.Authorization
+@using System.Globalization
 @using AcademyERP.Admin.Models.Admissions
 @using AcademyERP.Admin.Services
+@using AcademyERP.Admin.Models
+@using MudBlazor
 
 @inject AdmissionApplicationApiService AdmissionApi
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@inject TeacherApiService TeacherApi
 
 <PageTitle>Admission Applications</PageTitle>
 
@@ -15,9 +17,172 @@
     Admission Applications
 </MudText>
 
+<!-- SUMMARY CARDS -->
+<MudGrid Class="mb-4">
+
+    <MudItem xs="12" sm="6" md="4">
+        <MudCard Elevation="2">
+            <MudCardContent>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Total Admissions
+                </MudText>
+
+                <MudText Typo="Typo.h4" Color="Color.Primary">
+                    @_applications.Count
+                </MudText>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="4">
+        <MudCard Elevation="2">
+            <MudCardContent>
+
+                <MudText Typo="Typo.body2"
+                         Color="Color.Secondary"
+                         Class="mb-2">
+                    Month & Year
+                </MudText>
+
+               <MudStack Spacing="2">
+
+    <MudSelect T="int?"
+               @bind-Value="_selectedMonth"
+               Label="Month"
+               Variant="Variant.Outlined"
+               Dense="true"
+               Style="width:100%;">
+
+        <MudSelectItem T="int?" Value="@((int?)null)">
+            All Months
+        </MudSelectItem>
+
+        @foreach (var month in Enumerable.Range(1, 12))
+        {
+            <MudSelectItem T="int?" Value="@((int?)month)">
+                @CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month)
+            </MudSelectItem>
+        }
+
+    </MudSelect>
+
+    <MudSelect T="int?"
+               @bind-Value="_selectedYear"
+               Label="Year"
+               Variant="Variant.Outlined"
+               Dense="true"
+               Style="width:100%;">
+
+        <MudSelectItem T="int?" Value="@((int?)null)">
+            All Years
+        </MudSelectItem>
+
+        @foreach (var year in AvailableYears)
+        {
+            <MudSelectItem T="int?" Value="@year">
+                @year
+            </MudSelectItem>
+        }
+
+    </MudSelect>
+
+
+                </MudStack>
+
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="4">
+        <MudCard Elevation="2">
+            <MudCardContent>
+
+                <MudText Typo="Typo.body2"
+                         Color="Color.Secondary"
+                         Class="mb-2">
+                    Status
+                </MudText>
+
+                <MudSelect T="int?"
+                           @bind-Value="_selectedStatus"
+                           Label="Filter by Status"
+                           Variant="Variant.Outlined"
+                           Dense="true">
+
+                    <MudSelectItem T="int?" Value="@((int?)null)">
+                        All Statuses
+                    </MudSelectItem>
+
+                    <MudSelectItem T="int?" Value="1">
+                        New
+                    </MudSelectItem>
+
+                    <MudSelectItem T="int?" Value="2">
+                        Contacted
+                    </MudSelectItem>
+
+                    <MudSelectItem T="int?" Value="3">
+                        Demo Scheduled
+                    </MudSelectItem>
+
+                    <MudSelectItem T="int?" Value="4">
+                        Demo Completed
+                    </MudSelectItem>
+
+                    <MudSelectItem T="int?" Value="5">
+                        Approved
+                    </MudSelectItem>
+
+                    <MudSelectItem T="int?" Value="6">
+                        Rejected
+                    </MudSelectItem>
+
+                    <MudSelectItem T="int?" Value="7">
+                        Cancelled
+                    </MudSelectItem>
+
+                    <MudSelectItem T="int?" Value="8">
+                        Demo Started
+                    </MudSelectItem>
+
+                </MudSelect>
+
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+</MudGrid>
+
+<!-- FILTER SUMMARY / CLEAR -->
+<MudPaper Class="pa-3 mb-4">
+
+    <MudStack Row="true"
+              Justify="Justify.SpaceBetween"
+              AlignItems="AlignItems.Center"
+              Spacing="2">
+
+        <MudText Typo="Typo.body2">
+            Showing <strong>@FilteredApplications.Count</strong>
+            of <strong>@_applications.Count</strong> admissions
+        </MudText>
+
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Default"
+                   StartIcon="@Icons.Material.Filled.FilterAltOff"
+                   OnClick="ClearFilters">
+            Clear Filters
+        </MudButton>
+
+    </MudStack>
+
+</MudPaper>
+
+<!-- HEADER -->
 <MudPaper Class="pa-4 mb-4">
 
-    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+    <MudStack Row="true"
+              Justify="Justify.SpaceBetween"
+              AlignItems="AlignItems.Center">
 
         <div>
             <MudText Typo="Typo.h6">
@@ -29,7 +194,9 @@
             </MudText>
         </div>
 
-        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh"
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Refresh"
                    OnClick="LoadApplicationsAsync">
             Refresh
         </MudButton>
@@ -38,8 +205,12 @@
 
 </MudPaper>
 
-
-<MudTable T="AdmissionApplicationResponse" Items="_applications" Loading="_loading" Hover="true" Dense="true"
+<!-- APPLICATION TABLE -->
+<MudTable T="AdmissionApplicationResponse"
+          Items="FilteredApplications"
+          Loading="_loading"
+          Hover="true"
+          Dense="true"
           Striped="true">
 
     <HeaderContent>
@@ -79,8 +250,12 @@
 
         <MudTd DataLabel="Status">
 
-            <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)">
+            <MudChip T="string"
+                     Size="Size.Small"
+                     Color="@GetStatusColor(context.Status)">
+
                 @GetStatusText(context.Status)
+
             </MudChip>
 
         </MudTd>
@@ -88,25 +263,54 @@
         <MudTd DataLabel="Submitted">
             @context.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")
         </MudTd>
+
         <MudTd DataLabel="Actions">
 
-            <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Primary" Size="Size.Small"
-                           OnClick="@(() => OpenDetailsDialog(context))" />
+    <MudStack Row="true" Spacing="1">
 
-        </MudTd>
+        <MudIconButton
+            Icon="@Icons.Material.Filled.Visibility"
+            Color="Color.Primary"
+            Size="Size.Small"
+            OnClick="@(() => OpenDetailsDialog(context))" />
+
+        @if (context.Status == 8 &&
+              context.DemoStartedAt.HasValue)
+        {
+            <MudIconButton
+                Icon="@Icons.Material.Filled.AdminPanelSettings"
+                Color="Color.Success"
+                Size="Size.Small"
+                Href="@GetAdminWhatsAppUrl(context)"
+                Target="_blank"
+                Title="WhatsApp Admin" />
+
+            @if (GetAssignedTeacher(context) != null)
+            {
+                <MudIconButton
+                    Icon="@Icons.Material.Filled.School"
+                    Color="Color.Success"
+                    Size="Size.Small"
+                    Href="@GetTeacherWhatsAppUrl(context)"
+                    Target="_blank"
+                    Title="WhatsApp Teacher" />
+            }
+        }
+
+    </MudStack>
+
+</MudTd>
 
     </RowTemplate>
 
 </MudTable>
 
-
-@if (!_loading && !_applications.Any())
+@if (!_loading && !FilteredApplications.Any())
 {
     <MudAlert Severity="Severity.Info" Class="mt-4">
-        No admission applications found.
+        No admission applications match the selected filters.
     </MudAlert>
 }
-
 
 @code
 {
@@ -114,10 +318,55 @@
 
     private bool _loading;
 
-    protected override async Task OnInitializedAsync()
+    private int? _selectedMonth;
+    private int? _selectedYear;
+    private int? _selectedStatus;
+private List<TeacherResponse> _teachers = new();
+    private IEnumerable<int> AvailableYears =>
+        _applications
+            .Select(x => x.CreatedAt.ToLocalTime().Year)
+            .Distinct()
+            .OrderByDescending(x => x);
+
+    private List<AdmissionApplicationResponse> FilteredApplications =>
+        _applications
+            .Where(x =>
+                !_selectedMonth.HasValue ||
+                x.CreatedAt.ToLocalTime().Month == _selectedMonth.Value)
+            .Where(x =>
+                !_selectedYear.HasValue ||
+                x.CreatedAt.ToLocalTime().Year == _selectedYear.Value)
+            .Where(x =>
+                !_selectedStatus.HasValue ||
+                x.Status == _selectedStatus.Value)
+            .OrderByDescending(x => x.CreatedAt)
+            .ToList();
+
+   protected override async Task OnInitializedAsync()
+{
+    await LoadApplicationsAsync();
+    await LoadTeachersAsync();
+}
+private async Task LoadTeachersAsync()
+{
+    try
     {
-        await LoadApplicationsAsync();
+        var result = await TeacherApi.GetTeachersAsync(
+            new TeacherQueryRequest
+            {
+                Page = 1,
+                PageSize = 1000
+            });
+
+       _teachers = result?.Data?.Items?.ToList() ?? new();
     }
+    catch (Exception ex)
+    {
+        Snackbar.Add(
+            $"Unable to load teachers: {ex.Message}",
+            Severity.Error);
+    }
+}
 
     private async Task LoadApplicationsAsync()
     {
@@ -140,6 +389,13 @@
         }
     }
 
+    private void ClearFilters()
+    {
+        _selectedMonth = null;
+        _selectedYear = null;
+        _selectedStatus = null;
+    }
+
     private static string GetStatusText(int status)
     {
         return status switch
@@ -151,6 +407,7 @@
             5 => "Approved",
             6 => "Rejected",
             7 => "Cancelled",
+            8 => "Demo Started",
             _ => "Unknown"
         };
     }
@@ -160,22 +417,26 @@
         return status switch
         {
             1 => Color.Info,
-            2 => Color.Primary,
-            3 => Color.Warning,
-            4 => Color.Secondary,
+            2 => Color.Warning,
+            3 => Color.Info,
+            4 => Color.Success,
             5 => Color.Success,
             6 => Color.Error,
             7 => Color.Default,
+            8 => Color.Warning,
             _ => Color.Default
         };
     }
+
     private async Task OpenDetailsDialog(
-    AdmissionApplicationResponse application)
+        AdmissionApplicationResponse application)
     {
+        await AdmissionApi.MarkAsViewedAsync(application.Id);
+
         var parameters =
             new DialogParameters<AdmissionDetailsDialog>
             {
-            { x => x.Application, application }
+                { x => x.Application, application }
             };
 
         var options = new DialogOptions
@@ -198,4 +459,62 @@
             await LoadApplicationsAsync();
         }
     }
+
+    private TeacherResponse? GetAssignedTeacher(
+    AdmissionApplicationResponse application)
+{
+    if (!application.AssignedTeacherId.HasValue)
+        return null;
+
+    return _teachers.FirstOrDefault(
+        x => x.Id == application.AssignedTeacherId.Value);
+}
+
+private string GetTeacherWhatsAppUrl(
+    AdmissionApplicationResponse application)
+{
+    var teacher = GetAssignedTeacher(application);
+
+    if (teacher == null ||
+        string.IsNullOrWhiteSpace(teacher.MobileNumber))
+    {
+        return "#";
+    }
+
+    var message =
+        $"🔔 Demo Fee Follow-up\n\n" +
+        $"Student: {application.StudentName}\n" +
+        $"Course: {application.CourseName ?? "Not assigned"}\n\n" +
+        $"Today is the 3rd day of the student's demo. " +
+        $"Please follow up with the parent regarding fee payment.";
+
+    var phone = new string(
+        teacher.MobileNumber
+            .Where(char.IsDigit)
+            .ToArray());
+
+    return $"https://wa.me/{phone}?text={Uri.EscapeDataString(message)}";
+}
+
+private string GetAdminWhatsAppUrl(
+    AdmissionApplicationResponse application)
+{
+    // Replace this with the academy/admin WhatsApp number.
+   const string adminNumber = "919645083119";
+
+    var teacher = GetAssignedTeacher(application);
+
+    var teacherName =
+        teacher?.FullName ?? "Not assigned";
+
+    var message =
+        $"🔔 Demo Fee Follow-up\n\n" +
+        $"Teacher: {teacherName}\n" +
+        $"Student: {application.StudentName}\n" +
+        $"Course: {application.CourseName ?? "Not assigned"}\n\n" +
+        $"The student's 3-day demo is completing today. " +
+        $"Please ask the teacher to follow up with the parent for fee payment.";
+
+    return $"https://wa.me/{adminNumber}?text={Uri.EscapeDataString(message)}";
+}
 }

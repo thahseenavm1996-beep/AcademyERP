@@ -63,4 +63,14 @@ public async Task<IActionResult> GetByEnrollmentDate(
         ? NotFound()
         : Ok(result);
 }
+
+[HttpGet("absence-alerts")]
+public async Task<IActionResult> GetStudentAbsenceAlerts(
+    [FromQuery] int minimumConsecutiveClasses = 2)
+{
+    var result = await _service
+    .GetStudentAbsenceAlertsAsync(minimumConsecutiveClasses);
+
+    return Ok(result);
+}
 }

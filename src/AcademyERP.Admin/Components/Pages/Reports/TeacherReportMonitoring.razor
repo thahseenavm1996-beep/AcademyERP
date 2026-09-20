@@ -1,0 +1,480 @@
+@page "/reports/teacher-monitoring"
+
+@using AcademyERP.Admin.Models
+@using AcademyERP.Admin.Models.ClassReports
+@using AcademyERP.Admin.Services
+@using AcademyERP.Domain.Enums
+@using MudBlazor
+@using Microsoft.JSInterop
+
+
+@inject ClassReportApiService ClassReportApi
+@inject TeacherApiService TeacherApi
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+
+<PageTitle>Teacher Report Monitoring</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">
+    Teacher Report Monitoring
+</MudText>
+
+<MudPaper Class="pa-4 mb-4">
+
+    <MudText Typo="Typo.h6" Class="mb-3">
+        Filters
+    </MudText>
+
+    <MudGrid>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudDatePicker Label="From Date"
+                           @bind-Date="_fromDate"
+                           Variant="Variant.Outlined" />
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudDatePicker Label="To Date"
+                           @bind-Date="_toDate"
+                           Variant="Variant.Outlined" />
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="4">
+            <MudSelect T="Guid?"
+                       Label="Teacher"
+                       @bind-Value="_teacherId"
+                       Variant="Variant.Outlined"
+                       Clearable="true">
+
+                @foreach (var teacher in _teachers)
+                {
+                    <MudSelectItem Value="@((Guid?)teacher.Id)">
+                        @teacher.FullName
+                    </MudSelectItem>
+                }
+
+            </MudSelect>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="4">
+            <MudTextField T="string"
+                          Label="Course"
+                          @bind-Value="_courseName"
+                          Variant="Variant.Outlined" />
+        </MudItem>
+
+       <MudItem xs="12" sm="6" md="6">
+    <MudSelect T="Gender?"
+               @bind-Value="_gender"
+               Label="Gender"
+               Variant="Variant.Outlined"
+               Dense="true"
+               Style="width:100%; min-width:120px;">
+        <MudSelectItem Value="@((Gender?)null)">All</MudSelectItem>
+        <MudSelectItem Value="@Gender.Male">Male</MudSelectItem>
+        <MudSelectItem Value="@Gender.Female">Female</MudSelectItem>
+    </MudSelect>
+</MudItem>
+
+        <MudItem xs="12" sm="6" md="6">
+            <MudSelect T="bool?"
+                       Label="Report Status"
+                       @bind-Value="_reportSubmitted"
+                       Variant="Variant.Outlined"
+                       Clearable="true"
+                       Style="width:100%; min-width:150px;">
+
+                <MudSelectItem Value="@((bool?)true)">
+                    Sent
+                </MudSelectItem>
+
+                <MudSelectItem Value="@((bool?)false)">
+                    Not Sent
+                </MudSelectItem>
+
+            </MudSelect>
+        </MudItem>
+
+    </MudGrid>
+
+    <MudStack Row="true"
+          Spacing="2"
+          Class="mt-4"
+          Style="flex-wrap:wrap;">
+
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.Search"
+               OnClick="LoadReports">
+
+        Search
+
+    </MudButton>
+
+    <MudButton Variant="Variant.Outlined"
+               StartIcon="@Icons.Material.Filled.Clear"
+               OnClick="ClearFilters">
+
+        Clear
+
+    </MudButton>
+
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.PictureAsPdf"
+               OnClick="DownloadPdfAsync"
+               Disabled="_loading">
+
+        Download PDF
+
+    </MudButton>
+
+</MudStack>
+
+</MudPaper>
+
+
+@if (_loading)
+{
+    <div class="d-flex justify-center pa-6">
+        <MudProgressCircular Indeterminate="true"
+                             Color="Color.Primary" />
+    </div>
+}
+else
+{
+    <MudGrid Class="mb-4">
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Class="pa-4">
+                <MudText Typo="Typo.h4">
+                    @_reports.Count
+                </MudText>
+
+                <MudText Color="Color.Secondary">
+                    Scheduled Classes
+                </MudText>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Class="pa-4">
+                <MudText Typo="Typo.h4"
+                         Color="Color.Success">
+                    @ReportsSentCount
+                </MudText>
+
+                <MudText Color="Color.Secondary">
+                    Reports Sent
+                </MudText>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Class="pa-4">
+                <MudText Typo="Typo.h4"
+                         Color="Color.Error">
+                   @ReportsMissingCount
+                </MudText>
+
+                <MudText Color="Color.Secondary">
+                    Reports Missing
+                </MudText>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Class="pa-4">
+
+                <MudText Typo="Typo.h4">
+                   @($"{SubmissionRate:0.##}%")
+                </MudText>
+
+                <MudText Color="Color.Secondary">
+                    Submission Rate
+                </MudText>
+
+            </MudCard>
+        </MudItem>
+
+    </MudGrid>
+
+
+    <MudPaper Class="pa-4">
+
+        <MudText Typo="Typo.h6" Class="mb-3">
+            Class Report Submission Status
+        </MudText>
+
+        @if (_reports.Count == 0)
+        {
+            <MudAlert Severity="Severity.Info">
+                No scheduled classes were found for the selected filters.
+            </MudAlert>
+        }
+        else
+        {
+            <MudTable Items="_reports"
+                      Hover="true"
+                      Striped="true"
+                      Dense="true">
+
+                <HeaderContent>
+
+                    <MudTh>Date</MudTh>
+                    <MudTh>Time</MudTh>
+                    <MudTh>Student</MudTh>
+                    <MudTh>Employee ID</MudTh>
+                   <MudTh>Teacher</MudTh>
+
+                    <MudTh>Course</MudTh>
+                    <MudTh>Class Status</MudTh>
+                    <MudTh>Report</MudTh>
+                    <MudTh>Submitted At</MudTh>
+
+                </HeaderContent>
+
+                <RowTemplate>
+
+                    <MudTd DataLabel="Date">
+                        @context.ClassDate.ToString("dd MMM yyyy")
+                    </MudTd>
+
+                    <MudTd DataLabel="Time">
+                        @context.StartTime.ToString("hh\\:mm tt")
+                        -
+                        @context.EndTime.ToString("hh\\:mm tt")
+                    </MudTd>
+
+                    <MudTd DataLabel="Student">
+                        <b>@context.StudentName</b>
+                    </MudTd>
+<MudTd>
+    @context.EmployeeCode
+</MudTd>
+                    <MudTd DataLabel="Teacher">
+                        @context.TeacherName
+                    </MudTd>
+
+                    <MudTd DataLabel="Course">
+                        @context.CourseName
+                    </MudTd>
+
+                    <MudTd DataLabel="Class Status">
+                        @context.ClassStatus
+                    </MudTd>
+
+                    <MudTd DataLabel="Report">
+
+                        @if (string.Equals(context.AttendanceStatus, "Absent", StringComparison.OrdinalIgnoreCase) ||
+    string.Equals(context.AttendanceStatus, "Leave", StringComparison.OrdinalIgnoreCase))
+{
+    <MudChip T="string"
+             Color="Color.Warning"
+             Variant="Variant.Filled"
+             Size="Size.Small"
+             Icon="@Icons.Material.Filled.RemoveCircle">
+        NO REPORT NEEDED
+    </MudChip>
+}
+else if (context.ReportSubmitted)
+{
+    <MudChip T="string"
+             Color="Color.Success"
+             Variant="Variant.Filled"
+             Size="Size.Small"
+             Icon="@Icons.Material.Filled.CheckCircle">
+        SENT
+    </MudChip>
+}
+else
+{
+    <MudChip T="string"
+             Color="Color.Error"
+             Variant="Variant.Filled"
+             Size="Size.Small"
+             Icon="@Icons.Material.Filled.Warning">
+        NOT SENT
+    </MudChip>
+}
+
+                    </MudTd>
+
+                    <MudTd DataLabel="Submitted At">
+
+                        @if (context.ReportSubmitted)
+{
+    @if (context.ReportSubmittedAt.HasValue)
+    {
+        @context.ReportSubmittedAt.Value.ToLocalTime().ToString("dd MMM yyyy hh:mm tt")
+    }
+}
+else if (string.Equals(context.AttendanceStatus, "Absent", StringComparison.OrdinalIgnoreCase) ||
+         string.Equals(context.AttendanceStatus, "Leave", StringComparison.OrdinalIgnoreCase))
+{
+    <span>No report required</span>
+}
+else
+{
+    <span>—</span>
+}
+
+                    </MudTd>
+
+                </RowTemplate>
+
+            </MudTable>
+        }
+
+    </MudPaper>
+}
+
+
+@code
+{
+
+    private IEnumerable<TeacherReportMonitoringResponse> RequiredReports =>
+    _reports.Where(x =>
+        !string.Equals(x.AttendanceStatus, "Absent", StringComparison.OrdinalIgnoreCase) &&
+        !string.Equals(x.AttendanceStatus, "Leave", StringComparison.OrdinalIgnoreCase));
+
+private int ReportsSentCount =>
+    RequiredReports.Count(x => x.ReportSubmitted);
+
+private int ReportsMissingCount =>
+    RequiredReports.Count(x => !x.ReportSubmitted);
+
+private int NoReportNeededCount =>
+    _reports.Count(x =>
+        string.Equals(x.AttendanceStatus, "Absent", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(x.AttendanceStatus, "Leave", StringComparison.OrdinalIgnoreCase));
+
+private double SubmissionRate =>
+    RequiredReports.Any()
+        ? ReportsSentCount * 100.0 / RequiredReports.Count()
+        : 0;
+    private List<TeacherResponse> _teachers = new();
+
+    private List<TeacherReportMonitoringResponse> _reports = new();
+
+    private DateTime? _fromDate = DateTime.Today;
+
+    private DateTime? _toDate = DateTime.Today;
+
+    private Guid? _teacherId;
+
+    private string? _courseName;
+
+    private Gender? _gender;
+
+    private bool? _reportSubmitted;
+
+    private bool _loading;
+
+
+    
+
+
+   protected override async Task OnInitializedAsync()
+{
+    try
+    {
+        var teacherResult = await TeacherApi.GetTeachersAsync(
+            new TeacherQueryRequest
+            {
+                Page = 1,
+                PageSize = 1000
+            });
+
+        _teachers = teacherResult?.Data?.Items ?? new List<TeacherResponse>();
+
+        await LoadReports();
+    }
+    catch (Exception ex)
+    {
+        Snackbar.Add(
+            $"Unable to load teacher report monitoring: {ex.Message}",
+            Severity.Error);
+    }
+}
+
+
+    private async Task LoadReports()
+    {
+        try
+        {
+            _loading = true;
+
+            _reports =
+                await ClassReportApi.GetTeacherReportMonitoringAsync(
+                    _fromDate,
+                    _toDate,
+                    _teacherId,
+                    _courseName,
+                    _gender,
+                    _reportSubmitted);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to load report monitoring: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+
+    private async Task ClearFilters()
+    {
+        _fromDate = DateTime.Today;
+        _toDate = DateTime.Today;
+        _teacherId = null;
+        _courseName = null;
+        _gender = null;
+        _reportSubmitted = null;
+
+        await LoadReports();
+    }
+
+
+    private async Task DownloadPdfAsync()
+{
+    try
+    {
+        _loading = true;
+
+       var pdf = await ClassReportApi.DownloadTeacherReportMonitoringPdfAsync(
+    _fromDate,
+    _toDate,
+    _teacherId,
+    _courseName,
+    _gender,
+    _reportSubmitted);
+
+        var base64 = Convert.ToBase64String(pdf);
+
+        await JS.InvokeVoidAsync(
+            "downloadFile",
+            $"teacher-report-monitoring-{DateTime.Now:yyyyMMdd-HHmmss}.pdf",
+            "application/pdf",
+            base64);
+
+        Snackbar.Add(
+            "Teacher report monitoring PDF downloaded.",
+            Severity.Success);
+    }
+    catch (Exception ex)
+    {
+        Snackbar.Add(
+            $"Unable to download PDF: {ex.Message}",
+            Severity.Error);
+    }
+    finally
+    {
+        _loading = false;
+    }
+}
+}

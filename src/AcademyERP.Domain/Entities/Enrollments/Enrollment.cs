@@ -8,6 +8,7 @@ using AcademyERP.Domain.Entities.ClassReports;
 using AcademyERP.Domain.Entities.Finance;
 using AttendanceEntity = AcademyERP.Domain.Entities.Attendance.Attendance;
 using AcademyERP.Domain.Entities.EnrollmentSchedules;
+using AcademyERP.Domain.Entities.TeacherPayments;
 
 namespace AcademyERP.Domain.Entities.Enrollments;
 
@@ -53,6 +54,16 @@ public class Enrollment : BaseEntity
     = new List<AttendanceEntity>();
     public ICollection<FeeInvoice> FeeInvoices { get; set; }
     = new List<FeeInvoice>();
+
+    public ICollection<EnrollmentFeePause> FeePauses { get; set; }
+    = new List<EnrollmentFeePause>();
     public ICollection<EnrollmentSchedule> EnrollmentSchedules { get; set; }
     = new List<EnrollmentSchedule>();
+
+
+    public ICollection<TeacherPayment> TeacherPayments { get; set; }
+    = new List<TeacherPayment>();
+
+public ICollection<TeacherPaymentConfiguration> TeacherPaymentConfigurations { get; set; }
+    = new List<TeacherPaymentConfiguration>();
 }

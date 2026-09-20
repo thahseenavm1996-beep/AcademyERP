@@ -3,11 +3,15 @@
 @using AcademyERP.Application.DTOs.ScheduledClasses
 @using AcademyERP.Admin.Services
 @using MudBlazor
+@using AcademyERP.Admin.Models.Attendance
+@using AcademyERP.Domain.Enums
 
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inject ScheduledClassApiService ScheduledClassApi
+@inject AttendanceApiService AttendanceApi
 
+@using Microsoft.AspNetCore.Components
 <PageTitle>Scheduled Classes</PageTitle>
 
 <MudButton
@@ -177,23 +181,81 @@
 @code
 {
     private List<ScheduledClassResponse> _classes = new();
+    private HashSet<Guid> _missedClassIds = new();
 
     private string _searchText = "";
 
-    private IEnumerable<ScheduledClassResponse> FilteredClasses =>
-        string.IsNullOrWhiteSpace(_searchText)
-            ? _classes
-            : _classes.Where(x =>
+    [SupplyParameterFromQuery(Name = "filter")]
+private string? Filter { get; set; }
+
+    private IEnumerable<ScheduledClassResponse> FilteredClasses
+{
+    get
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+
+        IEnumerable<ScheduledClassResponse> query = _classes;
+
+        switch (Filter?.ToLowerInvariant())
+        {
+            case "today":
+                query = query.Where(x =>
+                    x.ClassDate == today);
+                break;
+
+            case "completed":
+                query = query.Where(x =>
+                    x.ClassDate == today &&
+                    x.Status == "Completed");
+                break;
+
+            case "upcoming":
+                query = query.Where(x =>
+                    x.ClassDate == today &&
+                    x.Status == "Scheduled");
+                break;
+
+                case "missed":
+    query = query.Where(x =>
+        x.ClassDate == today &&
+        _missedClassIds.Contains(x.Id));
+    break;
+        }
+
+        if (!string.IsNullOrWhiteSpace(_searchText))
+        {
+            query = query.Where(x =>
                 x.StudentName.Contains(
                     _searchText,
                     StringComparison.OrdinalIgnoreCase));
+        }
+
+        return query;
+    }
+}
 
     protected override async Task OnInitializedAsync()
-    {
-        var result = await ScheduledClassApi.GetAllAsync();
+{
+    var result = await ScheduledClassApi.GetAllAsync();
 
-        _classes = result ?? new List<ScheduledClassResponse>();
-    }
+    _classes = result ?? new List<ScheduledClassResponse>();
+
+    var today = DateTime.Today;
+
+    var attendance = await AttendanceApi.GetHistoryAsync(
+        new AttendanceQueryRequest
+        {
+            FromDate = today,
+            ToDate = today,
+            Status = AttendanceStatus.Absent,
+            Page = 1,
+            PageSize = 1000
+        });
+
+    _missedClassIds = attendance.Items
+        .Select(x => x.ScheduledClassId)
+        .ToHashSet();
+}
   private async Task OpenViewDialog(
     ScheduledClassResponse scheduledClass)
 {

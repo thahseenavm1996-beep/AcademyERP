@@ -1,192 +1,463 @@
 @page "/Teachers/TeacherDashboard"
+
+@layout TeacherLayout
+
 @using AcademyERP.Application.DTOs.ScheduledClasses
-@using Microsoft.AspNetCore.Authorization
-@using MudBlazor
+@using AcademyERP.Domain.Enums
 @using AcademyERP.Admin.Services
 @using AcademyERP.Admin.Models.TeacherDashboard
-@using AcademyERP.Domain.Enums
 @using AcademyERP.Admin.Components.Pages.Attendance
 @using AcademyERP.Admin.Models.Attendance
+@using AcademyERP.Admin.Models.ClassProgress
 
+@inject ClassReportApiService ClassReportApi
 @inject ISnackbar Snackbar
 @inject TeacherDashboardApiService DashboardApi
-@inject AttendanceApiService AttendanceApi
 @inject IDialogService DialogService
+@inject AttendanceApiService AttendanceApi
 @inject ClassProgressApiService ClassProgressApi
+@inject NavigationManager NavigationManager
 
-<PageTitle>Teacher Dashboard</PageTitle>
+
+<PageTitle>
+    Teacher Dashboard
+</PageTitle>
+
 
 <MudContainer MaxWidth="MaxWidth.False">
 
-    <MudText Typo="Typo.h4" GutterBottom="true">
-        Good Morning 🌸
-    </MudText>
 
-    <MudText Typo="Typo.subtitle1">
-        Welcome back!
-    </MudText>
+    <!-- Welcome Banner -->
 
-    <div style="height:20px"></div>
+    <MudPaper Class="pa-6 mb-6"
+              Elevation="3"
+              Style="border-radius:20px;">
+
+        <MudText Typo="Typo.h4">
+            Assalamu Alaikum 👋
+        </MudText>
+
+
+        <MudText Typo="Typo.subtitle1"
+                 Class="mt-2">
+
+            Welcome back, Teacher.
+            Have a productive teaching day 🌸
+
+        </MudText>
+
+    </MudPaper>
+
+
+
+    <!-- Summary Cards -->
 
     <MudGrid>
 
-        <MudItem xs="12" md="3">
 
-            <MudPaper Class="pa-4">
+        <MudItem xs="12"
+                 sm="6"
+                 md="3">
 
-                <MudText Typo="Typo.subtitle2">
-                    Today's Classes
-                </MudText>
+            <MudCard Elevation="3">
 
-                <MudText Typo="Typo.h3">
-                    @(DashboardData?.Summary.TotalClassesToday ?? 0)
-                </MudText>
+                <MudCardContent>
 
-            </MudPaper>
+                    <MudIcon Icon="@Icons.Material.Filled.Class"
+                             Size="Size.Large"/>
 
-        </MudItem>
 
-        <MudItem xs="12" md="3">
+                    <MudText Typo="Typo.subtitle2"
+                             Class="mt-3">
 
-            <MudPaper Class="pa-4">
+                        Today's Classes
 
-                <MudText Typo="Typo.subtitle2">
-                    Completed
-                </MudText>
+                    </MudText>
 
-                <MudText Typo="Typo.h3">
-                    @(DashboardData?.Summary.CompletedClasses ?? 0)
-                </MudText>
 
-            </MudPaper>
+                    <MudText Typo="Typo.h3">
 
-        </MudItem>
+                        @(DashboardData?.Summary.TotalClassesToday ?? 0)
 
-        <MudItem xs="12" md="3">
+                    </MudText>
 
-            <MudPaper Class="pa-4">
 
-                <MudText Typo="Typo.subtitle2">
-                    Pending
-                </MudText>
+                </MudCardContent>
 
-                <MudText Typo="Typo.h3">
-                    @(DashboardData?.Summary.PendingClasses ?? 0)
-                </MudText>
-
-            </MudPaper>
+            </MudCard>
 
         </MudItem>
 
-        <MudItem xs="12" md="3">
 
-            <MudPaper Class="pa-4">
 
-                <MudText Typo="Typo.subtitle2">
-                    Completion
-                </MudText>
 
-                <MudProgressLinear Value="@(DashboardData?.Summary.CompletionPercentage ?? 0)" Rounded="true" />
+        <MudItem xs="12"
+                 sm="6"
+                 md="3">
 
-                <MudText>
-                    @(DashboardData?.Summary.CompletionPercentage ?? 0)%
-                </MudText>
+            <MudCard Elevation="3">
 
-            </MudPaper>
+                <MudCardContent>
+
+
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
+                             Size="Size.Large"/>
+
+
+                    <MudText Typo="Typo.subtitle2"
+                             Class="mt-3">
+
+                        Completed
+
+                    </MudText>
+
+
+                    <MudText Typo="Typo.h3">
+
+                        @(DashboardData?.Summary.CompletedClasses ?? 0)
+
+                    </MudText>
+
+
+                </MudCardContent>
+
+            </MudCard>
 
         </MudItem>
+
+
+
+
+        <MudItem xs="12"
+                 sm="6"
+                 md="3">
+
+
+            <MudCard Elevation="3">
+
+                <MudCardContent>
+
+
+                    <MudIcon Icon="@Icons.Material.Filled.PendingActions"
+                             Size="Size.Large"/>
+
+
+                    <MudText Typo="Typo.subtitle2"
+                             Class="mt-3">
+
+                        Pending
+
+                    </MudText>
+
+
+                    <MudText Typo="Typo.h3">
+
+                        @(DashboardData?.Summary.PendingClasses ?? 0)
+
+                    </MudText>
+
+
+                </MudCardContent>
+
+
+            </MudCard>
+
+
+        </MudItem>
+
+
+
+
+
+        <MudItem xs="12"
+                 sm="6"
+                 md="3">
+
+
+            <MudCard Elevation="3">
+
+                <MudCardContent>
+
+
+                    <MudIcon Icon="@Icons.Material.Filled.TrendingUp"
+                             Size="Size.Large"/>
+
+
+                    <MudText Typo="Typo.subtitle2"
+                             Class="mt-3">
+
+                        Completion
+
+                    </MudText>
+
+
+                    <MudProgressLinear Value="@(DashboardData?.Summary.CompletionPercentage ?? 0)"
+                                       Rounded="true"
+                                       Class="mt-3"/>
+
+
+                    <MudText>
+                        @(DashboardData?.Summary.CompletionPercentage ?? 0)%
+                    </MudText>
+
+
+                </MudCardContent>
+
+
+            </MudCard>
+
+
+        </MudItem>
+
 
     </MudGrid>
 
-    <div style="height:25px"></div>
+<MudPaper Class="pa-4 mb-4"
+          Elevation="2"
+          Style="border-radius:15px">
 
-    <MudPaper Class="pa-4">
+<MudText Typo="Typo.h6">
+    Upcoming Class ⏰
+</MudText>
 
-        <MudText Typo="Typo.h5">
-            Today's Classes
-        </MudText>
 
-        <MudDivider Class="my-3" />
+@if(DashboardData?.TodayClasses
+    .Any(x => x.Status == ScheduledClassStatus.Scheduled) == true)
+{
 
-        <MudTable T="TodayClassResponse" Dense="true"
-                  Items="@(DashboardData?.TodayClasses ?? new List<TodayClassResponse>())">
+var next =
+DashboardData.TodayClasses
+.First(x => x.Status == ScheduledClassStatus.Scheduled);
 
-            <HeaderContent>
 
-                <MudTh>Time</MudTh>
-                <MudTh>Student</MudTh>
-                <MudTh>Course</MudTh>
-                <MudTh>Status</MudTh>
-                <MudTh></MudTh>
+<MudText Class="mt-2">
+    @next.StudentName
+    -
+    @next.StartTime.ToString("hh:mm tt")
+</MudText>
 
-            </HeaderContent>
+}
+else
+{
 
-            <RowTemplate Context="item">
+<MudText>
+    No upcoming classes
+</MudText>
 
-                <MudTd>
-                    @item.StartTime.ToString("HH:mm")
-                </MudTd>
+}
 
-                <MudTd>
-                    @item.StudentName
-                </MudTd>
+</MudPaper>
 
-                <MudTd>
-                    @item.CourseName
-                </MudTd>
+    <MudText Typo="Typo.h5"
+         Class="mt-6 mb-4">
+    Today's Classes 📚
+</MudText>
 
-                <MudTd>
 
-                    <MudChip T="string" Color="@GetStatusColor(item.Status)">
+<MudGrid>
 
-                        @item.Status
+@foreach(var item in DashboardData?.TodayClasses ?? new List<TodayClassResponse>())
+{
 
-                    </MudChip>
+<MudItem xs="12" md="6">
 
-                </MudTd>
+<MudCard Elevation="3"
+         Style="border-radius:18px">
 
-                
+<MudCardContent>
 
-             <MudTd>
+
+<MudText Typo="Typo.h5">
+    @item.StudentName
+</MudText>
+
+
+<MudText Class="mt-2">
+    📚 @item.CourseName
+</MudText>
+
+
+<MudText>
+    🕒 
+    @item.StartTime.ToString("HH:mm")
+    -
+    @item.EndTime.ToString("HH:mm")
+</MudText>
+
+
+
+<MudChip T="string"
+         Class="mt-3"
+         Color="@GetStatusColor(item.Status)">
+
+    @item.Status
+
+</MudChip>
+
+
+
+<MudDivider Class="my-3"/>
+
+
 
 @if(item.Status == ScheduledClassStatus.Scheduled)
 {
-    <MudButton
-        Variant="Variant.Filled"
-        Color="Color.Primary"
-        OnClick="@(() => StartClass(item.Id))">
-        Start Class
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               FullWidth="true"
+               OnClick="@(() => StartClass(item.ScheduledClassId))">
+
+        ▶ Start Class
+
+    </MudButton>
+
+    <MudButton Variant="Variant.Outlined"
+               Color="Color.Error"
+               FullWidth="true"
+               Class="mt-2"
+               OnClick="@(() => MarkStudentAbsent(item))">
+
+        ❌ Student Absent
+
     </MudButton>
 }
 else if(item.Status == ScheduledClassStatus.Started)
 {
-    <MudButton
-        Variant="Variant.Filled"
-        Color="Color.Success"
-        OnClick="@(() => OpenCompleteDialog(item))">
-        Complete Class
+
+<MudButton Variant="Variant.Filled"
+           Color="Color.Success"
+           FullWidth="true"
+           OnClick="@(() => OpenCompleteDialog(item))">
+
+✅ Complete Class
+
+</MudButton>
+
+}
+else if(item.Status == ScheduledClassStatus.Completed)
+{
+    <MudButton Color="Color.Primary"
+               Variant="Variant.Filled"
+               FullWidth="true"
+               OnClick="@(() => ViewReport(item))">
+
+        📄 View Report
+
+    </MudButton>
+}
+else if(item.Status == ScheduledClassStatus.Missed)
+{
+    <MudButton Color="Color.Dark"
+               Variant="Variant.Filled"
+               FullWidth="true"
+               Disabled="true">
+
+        Student Missed Class
+
     </MudButton>
 }
 else
 {
-    <MudChip T="string"
-             Color="Color.Success">
-        Completed
-    </MudChip>
+    <MudButton Color="Color.Default"
+               Variant="Variant.Outlined"
+               FullWidth="true"
+               Disabled="true">
+
+        @item.Status
+
+    </MudButton>
 }
 
-</MudTd>
 
-                
+</MudCardContent>
 
-            </RowTemplate>
+</MudCard>
 
-        </MudTable>
 
-    </MudPaper>
+</MudItem>
+
+}
+
+</MudGrid>
+
+
+
+    <MudText Typo="Typo.h5"
+             Class="mt-8">
+
+        Quick Actions
+
+    </MudText>
+
+
+
+    <MudGrid Class="mt-3">
+
+
+        <MudItem xs="12"
+                 sm="6"
+                 md="3">
+
+            <MudButton Variant="Variant.Filled"
+                       FullWidth="true"
+                       Href="/teacher/students">
+
+                My Students
+
+            </MudButton>
+
+        </MudItem>
+
+
+        <MudItem xs="12"
+                 sm="6"
+                 md="3">
+
+            <MudButton Variant="Variant.Filled"
+                       FullWidth="true"
+                       Href="/teacher/attendance">
+
+                Attendance
+
+            </MudButton>
+
+        </MudItem>
+
+
+        <MudItem xs="12"
+                 sm="6"
+                 md="3">
+
+            <MudButton Variant="Variant.Filled"
+                       FullWidth="true"
+                       Href="/teacher/reports">
+
+                Class Reports
+
+            </MudButton>
+
+        </MudItem>
+
+
+        <MudItem xs="12"
+                 sm="6"
+                 md="3">
+
+            <MudButton Variant="Variant.Filled"
+                       FullWidth="true"
+                       Href="/teacher/schedule">
+
+                Schedule
+
+            </MudButton>
+
+        </MudItem>
+
+
+    </MudGrid>
+
 
 </MudContainer>
-
 @code
 {
     private TeacherDashboardResponse? DashboardData;
@@ -304,14 +575,17 @@ private async Task OpenCompleteDialog(
                 request.Attendance);
 
 
-            // 3. Save lesson progress + homework
-            await ClassProgressApi.CreateAsync(
-                request.Progress);
+          // 3. Save lesson progress + homework
+await ClassProgressApi.CreateAsync(
+    request.Progress);
 
+// 4. Save class report
+await ClassReportApi.CreateAsync(
+    request.Report);
 
-            Snackbar.Add(
-                "Class completed successfully.",
-                Severity.Success);
+Snackbar.Add(
+    "Class completed successfully.",
+    Severity.Success);
 
 
             DashboardData =
@@ -328,4 +602,63 @@ private async Task OpenCompleteDialog(
         }
     }
 }
+
+private async Task ViewReport(TodayClassResponse item)
+{
+    try
+    {
+        var report =
+            await ClassReportApi
+                .GetByScheduledClassIdAsync(
+                    item.ScheduledClassId);
+
+        if (report == null)
+        {
+            Snackbar.Add(
+                "No class report found for this class.",
+                Severity.Info);
+
+            return;
+        }
+
+        // For now, navigate to the teacher reports page.
+        // We can later make this open the exact report directly.
+        NavigationManager.NavigateTo(
+            "/teacher/reports");
+    }
+    catch (Exception ex)
+    {
+        Snackbar.Add(
+            $"Unable to load report: {ex.Message}",
+            Severity.Error);
+    }
+}
+
+private async Task MarkStudentAbsent(
+    TodayClassResponse item)
+{
+    
+
+    try
+    {
+        await DashboardApi.MarkStudentAbsentAsync(
+            item.ScheduledClassId);
+
+        Snackbar.Add(
+            $"{item.StudentName} marked as absent.",
+            Severity.Success);
+
+        DashboardData =
+            await DashboardApi.GetDashboardAsync();
+
+        StateHasChanged();
+    }
+    catch (Exception ex)
+    {
+        Snackbar.Add(
+            $"Unable to mark student absent: {ex.Message}",
+            Severity.Error);
+    }
+}
+
 }

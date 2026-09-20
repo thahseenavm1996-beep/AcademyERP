@@ -1,0 +1,252 @@
+@page "/parent/profile"
+@layout ParentLayout
+
+@using AcademyERP.Admin.Models.ParentPortal
+@using AcademyERP.Admin.Services
+
+@inject ParentPortalApiService ParentPortalApi
+@inject ISnackbar Snackbar
+
+<PageTitle>Profile</PageTitle>
+
+<MudText Typo="Typo.h4">
+    My Profile
+</MudText>
+
+<MudText Typo="Typo.body2"
+         Color="Color.Secondary"
+         Class="mb-5">
+    View and update your parent account information.
+</MudText>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" />
+}
+else if (_profile == null)
+{
+    <MudAlert Severity="Severity.Error">
+        Unable to load your profile.
+    </MudAlert>
+}
+else
+{
+    <MudGrid>
+
+        <MudItem xs="12" md="8">
+
+            <MudCard>
+
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">
+                            Personal Information
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+
+                <MudCardContent>
+
+                    <MudGrid>
+
+                        <MudItem xs="12" sm="6">
+                            <MudTextField
+                                Label="Parent Number"
+                                Value="_profile.ParentNumber"
+                                Disabled="true"
+                                Variant="Variant.Outlined" />
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6">
+                            <MudTextField
+                                Label="Full Name"
+                                @bind-Value="_profile.FullName"
+                                Variant="Variant.Outlined"
+                                Required="true" />
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6">
+                            <MudTextField
+                                Label="Email"
+                                @bind-Value="_profile.Email"
+                                Variant="Variant.Outlined"
+                                InputType="InputType.Email" />
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6">
+                            <MudTextField
+                                Label="Phone Number"
+                                @bind-Value="_profile.PhoneNumber"
+                                Variant="Variant.Outlined" />
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6">
+                            <MudTextField
+                                Label="Country"
+                                @bind-Value="_profile.Country"
+                                Variant="Variant.Outlined" />
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6">
+                            <MudTextField
+                                Label="Time Zone"
+                                @bind-Value="_profile.TimeZone"
+                                Variant="Variant.Outlined" />
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudTextField
+                                Label="Address"
+                                @bind-Value="_profile.Address"
+                                Variant="Variant.Outlined"
+                                Lines="3" />
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6">
+                            <MudTextField
+                                Label="Occupation"
+                                @bind-Value="_profile.Occupation"
+                                Variant="Variant.Outlined" />
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudTextField
+                                Label="Remarks"
+                                @bind-Value="_profile.Remarks"
+                                Variant="Variant.Outlined"
+                                Lines="3" />
+                        </MudItem>
+
+                    </MudGrid>
+
+                </MudCardContent>
+
+                <MudCardActions Class="pa-4">
+
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Save"
+                               Disabled="_saving"
+                               OnClick="SaveProfile">
+
+                        @if (_saving)
+                        {
+                            <MudProgressCircular Size="Size.Small"
+                                                 Indeterminate="true"
+                                                 Class="mr-2" />
+                        }
+
+                        Save Changes
+
+                    </MudButton>
+
+                </MudCardActions>
+
+            </MudCard>
+
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+
+            <MudCard>
+
+                <MudCardContent Class="pa-6 text-center">
+
+                    <MudAvatar Color="Color.Primary"
+                               Size="Size.Large"
+                               Class="mb-3">
+
+                        <MudIcon Icon="@Icons.Material.Filled.Person"
+                                 Size="Size.Large" />
+
+                    </MudAvatar>
+
+                    <MudText Typo="Typo.h6">
+                        @_profile.FullName
+                    </MudText>
+
+                    <MudText Typo="Typo.body2"
+                             Color="Color.Secondary">
+                        Parent Account
+                    </MudText>
+
+                    <MudDivider Class="my-4" />
+
+                    <MudText Typo="Typo.caption"
+                             Color="Color.Secondary">
+                        Parent Number
+                    </MudText>
+
+                    <MudText Typo="Typo.body2">
+                        @_profile.ParentNumber
+                    </MudText>
+
+                </MudCardContent>
+
+            </MudCard>
+
+        </MudItem>
+
+    </MudGrid>
+}
+
+@code {
+    private ParentProfileDto? _profile;
+    private bool _loading = true;
+    private bool _saving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _profile = await ParentPortalApi.GetProfileAsync();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task SaveProfile()
+    {
+        if (_profile == null)
+            return;
+
+        _saving = true;
+
+        try
+        {
+            var request = new UpdateParentProfileRequest
+            {
+                FullName = _profile.FullName,
+                PhoneNumber = _profile.PhoneNumber,
+                Email = _profile.Email,
+                Country = _profile.Country,
+                TimeZone = _profile.TimeZone,
+                Address = _profile.Address,
+                Occupation = _profile.Occupation,
+                Remarks = _profile.Remarks
+            };
+
+            var success =
+                await ParentPortalApi.UpdateProfileAsync(request);
+
+            if (success)
+            {
+                Snackbar.Add(
+                    "Profile updated successfully.",
+                    Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add(
+                    "Unable to update your profile.",
+                    Severity.Error);
+            }
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+}

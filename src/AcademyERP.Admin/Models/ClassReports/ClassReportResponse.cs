@@ -6,6 +6,8 @@ public class ClassReportResponse
 {
     public Guid Id { get; set; }
 
+    public Guid ScheduledClassId { get; set; }
+
     public Guid TeacherId { get; set; }
 
     public string TeacherName { get; set; } = string.Empty;
@@ -14,12 +16,11 @@ public class ClassReportResponse
 
     public string StudentName { get; set; } = string.Empty;
 
-    public Guid EnrollmentId { get; set; }
     public string CourseName { get; set; } = string.Empty;
 
-    public DateTime ReportDate { get; set; }
+    public DateOnly ClassDate { get; set; }
 
-    public AttendanceStatus AttendanceStatus { get; set; }
+    public string AttendanceStatusText { get; set; } = "Not Marked";
 
     public PerformanceRating PerformanceRating { get; set; }
 

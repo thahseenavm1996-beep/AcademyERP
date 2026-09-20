@@ -21,6 +21,9 @@ using AcademyERP.Domain.Entities.Finance;
 using AttendanceEntity = AcademyERP.Domain.Entities.Attendance.Attendance;
 using AcademyERP.Domain.Entities.EnrollmentSchedules;
 using AcademyERP.Domain.Entities.AcademicProgress;
+using AcademyERP.Domain.Entities.Communication;
+using AcademyERP.Domain.Entities.TeacherPayments;
+using AcademyERP.Domain.Entities.ReportUnlockRequests;
 
 
 namespace AcademyERP.Persistence.Context;
@@ -42,13 +45,26 @@ public class ApplicationDbContext
     public DbSet<ClassReport> ClassReports => Set<ClassReport>();
     public DbSet<TeachingSchedule> TeachingSchedules => Set<TeachingSchedule>();
     public DbSet<ScheduledClass> ScheduledClasses => Set<ScheduledClass>();
+    public DbSet<ReportUnlockRequest> ReportUnlockRequests
+    => Set<ReportUnlockRequest>();
     public DbSet<Enrollment> Enrollments => Set<Enrollment>();
     public DbSet<ClassDuration> ClassDurations => Set<ClassDuration>();
     public DbSet<TimeSlot> TimeSlots => Set<TimeSlot>();
     public DbSet<TeacherCourse> TeacherCourses => Set<TeacherCourse>();
     public DbSet<FeeInvoice> FeeInvoices => Set<FeeInvoice>();
+    public DbSet<FeePaymentSubmission> FeePaymentSubmissions { get; set; }
+    public DbSet<EnrollmentFeePause> EnrollmentFeePauses => Set<EnrollmentFeePause>();
+    public DbSet<TeacherPayment> TeacherPayments => Set<TeacherPayment>();
+
+public DbSet<TeacherPaymentConfiguration> TeacherPaymentConfigurations
+    => Set<TeacherPaymentConfiguration>();
+    public DbSet<TeacherPaymentPause> TeacherPaymentPauses
+    => Set<TeacherPaymentPause>();
     public DbSet<ClassProgress> ClassProgresses => 
     Set<ClassProgress>();
+    public DbSet<Conversation> Conversations => Set<Conversation>();
+
+public DbSet<Message> Messages => Set<Message>();
     public DbSet<TeacherAvailability> TeacherAvailabilities => Set<TeacherAvailability>();
     public DbSet<RegistrationRequest>
     RegistrationRequests => Set<RegistrationRequest>();
@@ -69,6 +85,33 @@ public DbSet<PaymentMethod> PaymentMethods { get; set; }
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+        modelBuilder.Entity<Conversation>()
+        .HasMany(x => x.Messages)
+        .WithOne(x => x.Conversation)
+        .HasForeignKey(x => x.ConversationId)
+        .OnDelete(DeleteBehavior.Cascade);
+
+
+    modelBuilder.Entity<Message>()
+        .HasOne(x => x.Sender)
+        .WithMany()
+        .HasForeignKey(x => x.SenderUserId)
+        .OnDelete(DeleteBehavior.Restrict);
+
+
+    modelBuilder.Entity<Message>()
+        .HasOne(x => x.Receiver)
+        .WithMany()
+        .HasForeignKey(x => x.ReceiverUserId)
+        .OnDelete(DeleteBehavior.Restrict);
+
+
+modelBuilder.Entity<AttendanceEntity>()
+    .HasOne(x => x.ScheduledClass)
+    .WithMany(x => x.Attendances)
+    .HasForeignKey(x => x.ScheduledClassId)
+    .OnDelete(DeleteBehavior.Cascade);
+        
     }
     public override async Task<int> SaveChangesAsync(
     CancellationToken cancellationToken = default)

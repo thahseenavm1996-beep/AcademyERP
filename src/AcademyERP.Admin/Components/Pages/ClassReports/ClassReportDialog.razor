@@ -353,9 +353,19 @@ private void OnScheduledClassChanged(Guid id)
         return;
 
 
+    _model.EnrollmentId = item.EnrollmentId;
+
+    _model.StudentId = item.StudentId;
+
+    _model.TeacherId = item.TeacherId;
+
+
     _selectedStudentName = item.StudentName;
+
     _selectedTeacherName = item.TeacherName;
+
     _selectedCourseName = item.CourseName;
+
 
     _reportDate =
         item.ClassDate.ToDateTime(TimeOnly.MinValue);

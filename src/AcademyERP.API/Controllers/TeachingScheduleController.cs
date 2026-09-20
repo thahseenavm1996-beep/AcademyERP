@@ -1,4 +1,5 @@
 using AcademyERP.Application.DTOs.TeachingSchedules;
+using AcademyERP.Application.Constants;
 using AcademyERP.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +8,7 @@ namespace AcademyERP.API.Controllers;
 
 [ApiController]
 [Route("api/teachingschedules")]
-//[Authorize]
+[Authorize(Roles = Roles.SuperAdmin + "," + Roles.Administrator)]
 public class TeachingScheduleController : ControllerBase
 {
     private readonly ITeachingScheduleService _service;
@@ -30,8 +31,25 @@ public class TeachingScheduleController : ControllerBase
     public async Task<IActionResult> Create(
         CreateTeachingScheduleRequest request)
     {
-        var schedule = await _service.CreateAsync(request);
+        try
+        {
+            var schedule = await _service.CreateAsync(request);
 
-        return Ok(schedule);
+            return Ok(schedule);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new
+            {
+                message = ex.Message
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new
+            {
+                message = ex.Message
+            });
+        }
     }
 }

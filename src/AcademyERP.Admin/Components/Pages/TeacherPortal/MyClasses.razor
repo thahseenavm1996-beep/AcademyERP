@@ -1,0 +1,145 @@
+@page "/teacher/classes"
+@layout TeacherLayout
+
+@using AcademyERP.Admin.Models.TeacherPortal
+@using AcademyERP.Admin.Services
+
+@inject TeacherPortalApiService TeacherApi
+@inject IDialogService DialogService
+
+
+<MudText Typo="Typo.h4">
+    My Classes
+</MudText>
+
+
+@if (_classes == null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (!_classes.Any())
+{
+    <MudAlert Severity="Severity.Info">
+        No classes found.
+    </MudAlert>
+}
+else
+{
+
+    <MudGrid Class="mt-4">
+
+        @foreach (var item in _classes)
+        {
+            <MudItem xs="12" md="6" lg="4">
+
+                <MudCard>
+
+                    <MudCardContent>
+
+                        <MudText Typo="Typo.h5">
+                            @item.StudentName
+                        </MudText>
+
+
+                        <MudText>
+                            Course:
+                            @item.CourseName
+                        </MudText>
+
+
+                        <MudText>
+                            Date:
+                            @item.ClassDate.ToString("dd MMM yyyy")
+                        </MudText>
+
+
+                        <MudText>
+                            Time:
+                            @item.StartTime -
+                            @item.EndTime
+                        </MudText>
+
+
+                        <MudChip T="string"
+                                 Class="mt-3">
+
+                            @item.Status
+
+                        </MudChip>
+
+@if (item.AttendanceMarked)
+{
+    <MudButton Variant="Variant.Outlined"
+               Color="Color.Success"
+               Class="mt-3"
+               Disabled="true">
+        Attendance Marked
+    </MudButton>
+}
+else
+{
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               Class="mt-3"
+               OnClick="@(() => OpenAttendance(item))">
+        Mark Attendance
+    </MudButton>
+}
+                    </MudCardContent>
+
+                </MudCard>
+
+            </MudItem>
+        }
+
+    </MudGrid>
+
+}
+
+
+
+@code {
+
+    private List<TeacherClassDto>? _classes;
+
+private TeacherClassDto? _selectedClass;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _classes =
+            await TeacherApi.GetClassesAsync();
+    }
+
+ private async Task OpenAttendance(TeacherClassDto item)
+{
+    _selectedClass = item;
+
+    var parameters = new DialogParameters
+    {
+        ["Class"] = item
+    };
+
+    var options = new DialogOptions
+    {
+        CloseOnEscapeKey = true,
+        MaxWidth = MaxWidth.Small,
+        FullWidth = true
+    };
+
+    var dialog = await DialogService.ShowAsync<TeacherAttendanceDialog>(
+        "Mark Attendance",
+        parameters,
+        options);
+
+    var result = await dialog.Result;
+
+    if (!result.Canceled)
+    {
+        _classes =
+            await TeacherApi.GetClassesAsync();
+
+        StateHasChanged();
+    }
+}
+
+}

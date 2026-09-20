@@ -3,6 +3,8 @@ using AcademyERP.Application.Services;
 using AcademyERP.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 using AcademyERP.Domain.Enums;
+using AcademyERP.Domain.Entities.Attendance;
+
 namespace AcademyERP.Infrastructure.Services;
 
 public class ScheduledClassService : IScheduledClassService
@@ -36,7 +38,14 @@ public class ScheduledClassService : IScheduledClassService
     Id = x.Id,
 
     TeachingScheduleId = x.TeachingScheduleId,
+    EnrollmentId =
+    x.TeachingSchedule.EnrollmentId,
 
+StudentId =
+    x.TeachingSchedule.Enrollment.StudentId,
+
+TeacherId =
+    x.TeachingSchedule.TeacherId,
     ClassDate = x.ClassDate,
 
     StartTime = x.StartTime,
@@ -62,7 +71,20 @@ public class ScheduledClassService : IScheduledClassService
 
     CancellationReason = x.CancellationReason,
 
-    Remarks = x.Remarks
+   Remarks = x.Remarks,
+
+AttendanceStatus =
+    _context.Attendances
+        .Where(a => a.ScheduledClassId == x.Id)
+        .Select(a => a.Status.ToString())
+        .FirstOrDefault()
+        ?? "Not Marked",
+
+ClassReportStatus =
+    _context.ClassReports
+        .Any(r => r.ScheduledClassId == x.Id)
+        ? "Sent"
+        : "Not Sent"
 })
             .ToListAsync();
     }
@@ -123,6 +145,14 @@ public async Task<ScheduledClassResponse?> GetByIdAsync(Guid id)
             Id = x.Id,
 
             TeachingScheduleId = x.TeachingScheduleId,
+            EnrollmentId =
+    x.TeachingSchedule.EnrollmentId,
+
+StudentId =
+    x.TeachingSchedule.Enrollment.StudentId,
+
+TeacherId =
+    x.TeachingSchedule.TeacherId,
 
             ClassDate = x.ClassDate,
 
@@ -147,7 +177,20 @@ public async Task<ScheduledClassResponse?> GetByIdAsync(Guid id)
 
             CancellationReason = x.CancellationReason,
 
-            Remarks = x.Remarks
+            Remarks = x.Remarks,
+
+AttendanceStatus =
+    _context.Attendances
+        .Where(a => a.ScheduledClassId == x.Id)
+        .Select(a => a.Status.ToString())
+        .FirstOrDefault()
+        ?? "Not Marked",
+
+ClassReportStatus =
+    _context.ClassReports
+        .Any(r => r.ScheduledClassId == x.Id)
+        ? "Sent"
+        : "Not Sent"
 
         })
         .FirstOrDefaultAsync();
@@ -178,5 +221,58 @@ public async Task<ScheduledClassResponse?> UpdateAsync(
 
 
     return await GetByIdAsync(id);
+}
+
+public async Task MarkStudentAbsentAsync(Guid id)
+{
+    var scheduledClass =
+        await _context.ScheduledClasses
+            .FirstOrDefaultAsync(x => x.Id == id);
+
+    if (scheduledClass == null)
+    {
+        throw new Exception(
+            "Scheduled class not found.");
+    }
+
+    if (scheduledClass.Status !=
+        ScheduledClassStatus.Scheduled)
+    {
+        throw new InvalidOperationException(
+            "Only scheduled classes can be marked as absent.");
+    }
+
+    var attendance =
+        await _context.Attendances
+            .FirstOrDefaultAsync(x =>
+                x.ScheduledClassId == id);
+
+    if (attendance == null)
+    {
+        attendance = new Attendance
+        {
+            ScheduledClassId = id,
+            Status = AttendanceStatus.Absent,
+            Remarks = "Student was absent."
+        };
+
+        _context.Attendances.Add(attendance);
+    }
+    else
+    {
+        attendance.Status =
+            AttendanceStatus.Absent;
+
+        attendance.Remarks =
+            "Student was absent.";
+    }
+
+    scheduledClass.Status =
+        ScheduledClassStatus.Missed;
+
+    scheduledClass.CancellationReason =
+        "Student absent";
+
+    await _context.SaveChangesAsync();
 }
 }

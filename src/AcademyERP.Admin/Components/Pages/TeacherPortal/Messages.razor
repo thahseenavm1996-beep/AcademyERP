@@ -1,0 +1,371 @@
+@page "/teacher/messages"
+@layout TeacherLayout
+@using AcademyERP.Admin.Models.Communication
+@using AcademyERP.Admin.Services
+@using TeacherMessageRecipientDto =
+    AcademyERP.Application.DTOs.Communication.TeacherMessageRecipientDto
+@using StartTeacherConversationRequest =
+    AcademyERP.Application.DTOs.Communication.StartTeacherConversationRequest
+@inject CommunicationApiService CommunicationApi
+
+<MudText Typo="Typo.h4">Messages 💬</MudText>
+
+<MudGrid Class="mt-5">
+
+    <MudItem xs="12" md="4">
+        <MudPaper Class="pa-4">
+
+           <div class="d-flex justify-space-between align-center flex-wrap"
+     style="gap:8px;">
+
+    <MudText Typo="Typo.h6">
+        Conversations
+    </MudText>
+
+    <MudButton
+        Variant="Variant.Filled"
+        Color="Color.Primary"
+        Size="Size.Small"
+        OnClick="StartNewMessage"
+        Style="white-space:nowrap; flex-shrink:0;">
+        New Message
+    </MudButton>
+
+</div>
+
+            @if (_conversations == null)
+            {
+                <MudProgressCircular Indeterminate="true" />
+            }
+            else if (_conversations.Count == 0)
+            {
+                <MudText Class="mt-4" Color="Color.Secondary">
+                    No conversations yet.
+                </MudText>
+            }
+            else
+            {
+                foreach (var item in _conversations)
+                {
+                    <MudCard
+                        Class="mt-3"
+                        Style="cursor:pointer"
+                        @onclick="() => SelectConversation(item)">
+
+                        <MudCardContent>
+                            <div class="d-flex justify-space-between align-center">
+    <MudText Typo="Typo.subtitle1">
+        @item.OtherUserName
+    </MudText>
+
+    @if (item.UnreadCount > 0)
+    {
+        <MudBadge
+            Content="@item.UnreadCount"
+            Color="Color.Error"
+            Overlap="true">
+            <MudIcon Icon="@Icons.Material.Filled.MarkEmailUnread" />
+        </MudBadge>
+    }
+</div>
+                            @if (!string.IsNullOrWhiteSpace(item.StudentName))
+                            {
+                                <MudText Typo="Typo.caption">
+                                    Student:- @item.StudentName : 
+                                </MudText>
+                            }
+
+                          <MudText
+    Typo="Typo.caption"
+    Class="mt-2"
+    Style="@(item.UnreadCount > 0
+        ? "font-weight:600;"
+        : "")">
+
+    @item.LastMessage
+
+</MudText>
+                        </MudCardContent>
+
+                    </MudCard>
+                }
+            }
+
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" md="8">
+        <MudPaper Class="pa-4">
+
+            @if (_isNewMessage)
+            {
+                <MudText Typo="Typo.h6">New Message</MudText>
+
+                @if (_recipients == null)
+                {
+                    <MudProgressCircular
+                        Indeterminate="true"
+                        Class="mt-4" />
+                }
+                else
+                {
+                    <MudSelect T="TeacherMessageRecipientDto"
+                               Label="Recipient"
+                               Variant="Variant.Outlined"
+                               Class="mt-4"
+                               @bind-Value="_selectedRecipient">
+
+                        @foreach (var recipient in _recipients)
+                        {
+                            <MudSelectItem Value="recipient">
+                                @recipient.Name
+                                (@recipient.RecipientType
+                                @if (!string.IsNullOrWhiteSpace(recipient.StudentName))
+                                {
+                                    <text> - @recipient.StudentName</text>
+                                })
+                            </MudSelectItem>
+                        }
+
+                    </MudSelect>
+
+                    <MudTextField
+                        T="string"
+                        Label="Message"
+                        Lines="4"
+                        Variant="Variant.Outlined"
+                        Class="mt-4"
+                        @bind-Value="_newMessage" />
+
+                    <div class="mt-4">
+                        <MudButton
+                            Color="Color.Primary"
+                            Variant="Variant.Filled"
+                            Disabled="@(!CanStartConversation)"
+                            OnClick="StartConversation">
+
+                            Send Message
+                        </MudButton>
+
+                        <MudButton
+                            Variant="Variant.Text"
+                            Class="ml-2"
+                            OnClick="CancelNewMessage">
+
+                            Cancel
+                        </MudButton>
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(_errorMessage))
+                {
+                    <MudAlert
+                        Severity="Severity.Error"
+                        Class="mt-4">
+
+                        @_errorMessage
+
+                    </MudAlert>
+                }
+            }
+            else if (_selected == null)
+            {
+                <MudText>Select a conversation</MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.h6">
+                    @_selected.OtherUserName
+                </MudText>
+
+                @if (!string.IsNullOrWhiteSpace(_selected.StudentName))
+                {
+                    <MudText Typo="Typo.caption">
+                        Student: @_selected.StudentName
+                    </MudText>
+                }
+
+                @foreach (var message in _messages)
+                {
+                    <MudPaper Class="pa-3 my-2">
+
+                        <MudText Typo="Typo.subtitle2">
+                            @message.SenderName
+                        </MudText>
+
+                        <MudText>
+                            @message.MessageText
+                        </MudText>
+
+                        <MudText Typo="Typo.caption">
+                            @message.SentAt.ToLocalTime()
+                        </MudText>
+
+                    </MudPaper>
+                }
+
+                <MudDivider Class="my-4" />
+
+                <MudTextField
+                    T="string"
+                    Label="Message"
+                    Lines="3"
+                    @bind-Value="_newMessage" />
+
+                <MudButton
+                    Color="Color.Primary"
+                    Variant="Variant.Filled"
+                    Class="mt-3"
+                    Disabled="@string.IsNullOrWhiteSpace(_newMessage)"
+                    OnClick="Send">
+
+                    Send
+
+                </MudButton>
+            }
+
+        </MudPaper>
+    </MudItem>
+
+</MudGrid>
+
+@code {
+
+    private List<ConversationDto>? _conversations;
+
+    private ConversationDto? _selected;
+
+    private List<MessageDto> _messages = [];
+
+    private List<TeacherMessageRecipientDto>? _recipients;
+
+    private TeacherMessageRecipientDto? _selectedRecipient;
+
+    private string _newMessage = "";
+
+    private string _errorMessage = "";
+
+    private bool _isNewMessage;
+
+    private bool CanStartConversation =>
+        _selectedRecipient != null &&
+        !string.IsNullOrWhiteSpace(_newMessage);
+
+    protected override async Task OnInitializedAsync()
+    {
+        _conversations =
+            await CommunicationApi.GetTeacherConversationsAsync();
+    }
+
+    private async Task SelectConversation(ConversationDto item)
+    {
+        _isNewMessage = false;
+        _errorMessage = "";
+
+        _selected = item;
+
+        _messages =
+            await CommunicationApi.GetMessagesAsync(
+                item.Id,
+                "teacher");
+
+        _newMessage = "";
+    }
+
+    private async Task StartNewMessage()
+    {
+        _isNewMessage = true;
+        _selected = null;
+        _messages = [];
+        _newMessage = "";
+        _errorMessage = "";
+
+        _recipients =
+            await CommunicationApi.GetTeacherMessageRecipientsAsync();
+    }
+
+    private void CancelNewMessage()
+    {
+        _isNewMessage = false;
+        _selectedRecipient = null;
+        _newMessage = "";
+        _errorMessage = "";
+    }
+
+    private async Task StartConversation()
+    {
+        if (_selectedRecipient == null ||
+            string.IsNullOrWhiteSpace(_newMessage))
+        {
+            return;
+        }
+
+        try
+        {
+            var conversationId =
+                await CommunicationApi.StartTeacherConversationAsync(
+                    new StartTeacherConversationRequest
+                    {
+                        ReceiverUserId =
+                            _selectedRecipient.UserId,
+
+                        StudentId =
+                            _selectedRecipient.StudentId,
+
+                        MessageText =
+                            _newMessage
+                    });
+
+            _conversations =
+                await CommunicationApi.GetTeacherConversationsAsync();
+
+            var conversation =
+                _conversations.FirstOrDefault(
+                    x => x.Id == conversationId);
+
+            _isNewMessage = false;
+            _selectedRecipient = null;
+            _newMessage = "";
+            _errorMessage = "";
+
+            if (conversation != null)
+            {
+                await SelectConversation(conversation);
+            }
+        }
+        catch (HttpRequestException)
+        {
+            _errorMessage =
+                "Unable to send the message. Please try again.";
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+    }
+
+    private async Task Send()
+    {
+        if (_selected == null ||
+            string.IsNullOrWhiteSpace(_newMessage))
+        {
+            return;
+        }
+
+        await CommunicationApi.SendAsync(
+            new SendMessageRequest
+            {
+                ConversationId = _selected.Id,
+                ReceiverUserId = _selected.OtherUserId,
+                MessageText = _newMessage
+            },
+            "teacher");
+
+        _messages =
+            await CommunicationApi.GetMessagesAsync(
+                _selected.Id,
+                "teacher");
+
+        _newMessage = "";
+    }
+}

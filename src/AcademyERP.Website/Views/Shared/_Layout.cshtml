@@ -1,4 +1,7 @@
-﻿<!DOCTYPE html>
+﻿@using System.Text.Json
+@inject IConfiguration Configuration
+
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -16,12 +19,15 @@
     <link rel="stylesheet"
           href="~/css/site.css"
           asp-append-version="true" />
-          <link rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap"
+          rel="stylesheet">
 </head>
 
 <body>
@@ -32,26 +38,15 @@
 
         <div class="container">
 
-            <a class="navbar-brand"
-               asp-controller="Home"
-               asp-action="Index">
+            <!-- BRAND / HOME -->
+         <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+    <img src="~/images/Clogo.png"
+         alt="MS International Academy"
+         class="brand-logo" />
+</a>
 
-                <img src="~/images/Clogo.png"
-     alt="MS Academy"
-     class="brand-logo" />
 
-<div class="brand-text">
-    <span class="brand-name">
-        MS International Academy
-    </span>
-
-    <span class="brand-tagline">
-        Mueenu Ssalik
-    </span>
-</div>
-
-            </a>
-
+            <!-- MOBILE MENU BUTTON -->
             <button class="navbar-toggler"
                     type="button"
                     data-bs-toggle="collapse"
@@ -64,61 +59,77 @@
 
             </button>
 
+
+            <!-- NAVIGATION -->
             <div class="collapse navbar-collapse"
                  id="mainNavbar">
 
                 <ul class="navbar-nav ms-auto align-items-lg-center">
 
-                    <li class="nav-item">
-                        <a class="nav-link"
-                           href="#home">
-                            Home
-                        </a>
-                    </li>
+    <li class="nav-item">
+        <a class="nav-link"
+           href="@Url.Action("Index", "Home")#home">
+            Home
+        </a>
+    </li>
 
-                    <li class="nav-item">
-                        <a class="nav-link"
-                           href="#about">
-                            About
-                        </a>
-                    </li>
+    <li class="nav-item">
+        <a class="nav-link"
+           href="@Url.Action("Index", "Home")#about">
+            About
+        </a>
+    </li>
 
-                    <li class="nav-item">
-                        <a class="nav-link"
-                           href="#programs">
-                            Programs
-                        </a>
-                    </li>
+    <li class="nav-item">
+        <a class="nav-link"
+           href="@Url.Action("Index", "Home")#programs">
+            Programs
+        </a>
+    </li>
 
-                    <li class="nav-item">
-                        <a class="nav-link"
-                           href="#why-us">
-                            Why Us
-                        </a>
-                    </li>
+    <li class="nav-item">
+        <a class="nav-link"
+           href="@Url.Action("Index", "Home")#why-us">
+            Why Us
+        </a>
+    </li>
 
-                    <li class="nav-item">
-                        <a class="nav-link"
-                           href="#contact">
-                            Contact
-                        </a>
-                    </li>
+    <li class="nav-item">
+        <a class="nav-link"
+           href="@Url.Action("Index", "Home")#leadership">
+            Leadership
+        </a>
+    </li>
 
-                    <li class="nav-item ms-lg-3">
-                        <a class="btn btn-outline-brand"
-                           href="#">
-                            Login
-                        </a>
-                    </li>
+    <li class="nav-item">
+        <a class="nav-link"
+           href="@Url.Action("Index", "Home")#testimonials">
+            Testimonials
+        </a>
+    </li>
 
-                    <li class="nav-item ms-lg-2">
-                        <a class="btn btn-brand"
-                           href="#demo">
-                            Free Demo
-                        </a>
-                    </li>
+    <li class="nav-item">
+        <a class="nav-link"
+           href="@Url.Action("Index", "Home")#contact">
+            Contact
+        </a>
+    </li>
 
-                </ul>
+    <li class="nav-item ms-lg-3">
+        <a class="btn btn-outline-brand"
+           href="http://localhost:5105/login">
+            Login
+        </a>
+    </li>
+
+    <li class="nav-item ms-lg-2">
+        <a class="btn btn-brand"
+           href="@Url.Action("Index", "Home")#demo">
+            Free Demo
+        </a>
+    </li>
+
+</ul>
 
             </div>
 
@@ -143,7 +154,6 @@
         <div class="row g-5">
 
             <!-- BRAND -->
-
             <div class="col-lg-5">
 
                 <div class="footer-brand">
@@ -158,8 +168,13 @@
                     </p>
 
                     <div class="footer-highlight">
+
                         <strong>40,000+</strong>
-                        <span>Graduates Worldwide</span>
+
+                        <span>
+                            Graduates Worldwide
+                        </span>
+
                     </div>
 
                 </div>
@@ -168,28 +183,48 @@
 
 
             <!-- QUICK LINKS -->
-
             <div class="col-lg-3">
 
                 <div class="footer-links">
 
-                    <h5>
-                        Quick Links
-                    </h5>
+    <h5>
+        Quick Links
+    </h5>
 
-                    <a href="#home">Home</a>
-                    <a href="#about">About Us</a>
-                    <a href="#programs">Programs</a>
-                    <a href="#why-us">Why Choose Us</a>
-                    <a href="#contact">Contact</a>
+    <a href="@Url.Action("Index", "Home")#home">
+        Home
+    </a>
 
-                </div>
+    <a href="@Url.Action("Index", "Home")#about">
+        About Us
+    </a>
+
+    <a href="@Url.Action("Index", "Home")#programs">
+        Programs
+    </a>
+
+    <a href="@Url.Action("Index", "Home")#why-us">
+        Why Choose Us
+    </a>
+
+    <a href="@Url.Action("Index", "Home")#leadership">
+        Leadership
+    </a>
+
+    <a href="@Url.Action("Index", "Home")#testimonials">
+        Testimonials
+    </a>
+
+    <a href="@Url.Action("Index", "Home")#contact">
+        Contact
+    </a>
+
+</div>
 
             </div>
 
 
             <!-- CTA -->
-
             <div class="col-lg-4">
 
                 <div class="footer-cta">
@@ -207,10 +242,11 @@
                         programs and book your 3-day free demo.
                     </p>
 
-                    <a href="#demo"
+                    <a href="@Url.Action("Index", "Home")#demo"
                        class="btn btn-brand footer-demo-btn">
 
                         Book Your Free Demo
+
                         <span>→</span>
 
                     </a>
@@ -238,6 +274,15 @@
     </div>
 
 </footer>
+
+
+<!-- API BASE URL FOR WEBSITE JAVASCRIPT -->
+<script>
+    window.academyApiBaseUrl =
+        @Html.Raw(JsonSerializer.Serialize(
+            Configuration["ApiBaseUrl"] ?? ""
+        ));
+</script>
 
 
 <script src="~/lib/jquery/dist/jquery.min.js"></script>

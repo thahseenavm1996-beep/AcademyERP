@@ -7,4 +7,5 @@ public class ParentQueryRequest
     public int PageSize { get; set; } = 10;
 
     public string? Search { get; set; }
+    public string? StudentName { get; set; }
 }

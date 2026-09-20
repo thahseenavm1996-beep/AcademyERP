@@ -6,7 +6,7 @@ namespace AcademyERP.API.Controllers;
 
 [ApiController]
 [Route("api/timeslots")]
-//[Authorize]
+[Authorize]
 public class TimeSlotsController : ControllerBase
 {
     private readonly ITimeSlotService _service;

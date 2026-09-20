@@ -15,4 +15,9 @@ public interface IAttendanceService
     Task<AttendanceResponse?> GetByEnrollmentDateAsync(
     Guid enrollmentId,
     DateTime date);
+
+    Task<List<
+    AcademyERP.Application.DTOs.AttendanceAlerts.StudentAbsenceAlertResponse>>
+    GetStudentAbsenceAlertsAsync(
+        int minimumConsecutiveClasses = 2);
 }

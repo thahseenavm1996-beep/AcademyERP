@@ -1,0 +1,434 @@
+@page "/parent/fees"
+@layout ParentLayout
+
+@using AcademyERP.Admin.Models.ParentPortal
+@using AcademyERP.Admin.Services
+
+@inject ParentPortalApiService ParentPortalApi
+
+<PageTitle>Fees</PageTitle>
+
+<MudText Typo="Typo.h4">
+    Fees
+</MudText>
+
+<MudText Typo="Typo.body2"
+         Color="Color.Secondary"
+         Class="mb-5">
+    View invoices, payments and outstanding fees for your children.
+</MudText>
+
+@if (_loading && _fees == null)
+{
+    <MudProgressLinear Indeterminate="true" />
+}
+else if (_fees == null)
+{
+    <MudAlert Severity="Severity.Error">
+        Unable to load fee information.
+    </MudAlert>
+}
+else
+{
+    <MudPaper Class="pa-4 mb-5">
+
+        <MudSelect T="Guid?"
+                   Label="Child"
+                   @bind-Value="_studentId"
+                   Variant="Variant.Outlined"
+                   Clearable="true"
+                   Style="max-width:400px">
+
+            <MudSelectItem T="Guid?"
+                           Value="@((Guid?)null)">
+                All Children
+            </MudSelectItem>
+
+            @foreach (var child in _children)
+            {
+                <MudSelectItem T="Guid?"
+                               Value="@((Guid?)child.StudentId)">
+                    @child.StudentName
+                </MudSelectItem>
+            }
+
+        </MudSelect>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.FilterAlt"
+                   Class="mt-3"
+                   OnClick="LoadFees">
+            Apply Filter
+        </MudButton>
+
+    </MudPaper>
+
+    <MudGrid Spacing="3" Class="mb-6">
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard>
+                <MudCardContent>
+                    <MudText Typo="Typo.body2"
+                             Color="Color.Secondary">
+                        Total Invoiced
+                    </MudText>
+                    <MudText Typo="Typo.h5">
+                        ₹ @_fees.TotalInvoiced.ToString("N2")
+                    </MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard>
+                <MudCardContent>
+                    <MudText Typo="Typo.body2"
+                             Color="Color.Secondary">
+                        Total Paid
+                    </MudText>
+                    <MudText Typo="Typo.h5">
+                        ₹ @_fees.TotalPaid.ToString("N2")
+                    </MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard>
+                <MudCardContent>
+                    <MudText Typo="Typo.body2"
+                             Color="Color.Secondary">
+                        Outstanding
+                    </MudText>
+                    <MudText Typo="Typo.h5">
+                        ₹ @_fees.OutstandingAmount.ToString("N2")
+                    </MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard>
+                <MudCardContent>
+                    <MudText Typo="Typo.body2"
+                             Color="Color.Secondary">
+                        Credit
+                    </MudText>
+                    <MudText Typo="Typo.h5">
+                        ₹ @_fees.CreditAmount.ToString("N2")
+                    </MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+    </MudGrid>
+
+    <MudText Typo="Typo.h5" Class="mb-3">
+        Invoice History
+    </MudText>
+
+    @if (!_fees.Invoices.Any())
+    {
+        <MudPaper Class="pa-6 text-center mb-6">
+            <MudText Color="Color.Secondary">
+                No invoices found.
+            </MudText>
+        </MudPaper>
+    }
+    else
+    {
+       <MudPaper Class="fees-table-container"
+          Elevation="0"
+          Outlined="true">
+
+    <MudTable Items="_fees.Invoices"
+              Hover="true"
+              Dense="false"
+              Striped="false"
+              Bordered="false"
+              Breakpoint="Breakpoint.None"
+              Class="modern-fees-table">
+
+        <HeaderContent>
+            <MudTh>Invoice</MudTh>
+            <MudTh>Student</MudTh>
+            <MudTh>Course</MudTh>
+            <MudTh>Invoice Date</MudTh>
+            <MudTh>Due Date</MudTh>
+            <MudTh Class="amount-column">Amount</MudTh>
+            <MudTh Class="amount-column">Paid</MudTh>
+            <MudTh Class="amount-column">Balance</MudTh>
+            <MudTh>Status</MudTh>
+        </HeaderContent>
+
+        <RowTemplate Context="item">
+
+            <MudTd DataLabel="Invoice">
+                <MudText Typo="Typo.body2"
+                         Class="invoice-number">
+                    @item.InvoiceNumber
+                </MudText>
+            </MudTd>
+
+            <MudTd DataLabel="Student">
+                <MudText Typo="Typo.body2"
+                         Class="fee-student">
+                    @item.StudentName
+                </MudText>
+            </MudTd>
+
+            <MudTd DataLabel="Course">
+                <MudText Typo="Typo.body2"
+                         Class="fee-course">
+                    @item.CourseName
+                </MudText>
+            </MudTd>
+
+            <MudTd DataLabel="Invoice Date">
+                @item.InvoiceDate
+            </MudTd>
+
+            <MudTd DataLabel="Due Date">
+                @item.DueDate
+            </MudTd>
+
+            <MudTd DataLabel="Amount"
+                   Class="amount-column">
+                ₹ @item.Amount.ToString("N2")
+            </MudTd>
+
+            <MudTd DataLabel="Paid"
+                   Class="amount-column">
+                ₹ @item.PaidAmount.ToString("N2")
+            </MudTd>
+
+            <MudTd DataLabel="Balance"
+                   Class="amount-column">
+                <strong>₹ @item.BalanceAmount.ToString("N2")</strong>
+            </MudTd>
+
+            <MudTd DataLabel="Status">
+                <MudChip T="string"
+                         Size="Size.Small"
+                         Variant="Variant.Outlined"
+                         Color="@GetFeeStatusColor(item.Status)">
+                    @item.Status
+                </MudChip>
+            </MudTd>
+
+        </RowTemplate>
+
+    </MudTable>
+
+</MudPaper>
+    }
+
+    <MudText Typo="Typo.h5" Class="mb-3">
+        Payment History
+    </MudText>
+
+    @if (!_fees.Payments.Any())
+    {
+        <MudPaper Class="pa-6 text-center">
+            <MudText Color="Color.Secondary">
+                No payments found.
+            </MudText>
+        </MudPaper>
+    }
+    else
+    {
+        <MudPaper Class="fees-table-container"
+          Elevation="0"
+          Outlined="true">
+
+    <MudTable Items="_fees.Payments"
+              Hover="true"
+              Dense="false"
+              Striped="false"
+              Bordered="false"
+              Breakpoint="Breakpoint.None"
+              Class="modern-fees-table">
+
+        <HeaderContent>
+            <MudTh>Date</MudTh>
+            <MudTh>Invoice</MudTh>
+            <MudTh>Student</MudTh>
+            <MudTh Class="amount-column">Amount</MudTh>
+            <MudTh>Payment Method</MudTh>
+            <MudTh>Reference</MudTh>
+        </HeaderContent>
+
+        <RowTemplate Context="item">
+
+            <MudTd DataLabel="Date">
+                @item.PaymentDate
+            </MudTd>
+
+            <MudTd DataLabel="Invoice">
+                <MudText Typo="Typo.body2"
+                         Class="invoice-number">
+                    @item.InvoiceNumber
+                </MudText>
+            </MudTd>
+
+            <MudTd DataLabel="Student">
+                <MudText Typo="Typo.body2"
+                         Class="fee-student">
+                    @item.StudentName
+                </MudText>
+            </MudTd>
+
+            <MudTd DataLabel="Amount"
+                   Class="amount-column">
+                <strong>
+                    ₹ @item.Amount.ToString("N2")
+                </strong>
+            </MudTd>
+
+            <MudTd DataLabel="Payment Method">
+                @item.PaymentMethodName
+            </MudTd>
+
+            <MudTd DataLabel="Reference">
+                @(string.IsNullOrWhiteSpace(item.TransactionReference)
+                    ? "—"
+                    : item.TransactionReference)
+            </MudTd>
+
+        </RowTemplate>
+
+    </MudTable>
+
+</MudPaper>
+    }
+}
+
+<style>
+    .fees-table-container {
+        overflow-x: auto;
+        border-radius: 12px;
+        margin-bottom: 32px;
+    }
+
+    .modern-fees-table {
+        min-width: 1050px;
+    }
+
+    .modern-fees-table .mud-table-head {
+        background-color: #f8fafc;
+    }
+
+    .modern-fees-table .mud-table-head .mud-table-cell {
+        font-weight: 600;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+        padding: 14px 16px;
+    }
+
+    .modern-fees-table .mud-table-body .mud-table-cell {
+        padding: 16px;
+        vertical-align: middle;
+    }
+
+    .modern-fees-table .mud-table-row {
+        transition: background-color 0.15s ease;
+    }
+
+    .modern-fees-table .mud-table-row:hover {
+        background-color: #f8fafc;
+    }
+
+    .invoice-number {
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .fee-student {
+        font-weight: 600;
+    }
+
+    .fee-course {
+        font-weight: 500;
+    }
+
+    .amount-column {
+        white-space: nowrap;
+        text-align: right;
+    }
+
+    @@media (max-width: 1100px) {
+        .modern-fees-table {
+            min-width: 950px;
+        }
+
+        .modern-fees-table .mud-table-head .mud-table-cell,
+        .modern-fees-table .mud-table-body .mud-table-cell {
+            padding: 12px;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .fees-table-container {
+            margin-left: -4px;
+            margin-right: -4px;
+            border-radius: 10px;
+        }
+
+        .modern-fees-table {
+            min-width: 950px;
+        }
+    }
+</style>
+
+@code {
+    private List<ParentChildSummaryDto> _children = [];
+    private ParentFeesResponse? _fees;
+
+    private Guid? _studentId;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _children =
+                await ParentPortalApi.GetChildrenAsync() ?? [];
+
+            await LoadFees();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task LoadFees()
+    {
+        _loading = true;
+
+        try
+        {
+            _fees =
+                await ParentPortalApi.GetFeesAsync(_studentId);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static Color GetFeeStatusColor(string status)
+    {
+        return status switch
+        {
+            "Paid" => Color.Success,
+            "PartiallyPaid" => Color.Warning,
+            "Pending" => Color.Error,
+            "Overdue" => Color.Error,
+            _ => Color.Default
+        };
+    }
+}

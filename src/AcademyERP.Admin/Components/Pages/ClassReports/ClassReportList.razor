@@ -2,24 +2,230 @@
 
 @using MudBlazor
 @using AcademyERP.Admin.Models.ClassReports
+@using AcademyERP.Admin.Models.Courses
 @using AcademyERP.Admin.Services
+@using AcademyERP.Domain.Enums
+@using Microsoft.JSInterop
 
 @inject ClassReportApiService ClassReportApi
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject IJSRuntime JS
+@inject CourseApiService CourseApi
 
 <PageTitle>Class Reports</PageTitle>
 
-<MudText Typo="Typo.h4" Class="mb-4">
-    Class Reports
-</MudText>
+<MudStack Row="true"
+          Justify="Justify.SpaceBetween"
+          AlignItems="AlignItems.Center"
+          Class="mb-4 class-report-header">
 
-<MudButton Variant="Variant.Filled"
-           Color="Color.Primary"
-           StartIcon="@Icons.Material.Filled.Add"
-           OnClick="OpenCreateDialog">
-    Create Class Report
+    <MudText Typo="Typo.h4">
+        Class Reports
+    </MudText>
+
+    <MudStack Row="true" Spacing="2" Class="class-report-actions">
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="OpenCreateDialog">
+
+            Create Class Report
+
+        </MudButton>
+
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.PictureAsPdf"
+                   OnClick="DownloadFilteredPdfAsync"
+                   Disabled="@_downloadingPdf">
+
+            @if (_downloadingPdf)
+            {
+                <MudProgressCircular Size="Size.Small"
+                                     Indeterminate="true"
+                                     Class="mr-2" />
+
+                <span>Generating...</span>
+            }
+            else
+            {
+                <span>Filtered PDF</span>
+            }
+
+        </MudButton>
+         <MudButton Variant="Variant.Outlined"
+           StartIcon="@Icons.Material.Filled.Image"
+           OnClick="DownloadFilteredImageAsync">
+    Download Filtered Image
 </MudButton>
+
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Secondary"
+                   StartIcon="@Icons.Material.Filled.Description"
+                   OnClick="DownloadFullPdfAsync"
+                   Disabled="@_downloadingFullPdf">
+
+            @if (_downloadingFullPdf)
+            {
+                <MudProgressCircular Size="Size.Small"
+                                     Indeterminate="true"
+                                     Class="mr-2" />
+
+                <span>Generating...</span>
+            }
+            else
+            {
+                <span>Full Report PDF</span>
+            }
+
+        </MudButton>
+        <MudButton Variant="Variant.Outlined"
+           StartIcon="@Icons.Material.Filled.Image"
+           OnClick="DownloadFullImageAsync">
+    Download Full Image
+</MudButton>
+       
+<MudButton Variant="Variant.Filled"
+           Color="Color.Success"
+           StartIcon="@Icons.Material.Filled.Share"
+           OnClick="ShareFilteredImageAsync">
+    Share via WhatsApp
+</MudButton>
+    </MudStack>
+
+</MudStack>
+
+
+<MudPaper Class="pa-4">
+
+    <MudText Typo="Typo.h6" Class="mb-3">
+        Report Filters
+    </MudText>
+
+    <MudGrid>
+
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudTextField T="string"
+                          Label="Student Name"
+                          Variant="Variant.Outlined"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Person"
+                          @bind-Value="_studentName" />
+
+        </MudItem>
+
+
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudTextField T="string"
+                          Label="Teacher Name"
+                          Variant="Variant.Outlined"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.PersonOutline"
+                          @bind-Value="_teacherName" />
+
+        </MudItem>
+<MudItem xs="12" sm="6" md="3">
+
+    <MudSelect T="string"
+               Label="Course"
+               Variant="Variant.Outlined"
+               Clearable="true"
+               @bind-Value="_courseName">
+
+        <MudSelectItem T="string" Value="@((string?)null)">
+            All Courses
+        </MudSelectItem>
+
+        @foreach (var course in _courses)
+        {
+            <MudSelectItem T="string" Value="@course.CourseName">
+                @course.CourseName
+            </MudSelectItem>
+        }
+
+    </MudSelect>
+
+</MudItem>
+
+<MudItem xs="12" sm="6" md="3">
+
+    <MudSelect T="Gender?"
+               Label="Gender"
+               Variant="Variant.Outlined"
+               Clearable="true"
+               @bind-Value="_gender">
+
+        <MudSelectItem T="Gender?" Value="@((Gender?)null)">
+            All
+        </MudSelectItem>
+
+        <MudSelectItem T="Gender?" Value="@Gender.Male">
+            Male
+        </MudSelectItem>
+
+        <MudSelectItem T="Gender?" Value="@Gender.Female">
+            Female
+        </MudSelectItem>
+        <MudSelectItem Value="@Gender.Other">
+    Other
+</MudSelectItem>
+
+    </MudSelect>
+
+</MudItem>
+
+        <MudItem xs="12" sm="6" md="4">
+
+            <MudDatePicker Label="From Date"
+                           Variant="Variant.Outlined"
+                           @bind-Date="_fromDate"
+                           Clearable="true" />
+
+        </MudItem>
+
+
+        <MudItem xs="12" sm="6" md="4">
+
+            <MudDatePicker Label="To Date"
+                           Variant="Variant.Outlined"
+                           @bind-Date="_toDate"
+                           Clearable="true" />
+
+        </MudItem>
+
+
+        <MudItem xs="12" sm="6" md="4">
+
+            <MudStack Row="true"
+                      AlignItems="AlignItems.Center"
+                      Style="height:100%;">
+
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Search"
+                           OnClick="ApplyFilters">
+
+                    Search
+
+                </MudButton>
+
+                <MudIconButton Icon="@Icons.Material.Filled.Clear"
+                               Color="Color.Default"
+                               Title="Clear Filters"
+                               OnClick="ClearFilters" />
+
+            </MudStack>
+
+        </MudItem>
+
+    </MudGrid>
+
+</MudPaper>
+
 
 <MudPaper Class="pa-4 mt-4">
 
@@ -29,24 +235,23 @@
     }
     else if (_reports.Count == 0)
     {
-        <MudText>No class reports found.</MudText>
+        <MudText>
+            No class reports found for the selected filters.
+        </MudText>
     }
     else
     {
-        <MudTextField T="string"
-                      Label="Search Student"
-                      Variant="Variant.Outlined"
-                      Adornment="Adornment.Start"
-                      AdornmentIcon="@Icons.Material.Filled.Search"
-                      Class="mb-4"
-                      @bind-Value="_searchText" />
+        <MudText Typo="Typo.body2" Class="mb-3">
+            Showing @_reports.Count class report(s)
+        </MudText>
 
-        <MudTable Items="FilteredReports"
+        <MudTable Items="_reports"
                   Hover="true"
                   Dense="true"
                   Striped="true">
 
             <HeaderContent>
+
                 <MudTh>Date</MudTh>
                 <MudTh>Student</MudTh>
                 <MudTh>Teacher</MudTh>
@@ -57,12 +262,13 @@
                 <MudTh>Outcome</MudTh>
                 <MudTh>Duration</MudTh>
                 <MudTh>Actions</MudTh>
+
             </HeaderContent>
 
             <RowTemplate>
 
                 <MudTd>
-                    @context.ReportDate.ToString("dd MMM yyyy")
+                    @context.ClassDate.ToString("dd MMM yyyy")
                 </MudTd>
 
                 <MudTd>
@@ -78,35 +284,51 @@
                 </MudTd>
 
                 <MudTd>
+
                     <MudChip T="string"
                              Color="Color.Success"
                              Size="Size.Small">
-                        @context.AttendanceStatus
+
+                        @context.AttendanceStatusText
+
                     </MudChip>
+
                 </MudTd>
 
                 <MudTd>
+
                     <MudChip T="string"
                              Color="Color.Warning"
                              Size="Size.Small">
+
                         @context.PerformanceRating
+
                     </MudChip>
+
                 </MudTd>
 
                 <MudTd>
+
                     <MudChip T="string"
                              Color="Color.Secondary"
                              Size="Size.Small">
+
                         @context.BehaviourRating
+
                     </MudChip>
+
                 </MudTd>
 
                 <MudTd>
+
                     <MudChip T="string"
                              Color="Color.Info"
                              Size="Size.Small">
+
                         @context.ClassOutcome
+
                     </MudChip>
+
                 </MudTd>
 
                 <MudTd>
@@ -130,26 +352,88 @@
 
 </MudPaper>
 
+
 @code {
 
     private List<ClassReportResponse> _reports = new();
 
     private bool _loading = true;
 
-    private string _searchText = string.Empty;
+    private bool _downloadingPdf;
 
-    private IEnumerable<ClassReportResponse> FilteredReports =>
-        string.IsNullOrWhiteSpace(_searchText)
-            ? _reports
-            : _reports.Where(x =>
-                x.StudentName.Contains(
-                    _searchText,
-                    StringComparison.OrdinalIgnoreCase));
+    private bool _downloadingFullPdf;
+
+    private string _studentName = string.Empty;
+
+    private string _teacherName = string.Empty;
+    private List<CourseResponse> _courses = new();
+
+private string? _courseName;
+
+private Gender? _gender;
+
+    private DateTime? _fromDate;
+
+    private DateTime? _toDate;
+
 
     protected override async Task OnInitializedAsync()
+{
+    await LoadCourses();
+    await LoadReports();
+}
+
+private async Task LoadCourses()
+{
+    try
     {
-        await LoadReports();
+        _courses = await CourseApi.GetAllAsync();
+
+        _courses = _courses
+            .Where(x => x.IsActive)
+            .OrderBy(x => x.CourseName)
+            .ToList();
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine(ex);
+
+        Snackbar.Add(
+            "Unable to load courses.",
+            Severity.Error);
+    }
+}
+    private ClassReportQueryRequest BuildRequest()
+    {
+        return new ClassReportQueryRequest
+        {
+            Page = 1,
+
+            PageSize = 100,
+
+            StudentName =
+                string.IsNullOrWhiteSpace(_studentName)
+                    ? null
+                    : _studentName.Trim(),
+
+            TeacherName =
+                string.IsNullOrWhiteSpace(_teacherName)
+                    ? null
+                    : _teacherName.Trim(),
+
+            FromDate = _fromDate,
+
+ToDate = _toDate,
+
+CourseName =
+    string.IsNullOrWhiteSpace(_courseName)
+        ? null
+        : _courseName,
+
+Gender = _gender
+        };
+    }
+
 
     private async Task LoadReports()
     {
@@ -157,11 +441,7 @@
         {
             _loading = true;
 
-            var request = new ClassReportQueryRequest
-            {
-                Page = 1,
-                PageSize = 100
-            };
+            var request = BuildRequest();
 
             var result =
                 await ClassReportApi.GetAllAsync(request);
@@ -182,38 +462,52 @@
         }
     }
 
-   
-private async Task OpenCreateDialog()
-{
-    var parameters =
-        new DialogParameters<ClassReportDialog>
-        {
-            {
-                x => x.Model,
-                new CreateClassReportRequest()
-            }
-        };
 
-    var dialog =
-        await DialogService.ShowAsync<ClassReportDialog>(
-            "Create Class Report",
-            parameters);
+    private async Task ApplyFilters()
+    {
+        await LoadReports();
+    }
 
-    var result = await dialog.Result;
 
-    if (result is not null &&
-        !result.Canceled &&
-        result.Data is CreateClassReportRequest request)
+    private async Task ClearFilters()
+    {
+        _studentName = string.Empty;
+
+        _teacherName = string.Empty;
+
+        _fromDate = null;
+
+        _toDate = null;
+        _courseName = null;
+_gender = null;
+
+        await LoadReports();
+    }
+
+
+    private async Task DownloadFilteredPdfAsync()
     {
         try
         {
-            await ClassReportApi.CreateAsync(request);
+            _downloadingPdf = true;
+
+            var request = BuildRequest();
+
+            var pdf =
+                await ClassReportApi.DownloadPdfAsync(request);
+
+            var base64 =
+                Convert.ToBase64String(pdf);
+
+            await JS.InvokeVoidAsync(
+                "downloadFile",
+                "class-reports-filtered.pdf",
+                "application/pdf",
+                base64);
 
             Snackbar.Add(
-                "Class report created successfully.",
+                "Filtered class report downloaded.",
                 Severity.Success);
-
-            await LoadReports();
         }
         catch (Exception ex)
         {
@@ -221,8 +515,89 @@ private async Task OpenCreateDialog()
                 ex.Message,
                 Severity.Error);
         }
+        finally
+        {
+            _downloadingPdf = false;
+        }
     }
-}
+
+
+    private async Task DownloadFullPdfAsync()
+    {
+        try
+        {
+            _downloadingFullPdf = true;
+
+            var pdf =
+                await ClassReportApi.DownloadPdfAsync();
+
+            var base64 =
+                Convert.ToBase64String(pdf);
+
+            await JS.InvokeVoidAsync(
+                "downloadFile",
+                "class-reports-full.pdf",
+                "application/pdf",
+                base64);
+
+            Snackbar.Add(
+                "Full class report downloaded.",
+                Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                ex.Message,
+                Severity.Error);
+        }
+        finally
+        {
+            _downloadingFullPdf = false;
+        }
+    }
+
+
+    private async Task OpenCreateDialog()
+    {
+        var parameters =
+            new DialogParameters<ClassReportDialog>
+            {
+                {
+                    x => x.Model,
+                    new CreateClassReportRequest()
+                }
+            };
+
+        var dialog =
+            await DialogService.ShowAsync<ClassReportDialog>(
+                "Create Class Report",
+                parameters);
+
+        var result = await dialog.Result;
+
+        if (result is not null &&
+            !result.Canceled &&
+            result.Data is CreateClassReportRequest request)
+        {
+            try
+            {
+                await ClassReportApi.CreateAsync(request);
+
+                Snackbar.Add(
+                    "Class report created successfully.",
+                    Severity.Success);
+
+                await LoadReports();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(
+                    ex.Message,
+                    Severity.Error);
+            }
+        }
+    }
+
 
     private async Task DeleteReport(Guid id)
     {
@@ -234,5 +609,99 @@ private async Task OpenCreateDialog()
 
         await LoadReports();
     }
+private async Task DownloadFilteredImageAsync()
+{
+    try
+    {
+        var request = BuildRequest();
 
+        var image =
+            await ClassReportApi.DownloadImageAsync(request);
+
+        var base64 =
+            Convert.ToBase64String(image);
+
+        await JS.InvokeVoidAsync(
+            "downloadFile",
+            $"class-reports-{DateTime.Now:yyyyMMdd-HHmmss}.png",
+            "image/png",
+            base64);
+
+        Snackbar.Add(
+            "Class report image downloaded.",
+            Severity.Success);
+    }
+    catch (Exception ex)
+    {
+        Snackbar.Add(
+            $"Unable to download image: {ex.Message}",
+            Severity.Error);
+    }
+}
+
+private async Task DownloadFullImageAsync()
+{
+    try
+    {
+        var image =
+            await ClassReportApi.DownloadImageAsync();
+
+        var base64 =
+            Convert.ToBase64String(image);
+
+        await JS.InvokeVoidAsync(
+            "downloadFile",
+            $"class-reports-{DateTime.Now:yyyyMMdd-HHmmss}.png",
+            "image/png",
+            base64);
+
+        Snackbar.Add(
+            "Class report image downloaded.",
+            Severity.Success);
+    }
+    catch (Exception ex)
+    {
+        Snackbar.Add(
+            $"Unable to download image: {ex.Message}",
+            Severity.Error);
+    }
+}
+
+private async Task ShareFilteredImageAsync()
+{
+    try
+    {
+        var request = BuildRequest();
+
+        var image =
+            await ClassReportApi.DownloadImageAsync(request);
+
+        var base64 =
+            Convert.ToBase64String(image);
+
+        var fileName =
+            $"class-reports-{DateTime.Now:yyyyMMdd-HHmmss}.png";
+
+        await JS.InvokeVoidAsync(
+            "shareReportImage",
+            fileName,
+            base64);
+
+        Snackbar.Add(
+            "Report ready to share.",
+            Severity.Success);
+    }
+    catch (JSException)
+    {
+        Snackbar.Add(
+            "Image sharing is not supported here. Download the image and attach it to WhatsApp.",
+            Severity.Info);
+    }
+    catch (Exception ex)
+    {
+        Snackbar.Add(
+            $"Unable to share image: {ex.Message}",
+            Severity.Error);
+    }
+}
 }

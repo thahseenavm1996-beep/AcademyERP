@@ -19,4 +19,6 @@ Task<bool> ApproveAsync(
 Task<bool> RejectAsync(
     Guid id,
     string remarks);
+
+    Task<bool> MarkAsViewedAsync(Guid id);
 }

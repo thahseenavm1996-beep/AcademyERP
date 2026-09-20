@@ -2,8 +2,11 @@
 @using AcademyERP.Admin.Models.Payments
 @using AcademyERP.Admin.Services
 @using MudBlazor
+@using Microsoft.JSInterop
 
 @inject FeePaymentApiService FeePaymentApi
+@inject FeeInvoiceApiService FeeInvoiceApi
+@inject IJSRuntime JS
 
 <MudDialog>
 
@@ -119,11 +122,34 @@
 
     <DialogActions>
 
-        <MudButton OnClick="Close">
-            Close
-        </MudButton>
+    <MudButton
+        Variant="Variant.Outlined"
+        Color="Color.Primary"
+        StartIcon="@Icons.Material.Filled.PictureAsPdf"
+        Disabled="_downloadingPdf"
+        OnClick="DownloadPdf">
 
-    </DialogActions>
+        @if (_downloadingPdf)
+        {
+            <MudProgressCircular
+                Size="Size.Small"
+                Indeterminate="true"
+                Class="mr-2" />
+
+            <span>Generating...</span>
+        }
+        else
+        {
+            <span>Download PDF</span>
+        }
+
+    </MudButton>
+
+    <MudButton OnClick="Close">
+        Close
+    </MudButton>
+
+</DialogActions>
 
 </MudDialog>
 
@@ -161,4 +187,34 @@
             _ => "Unknown"
         };
     }
+
+    private bool _downloadingPdf;
+
+private async Task DownloadPdf()
+{
+    try
+    {
+        _downloadingPdf = true;
+
+        var pdf =
+            await FeeInvoiceApi
+                .DownloadPdfAsync(Invoice.Id);
+
+        var base64 =
+            Convert.ToBase64String(pdf);
+
+        var fileName =
+            $"invoice-{Invoice.InvoiceNumber}.pdf";
+
+        await JS.InvokeVoidAsync(
+            "downloadFile",
+            fileName,
+            "application/pdf",
+            base64);
+    }
+    finally
+    {
+        _downloadingPdf = false;
+    }
+}
 }

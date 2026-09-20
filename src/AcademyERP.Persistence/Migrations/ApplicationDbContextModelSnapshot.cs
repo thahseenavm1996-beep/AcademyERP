@@ -92,6 +92,9 @@ namespace AcademyERP.Persistence.Migrations
                     b.Property<int>("Age")
                         .HasColumnType("int");
 
+                    b.Property<Guid?>("AssignedTeacherId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("City")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -115,6 +118,12 @@ namespace AcademyERP.Persistence.Migrations
 
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("DemoFeeReminderSentAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DemoStartedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
                         .HasMaxLength(250)
@@ -162,6 +171,9 @@ namespace AcademyERP.Persistence.Migrations
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ViewedByAdminAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("WhatsAppNumber")
                         .IsRequired()
@@ -242,6 +254,9 @@ namespace AcademyERP.Persistence.Migrations
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ViewedByAdminAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -473,6 +488,108 @@ namespace AcademyERP.Persistence.Migrations
                     b.HasIndex("TeacherId");
 
                     b.ToTable("ClassReports", (string)null);
+                });
+
+            modelBuilder.Entity("AcademyERP.Domain.Entities.Communication.Conversation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsClosed")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("LastMessageAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("StudentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Conversations");
+                });
+
+            modelBuilder.Entity("AcademyERP.Domain.Entities.Communication.Message", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MessageText")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("ReceiverUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SenderUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConversationId");
+
+                    b.HasIndex("ReceiverUserId");
+
+                    b.HasIndex("SenderUserId");
+
+                    b.ToTable("Messages");
                 });
 
             modelBuilder.Entity("AcademyERP.Domain.Entities.Courses.Course", b =>
@@ -727,6 +844,53 @@ namespace AcademyERP.Persistence.Migrations
                     b.ToTable("Enrollments", (string)null);
                 });
 
+            modelBuilder.Entity("AcademyERP.Domain.Entities.Enrollments.EnrollmentFeePause", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EnrollmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("PauseStartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("ResumeDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EnrollmentId", "PauseStartDate");
+
+                    b.ToTable("EnrollmentFeePauses", (string)null);
+                });
+
             modelBuilder.Entity("AcademyERP.Domain.Entities.Finance.FeeInvoice", b =>
                 {
                     b.Property<Guid>("Id")
@@ -854,6 +1018,92 @@ namespace AcademyERP.Persistence.Migrations
                     b.HasIndex("PaymentMethodId");
 
                     b.ToTable("FeePayments", (string)null);
+                });
+
+            modelBuilder.Entity("AcademyERP.Domain.Entities.Finance.FeePaymentSubmission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("FeeInvoiceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("PaymentDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("PaymentMethodId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("PaymentProofFileName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PaymentProofPath")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("PaymentProofUploadedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ProofFilePath")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RejectionReason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ReviewedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("TeacherId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TransactionReference")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FeeInvoiceId");
+
+                    b.HasIndex("PaymentMethodId");
+
+                    b.HasIndex("TeacherId");
+
+                    b.ToTable("FeePaymentSubmissions");
                 });
 
             modelBuilder.Entity("AcademyERP.Domain.Entities.Finance.PaymentMethod", b =>
@@ -1299,6 +1549,74 @@ namespace AcademyERP.Persistence.Migrations
                     b.ToTable("Programs", (string)null);
                 });
 
+            modelBuilder.Entity("AcademyERP.Domain.Entities.ReportUnlockRequests.ReportUnlockRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AdminRemarks")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateOnly>("ReportDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime>("RequestedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ReviewedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ScheduledClassId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("TeacherId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TeacherId");
+
+                    b.HasIndex("ScheduledClassId", "TeacherId");
+
+                    b.ToTable("ReportUnlockRequests", (string)null);
+                });
+
             modelBuilder.Entity("AcademyERP.Domain.Entities.ScheduledClasses.ScheduledClass", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1601,6 +1919,195 @@ namespace AcademyERP.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("TeacherCourses", (string)null);
+                });
+
+            modelBuilder.Entity("AcademyERP.Domain.Entities.TeacherPayments.TeacherPayment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CycleEndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CycleScheduledDays")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CycleStartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("EnrollmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("PaidDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PayableDays")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("PayableFromDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("PayableToDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("PaymentMethodId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Remarks")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("TeacherId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TransactionReference")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EnrollmentId");
+
+                    b.HasIndex("TeacherId", "EnrollmentId", "CycleStartDate", "CycleEndDate")
+                        .IsUnique();
+
+                    b.ToTable("TeacherPayments", (string)null);
+                });
+
+            modelBuilder.Entity("AcademyERP.Domain.Entities.TeacherPayments.TeacherPaymentConfiguration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("EffectiveFrom")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("EffectiveTo")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("EnrollmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal>("PaymentAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Remarks")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("TeacherId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EnrollmentId");
+
+                    b.HasIndex("TeacherId", "EnrollmentId", "EffectiveFrom");
+
+                    b.ToTable("TeacherPaymentConfigurations", (string)null);
+                });
+
+            modelBuilder.Entity("AcademyERP.Domain.Entities.TeacherPayments.TeacherPaymentPause", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("PauseStartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("ResumeDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("TeacherPaymentConfigurationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TeacherPaymentConfigurationId", "PauseStartDate");
+
+                    b.ToTable("TeacherPaymentPauses", (string)null);
                 });
 
             modelBuilder.Entity("AcademyERP.Domain.Entities.Teachers.Teacher", b =>
@@ -1961,9 +2468,9 @@ namespace AcademyERP.Persistence.Migrations
                         .HasForeignKey("EnrollmentId");
 
                     b.HasOne("AcademyERP.Domain.Entities.ScheduledClasses.ScheduledClass", "ScheduledClass")
-                        .WithMany()
+                        .WithMany("Attendances")
                         .HasForeignKey("ScheduledClassId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("AcademyERP.Domain.Entities.Students.Student", null)
@@ -1998,6 +2505,33 @@ namespace AcademyERP.Persistence.Migrations
                         .HasForeignKey("TeacherId");
 
                     b.Navigation("ScheduledClass");
+                });
+
+            modelBuilder.Entity("AcademyERP.Domain.Entities.Communication.Message", b =>
+                {
+                    b.HasOne("AcademyERP.Domain.Entities.Communication.Conversation", "Conversation")
+                        .WithMany("Messages")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AcademyERP.Domain.Entities.Identity.ApplicationUser", "Receiver")
+                        .WithMany()
+                        .HasForeignKey("ReceiverUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AcademyERP.Domain.Entities.Identity.ApplicationUser", "Sender")
+                        .WithMany()
+                        .HasForeignKey("SenderUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Conversation");
+
+                    b.Navigation("Receiver");
+
+                    b.Navigation("Sender");
                 });
 
             modelBuilder.Entity("AcademyERP.Domain.Entities.Courses.Course", b =>
@@ -2064,6 +2598,17 @@ namespace AcademyERP.Persistence.Migrations
                     b.Navigation("Teacher");
                 });
 
+            modelBuilder.Entity("AcademyERP.Domain.Entities.Enrollments.EnrollmentFeePause", b =>
+                {
+                    b.HasOne("AcademyERP.Domain.Entities.Enrollments.Enrollment", "Enrollment")
+                        .WithMany("FeePauses")
+                        .HasForeignKey("EnrollmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Enrollment");
+                });
+
             modelBuilder.Entity("AcademyERP.Domain.Entities.Finance.FeeInvoice", b =>
                 {
                     b.HasOne("AcademyERP.Domain.Entities.Enrollments.Enrollment", "Enrollment")
@@ -2094,6 +2639,33 @@ namespace AcademyERP.Persistence.Migrations
                     b.Navigation("PaymentMethod");
                 });
 
+            modelBuilder.Entity("AcademyERP.Domain.Entities.Finance.FeePaymentSubmission", b =>
+                {
+                    b.HasOne("AcademyERP.Domain.Entities.Finance.FeeInvoice", "FeeInvoice")
+                        .WithMany()
+                        .HasForeignKey("FeeInvoiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AcademyERP.Domain.Entities.Finance.PaymentMethod", "PaymentMethod")
+                        .WithMany()
+                        .HasForeignKey("PaymentMethodId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AcademyERP.Domain.Entities.Teachers.Teacher", "Teacher")
+                        .WithMany()
+                        .HasForeignKey("TeacherId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("FeeInvoice");
+
+                    b.Navigation("PaymentMethod");
+
+                    b.Navigation("Teacher");
+                });
+
             modelBuilder.Entity("AcademyERP.Domain.Entities.Parents.Parent", b =>
                 {
                     b.HasOne("AcademyERP.Domain.Entities.Identity.ApplicationUser", "ApplicationUser")
@@ -2103,6 +2675,25 @@ namespace AcademyERP.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("ApplicationUser");
+                });
+
+            modelBuilder.Entity("AcademyERP.Domain.Entities.ReportUnlockRequests.ReportUnlockRequest", b =>
+                {
+                    b.HasOne("AcademyERP.Domain.Entities.ScheduledClasses.ScheduledClass", "ScheduledClass")
+                        .WithMany()
+                        .HasForeignKey("ScheduledClassId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AcademyERP.Domain.Entities.Teachers.Teacher", "Teacher")
+                        .WithMany()
+                        .HasForeignKey("TeacherId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ScheduledClass");
+
+                    b.Navigation("Teacher");
                 });
 
             modelBuilder.Entity("AcademyERP.Domain.Entities.ScheduledClasses.ScheduledClass", b =>
@@ -2180,6 +2771,55 @@ namespace AcademyERP.Persistence.Migrations
                     b.Navigation("Course");
 
                     b.Navigation("Teacher");
+                });
+
+            modelBuilder.Entity("AcademyERP.Domain.Entities.TeacherPayments.TeacherPayment", b =>
+                {
+                    b.HasOne("AcademyERP.Domain.Entities.Enrollments.Enrollment", "Enrollment")
+                        .WithMany("TeacherPayments")
+                        .HasForeignKey("EnrollmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AcademyERP.Domain.Entities.Teachers.Teacher", "Teacher")
+                        .WithMany("TeacherPayments")
+                        .HasForeignKey("TeacherId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Enrollment");
+
+                    b.Navigation("Teacher");
+                });
+
+            modelBuilder.Entity("AcademyERP.Domain.Entities.TeacherPayments.TeacherPaymentConfiguration", b =>
+                {
+                    b.HasOne("AcademyERP.Domain.Entities.Enrollments.Enrollment", "Enrollment")
+                        .WithMany("TeacherPaymentConfigurations")
+                        .HasForeignKey("EnrollmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AcademyERP.Domain.Entities.Teachers.Teacher", "Teacher")
+                        .WithMany("TeacherPaymentConfigurations")
+                        .HasForeignKey("TeacherId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Enrollment");
+
+                    b.Navigation("Teacher");
+                });
+
+            modelBuilder.Entity("AcademyERP.Domain.Entities.TeacherPayments.TeacherPaymentPause", b =>
+                {
+                    b.HasOne("AcademyERP.Domain.Entities.TeacherPayments.TeacherPaymentConfiguration", "TeacherPaymentConfiguration")
+                        .WithMany("Pauses")
+                        .HasForeignKey("TeacherPaymentConfigurationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TeacherPaymentConfiguration");
                 });
 
             modelBuilder.Entity("AcademyERP.Domain.Entities.Teachers.Teacher", b =>
@@ -2276,6 +2916,11 @@ namespace AcademyERP.Persistence.Migrations
                     b.Navigation("Students");
                 });
 
+            modelBuilder.Entity("AcademyERP.Domain.Entities.Communication.Conversation", b =>
+                {
+                    b.Navigation("Messages");
+                });
+
             modelBuilder.Entity("AcademyERP.Domain.Entities.Courses.Course", b =>
                 {
                     b.Navigation("Enrollments");
@@ -2292,6 +2937,12 @@ namespace AcademyERP.Persistence.Migrations
                     b.Navigation("EnrollmentSchedules");
 
                     b.Navigation("FeeInvoices");
+
+                    b.Navigation("FeePauses");
+
+                    b.Navigation("TeacherPaymentConfigurations");
+
+                    b.Navigation("TeacherPayments");
                 });
 
             modelBuilder.Entity("AcademyERP.Domain.Entities.Finance.FeeInvoice", b =>
@@ -2319,6 +2970,11 @@ namespace AcademyERP.Persistence.Migrations
                     b.Navigation("Courses");
                 });
 
+            modelBuilder.Entity("AcademyERP.Domain.Entities.ScheduledClasses.ScheduledClass", b =>
+                {
+                    b.Navigation("Attendances");
+                });
+
             modelBuilder.Entity("AcademyERP.Domain.Entities.Students.Student", b =>
                 {
                     b.Navigation("Attendances");
@@ -2328,6 +2984,11 @@ namespace AcademyERP.Persistence.Migrations
                     b.Navigation("Enrollments");
 
                     b.Navigation("StudentParents");
+                });
+
+            modelBuilder.Entity("AcademyERP.Domain.Entities.TeacherPayments.TeacherPaymentConfiguration", b =>
+                {
+                    b.Navigation("Pauses");
                 });
 
             modelBuilder.Entity("AcademyERP.Domain.Entities.Teachers.Teacher", b =>
@@ -2341,6 +3002,10 @@ namespace AcademyERP.Persistence.Migrations
                     b.Navigation("TeacherAvailabilities");
 
                     b.Navigation("TeacherCourses");
+
+                    b.Navigation("TeacherPaymentConfigurations");
+
+                    b.Navigation("TeacherPayments");
                 });
 
             modelBuilder.Entity("AcademyERP.Domain.Entities.TeachingSchedules.TeachingSchedule", b =>

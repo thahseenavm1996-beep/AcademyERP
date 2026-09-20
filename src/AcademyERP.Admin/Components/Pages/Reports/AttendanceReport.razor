@@ -2,12 +2,40 @@
 
 @using AcademyERP.Admin.Models.AttendanceReports
 @using AcademyERP.Admin.Services
+@using Microsoft.JSInterop
 @inject AttendanceReportApiService AttendanceReportApi
+@inject IJSRuntime JS
 
+<MudStack Row="true"
+          Justify="Justify.SpaceBetween"
+          AlignItems="AlignItems.Center"
+          Class="mb-4">
 
-<MudText Typo="Typo.h4">
-    Attendance Reports
-</MudText>
+    <MudText Typo="Typo.h4">
+        Attendance Reports
+    </MudText>
+
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.PictureAsPdf"
+               OnClick="DownloadPdfAsync"
+               Disabled="@_downloadingPdf">
+
+        @if (_downloadingPdf)
+        {
+            <MudProgressCircular Size="Size.Small"
+                                 Indeterminate="true"
+                                 Class="mr-2" />
+            <span>Generating...</span>
+        }
+        else
+        {
+            <span>Download PDF</span>
+        }
+
+    </MudButton>
+
+</MudStack>
 
 
 @if (_dashboard == null)
@@ -166,10 +194,11 @@ else
 
 
         <MudChart T="double"
-                  ChartType="ChartType.Bar"
-                  ChartSeries="@CourseSeries"
-                  ChartLabels="@CourseLabels"
-                  Height="350px" />
+          ChartType="ChartType.Bar"
+          ChartSeries="@CourseSeries"
+          ChartLabels="@CourseLabels"
+          ChartOptions="@CourseChartOptions"
+          Height="450px" />
 
     </MudPaper>
 
@@ -317,9 +346,17 @@ else
 
 
 
-    private List<ChartSeries<double>> CourseSeries = new();
+   private List<ChartSeries<double>> CourseSeries = new();
 
-    private string[] CourseLabels = Array.Empty<string>();
+private string[] CourseLabels = Array.Empty<string>();
+
+private BarChartOptions CourseChartOptions = new()
+{
+    XAxisLabelRotation = 45,
+    XAxisTitle = "Courses",
+    YAxisTitle = "Attendance %"
+};
+
 
 
 
@@ -404,5 +441,32 @@ else
         ];
 
     }
+
+private bool _downloadingPdf;
+
+private async Task DownloadPdfAsync()
+{
+    try
+    {
+        _downloadingPdf = true;
+
+        var pdf =
+            await AttendanceReportApi.DownloadPdfAsync();
+
+        var base64 =
+            Convert.ToBase64String(pdf);
+
+        await JS.InvokeVoidAsync(
+            "downloadFile",
+            "attendance-report.pdf",
+            "application/pdf",
+            base64);
+    }
+    finally
+    {
+        _downloadingPdf = false;
+    }
+}
+
 
 }

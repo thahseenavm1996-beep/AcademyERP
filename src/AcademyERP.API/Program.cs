@@ -16,6 +16,10 @@ using Serilog.Events;
 using AcademyERP.Application.Mappings;
 using AcademyERP.Application.Interfaces;
 using AcademyERP.Infrastructure.Repositories;
+using AcademyERP.Application.Services.Pdf;
+using QuestPDF.Infrastructure;
+using AcademyERP.Application.Services.Reports;
+using AcademyERP.Infrastructure.Services.Reports;
 
 
 
@@ -64,10 +68,10 @@ builder.Services
     .AddIdentity<ApplicationUser, ApplicationRole>(options =>
     {
         options.Password.RequiredLength = 6;
-        options.Password.RequireDigit = true;
-        options.Password.RequireUppercase = false;
-        options.Password.RequireLowercase = true;
-        options.Password.RequireNonAlphanumeric = false;
+options.Password.RequireDigit = true;
+options.Password.RequireUppercase = true;
+options.Password.RequireLowercase = true;
+options.Password.RequireNonAlphanumeric = true;
     })
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
@@ -89,6 +93,7 @@ builder.Services.AddScoped<ICourseService, CourseService>();
 builder.Services.AddScoped<IClassReportService, ClassReportService>();
 builder.Services.AddScoped<IAttendanceService, AttendanceService>();
 builder.Services.AddScoped<IFeeInvoiceService, FeeInvoiceService>();
+builder.Services.AddScoped<ITeacherPaymentService, TeacherPaymentService>();
 builder.Services.AddScoped<IAdmissionConversionService, AdmissionConversionService>();
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
 builder.Services.AddScoped<IStudentReportService, StudentReportService>();
@@ -96,13 +101,20 @@ builder.Services.AddScoped<TeacherReportService>();
 builder.Services.AddScoped<StudentReportDashboardService>();
 builder.Services.AddScoped<IAttendanceReportService, AttendanceReportService>();
 builder.Services.AddScoped<IFinanceReportService, FinanceReportService>();
+builder.Services.AddScoped<IPdfService, PdfService>();
 builder.Services.AddScoped<IParentPortalService, ParentPortalService>();
+builder.Services.AddScoped<ITeacherPortalService, TeacherPortalService>();
+builder.Services.AddScoped<IReportUnlockRequestService, ReportUnlockRequestService>();
+builder.Services.AddScoped<ICommunicationService, CommunicationService>();
 builder.Services.AddScoped<
     IStudentPerformanceService,
     StudentPerformanceService>();
 builder.Services.AddScoped<
     IFeePaymentService,
     FeePaymentService>();
+    builder.Services.AddScoped<
+    IFeePaymentSubmissionService,
+    FeePaymentSubmissionService>();
 builder.Services.AddScoped<
     IScheduledClassService,
     ScheduledClassService>();
@@ -115,6 +127,9 @@ builder.Services.AddScoped<
     builder.Services.AddScoped<
     ITimeSlotService,
     TimeSlotService>();
+    builder.Services.AddScoped<
+    IClassReportImageService,
+    ClassReportImageService>();
     builder.Services.AddScoped<
     IClassDurationService,
     ClassDurationService>();
@@ -158,6 +173,15 @@ builder.Services.AddAuthentication(options =>
     };
 });
 Console.WriteLine("Before Build");
+QuestPDF.Settings.License = LicenseType.Community;
+builder.Services.AddScoped<AcademyERP.Application.Services.Reports.IBestPerformingStudentService, AcademyERP.Infrastructure.Services.BestPerformingStudentService>();
+builder.Services.AddScoped<AcademyERP.Infrastructure.Services.Reports.BestPerformingStudentsPdfService>();
+builder.Services.AddScoped<AcademyERP.Infrastructure.Services.Reports.BestPerformingStudentsImageService>();
+
+builder.Services.AddScoped<AcademyERP.Application.Services.Reports.IBestPerformingFacultyService, AcademyERP.Infrastructure.Services.BestPerformingFacultyService>();
+builder.Services.AddScoped<AcademyERP.Infrastructure.Services.Reports.BestPerformingFacultyPdfService>();
+builder.Services.AddScoped<AcademyERP.Infrastructure.Services.Reports.BestPerformingFacultyImageService>();
+
 var app = builder.Build();
 Console.WriteLine("After Build");
 

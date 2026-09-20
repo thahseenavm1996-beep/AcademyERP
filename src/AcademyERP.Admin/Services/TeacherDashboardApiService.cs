@@ -41,4 +41,15 @@ public async Task CompleteClassAsync(
     response.EnsureSuccessStatusCode();
 }
 
+public async Task MarkStudentAbsentAsync(
+    Guid scheduledClassId)
+{
+    var response =
+        await _httpClient.PostAsync(
+            $"api/scheduledclasses/{scheduledClassId}/absent",
+            null);
+
+    response.EnsureSuccessStatusCode();
+}
+
 }

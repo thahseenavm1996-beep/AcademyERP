@@ -20,7 +20,10 @@ public class ParentApiService
     public async Task<ParentListResponse?> GetParentsAsync(ParentQueryRequest request)
     {
         var response = await _httpClient.GetAsync(
-            $"api/Parents?page={request.Page}&pageSize={request.PageSize}&search={request.Search}");
+            $"api/Parents?page={request.Page}" +
+$"&pageSize={request.PageSize}" +
+$"&search={Uri.EscapeDataString(request.Search ?? string.Empty)}" +
+$"&studentName={Uri.EscapeDataString(request.StudentName ?? string.Empty)}");
 
         Console.WriteLine($"Status Code: {response.StatusCode}");
 

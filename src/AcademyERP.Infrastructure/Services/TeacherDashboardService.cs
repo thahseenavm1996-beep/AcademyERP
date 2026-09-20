@@ -114,8 +114,8 @@ Id = c.Id,
 
 
     response.Summary.MissedClasses =
-        classes.Count(x =>
-            x.Status == ScheduledClassStatus.Cancelled);
+    classes.Count(x =>
+        x.Status == ScheduledClassStatus.Missed);
 
 
 

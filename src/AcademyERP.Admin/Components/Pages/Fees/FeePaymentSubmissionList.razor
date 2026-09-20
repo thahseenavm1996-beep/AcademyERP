@@ -1,0 +1,625 @@
+@page "/fee-payment-submissions"
+
+@using AcademyERP.Admin.Models.FeePaymentSubmissions
+@using AcademyERP.Admin.Services
+
+@inject FeePaymentSubmissionApiService SubmissionApi
+@inject ISnackbar Snackbar
+
+<MudText Typo="Typo.h5" Class="mb-4">
+    Fee Payment Submissions
+</MudText>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" />
+}
+else
+{
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+
+    <MudGrid Spacing="2">
+
+    <!-- Teacher -->
+    <MudItem xs="12" sm="6" md="4">
+        <MudTextField T="string"
+                      @bind-Value="_teacherFilter"
+                      Label="Teacher"
+                      Placeholder="Search teacher..."
+                      Variant="Variant.Outlined"
+                      FullWidth="true" />
+    </MudItem>
+
+    <!-- Course -->
+    <MudItem xs="12" sm="6" md="4">
+        <MudTextField T="string"
+                      @bind-Value="_courseFilter"
+                      Label="Course"
+                      Placeholder="Search course..."
+                      Variant="Variant.Outlined"
+                      FullWidth="true" />
+    </MudItem>
+
+    <!-- Gender -->
+    <MudItem xs="12" sm="6" md="4">
+        <MudSelect T="string"
+                   @bind-Value="_genderFilter"
+                   Label="Gender"
+                   Variant="Variant.Outlined"
+                   Clearable="true"
+                   FullWidth="true">
+
+            <MudSelectItem Value="@string.Empty">
+                All
+            </MudSelectItem>
+
+            <MudSelectItem Value="@("Male")">
+                Male
+            </MudSelectItem>
+
+            <MudSelectItem Value="@("Female")">
+                Female
+            </MudSelectItem>
+
+            <MudSelectItem Value="@("Other")">
+                Other
+            </MudSelectItem>
+
+        </MudSelect>
+    </MudItem>
+
+    <!-- Filter Actions -->
+    <MudItem xs="12">
+        <MudStack Row="true"
+                  Spacing="2"
+                  AlignItems="AlignItems.Center"
+                  Style="flex-wrap:wrap;">
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       OnClick="ApplyFilters">
+                Search
+            </MudButton>
+
+            <MudButton Variant="Variant.Outlined"
+                       OnClick="ClearFilters">
+                Clear
+            </MudButton>
+
+        </MudStack>
+    </MudItem>
+
+</MudGrid>
+
+</MudPaper>
+    <MudTable Items="_submissions"
+              Hover="true"
+              Dense="true"
+              Striped="true">
+
+        <HeaderContent>
+            <MudTh>Date</MudTh>
+            <MudTh>Student</MudTh>
+            <MudTh>Gender</MudTh>
+<MudTh>Course</MudTh>
+            <MudTh>Invoice</MudTh>
+            <MudTh>Teacher</MudTh>
+            <MudTh>Amount</MudTh>
+            <MudTh>Payment Method</MudTh>
+            <MudTh>Proof</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Action</MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd>
+                @context.SubmittedAt.ToLocalTime().ToString("dd MMM yyyy")
+            </MudTd>
+
+            <MudTd>
+                @context.StudentName
+            </MudTd>
+<MudTd>
+    @context.Gender
+</MudTd>
+
+<MudTd>
+    @context.CourseName
+</MudTd>
+            <MudTd>
+                @context.InvoiceNumber
+            </MudTd>
+
+            <MudTd>
+                @context.TeacherName
+            </MudTd>
+
+            <MudTd>
+                @context.Amount.ToString("C")
+            </MudTd>
+
+            <MudTd>
+                @context.PaymentMethodName
+            </MudTd>
+
+            <MudTd>
+                @if (!string.IsNullOrWhiteSpace(context.ProofFilePath))
+                {
+                    <MudChip T="string"
+                             Size="Size.Small"
+                             Color="Color.Success">
+                        Uploaded
+                    </MudChip>
+                }
+                else
+                {
+                    <MudChip T="string"
+                             Size="Size.Small"
+                             Color="Color.Warning">
+                        Not Uploaded
+                    </MudChip>
+                }
+            </MudTd>
+
+            <MudTd>
+                <MudChip T="string"
+                         Color="@GetStatusColor(context.Status)">
+                    @context.Status
+                </MudChip>
+            </MudTd>
+
+            <MudTd>
+                <MudButton Variant="Variant.Outlined"
+                           Size="Size.Small"
+                           OnClick="@(() => OpenReview(context))">
+                    Review
+                </MudButton>
+            </MudTd>
+        </RowTemplate>
+
+        <NoRecordsContent>
+            <MudText Class="pa-4">
+                No payment submissions found.
+            </MudText>
+        </NoRecordsContent>
+
+    </MudTable>
+}
+
+
+@* ========================= REVIEW MODAL ========================= *@
+
+@if (_dialogVisible && _selected != null)
+{
+    <div style="
+        position:fixed;
+        inset:0;
+        background:rgba(0,0,0,0.55);
+        z-index:2000;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:20px;">
+
+        <div style="
+            background:white;
+            border-radius:10px;
+            width:100%;
+            max-width:430px;
+            max-height:90vh;
+            overflow:auto;
+            padding:26px;
+            box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+
+            <MudText Typo="Typo.h6" Class="mb-4">
+                Payment Submission Review
+            </MudText>
+
+            <MudStack Spacing="1">
+
+                <MudText>
+                    <b>Student:</b> @_selected.StudentName
+                </MudText>
+
+                <MudText>
+                    <b>Invoice:</b> @_selected.InvoiceNumber
+                </MudText>
+
+                <MudText>
+                    <b>Teacher:</b> @_selected.TeacherName
+                </MudText>
+
+                <MudText>
+                    <b>Amount:</b> @_selected.Amount.ToString("C")
+                </MudText>
+
+                <MudText>
+                    <b>Payment Date:</b>
+                    @_selected.PaymentDate.ToLocalTime().ToString("dd MMM yyyy")
+                </MudText>
+
+                <MudText>
+                    <b>Payment Method:</b>
+                    @_selected.PaymentMethodName
+                </MudText>
+
+                @if (!string.IsNullOrWhiteSpace(_selected.TransactionReference))
+                {
+                    <MudText>
+                        <b>Transaction Reference:</b>
+                        @_selected.TransactionReference
+                    </MudText>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(_selected.Remarks))
+                {
+                    <MudText>
+                        <b>Remarks:</b>
+                        @_selected.Remarks
+                    </MudText>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(_selected.ProofFilePath))
+                {
+                    <MudButton Variant="Variant.Outlined"
+                               FullWidth="true"
+                               Class="mt-3"
+                               OnClick="ViewProof">
+                        VIEW PAYMENT PROOF
+                    </MudButton>
+                }
+
+                @if (_selected.Status ==
+                    AcademyERP.Domain.Enums.FeePaymentSubmissionStatus.Pending)
+                {
+                    <MudTextField @bind-Value="_rejectionReason"
+                                  Label="Rejection Reason"
+                                  Variant="Variant.Outlined"
+                                  Lines="3"
+                                  Class="mt-3" />
+                }
+
+            </MudStack>
+
+            <div style="
+                display:flex;
+                justify-content:flex-end;
+                gap:10px;
+                margin-top:25px;">
+
+                @if (_selected.Status ==
+                    AcademyERP.Domain.Enums.FeePaymentSubmissionStatus.Pending)
+                {
+                    <MudButton Color="Color.Error"
+                               Variant="Variant.Outlined"
+                               OnClick="Reject">
+                        REJECT
+                    </MudButton>
+
+                    <MudButton Color="Color.Success"
+                               Variant="Variant.Filled"
+                               OnClick="Approve">
+                        APPROVE
+                    </MudButton>
+                }
+
+                <MudButton Variant="Variant.Text"
+                           OnClick="CloseDialog">
+                    CLOSE
+                </MudButton>
+
+            </div>
+
+        </div>
+    </div>
+}
+
+
+@* ========================= PAYMENT PROOF MODAL ========================= *@
+
+@if (_proofDialogVisible)
+{
+    <div style="
+        position:fixed;
+        inset:0;
+        background:rgba(0,0,0,0.65);
+        z-index:2100;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:20px;">
+
+        <div style="
+            background:white;
+            border-radius:10px;
+            width:100%;
+            max-width:700px;
+            max-height:90vh;
+            overflow:auto;
+            padding:26px;
+            box-shadow:0 10px 40px rgba(0,0,0,0.4);">
+
+            <MudText Typo="Typo.h6" Class="mb-4">
+                Payment Proof
+            </MudText>
+
+            @if (!string.IsNullOrWhiteSpace(_proofDataUrl))
+            {
+                <div style="
+                    width:100%;
+                    display:flex;
+                    justify-content:center;
+                    align-items:center;">
+
+                    <img src="@_proofDataUrl"
+                         alt="Payment Proof"
+                         style="
+                            max-width:100%;
+                            max-height:70vh;
+                            object-fit:contain;
+                            border-radius:6px;" />
+                </div>
+            }
+            else
+            {
+                <MudText>
+                    Payment proof is not available.
+                </MudText>
+            }
+
+            <div style="
+                display:flex;
+                justify-content:flex-end;
+                margin-top:20px;">
+
+                <MudButton Variant="Variant.Text"
+                           OnClick="CloseProofDialog">
+                    CLOSE
+                </MudButton>
+
+            </div>
+
+        </div>
+    </div>
+}
+
+
+@code {
+
+    private List<FeePaymentSubmissionResponse> _submissions = new();
+
+    private FeePaymentSubmissionResponse? _selected;
+
+    private bool _loading = true;
+
+    private bool _dialogVisible = false;
+
+    private bool _proofDialogVisible = false;
+
+    private string? _proofDataUrl;
+
+    private string? _rejectionReason;
+    private string _teacherFilter = string.Empty;
+private string _courseFilter = string.Empty;
+private string _genderFilter = string.Empty;
+
+private List<FeePaymentSubmissionResponse> _allSubmissions = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+
+    private async Task LoadData()
+    {
+        _loading = true;
+
+        try
+        {
+           _allSubmissions = await SubmissionApi.GetAllAsync();
+_submissions = _allSubmissions.ToList();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                ex.Message,
+                Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+
+    private void OpenReview(
+        FeePaymentSubmissionResponse submission)
+    {
+        _selected = submission;
+        _rejectionReason = null;
+        _dialogVisible = true;
+    }
+
+
+    private void CloseDialog()
+    {
+        _dialogVisible = false;
+        _selected = null;
+        _rejectionReason = null;
+    }
+
+
+    private async Task Approve()
+    {
+        if (_selected == null)
+            return;
+
+        try
+        {
+            var result = await SubmissionApi.ReviewAsync(
+                _selected.Id,
+                new ReviewFeePaymentSubmissionRequest
+                {
+                    Approve = true
+                });
+
+            if (result != null)
+            {
+                _dialogVisible = false;
+                _selected = null;
+                _rejectionReason = null;
+
+                await LoadData();
+
+                Snackbar.Add(
+                    "Payment approved successfully.",
+                    Severity.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to approve payment: {ex.Message}",
+                Severity.Error);
+        }
+    }
+
+
+    private async Task Reject()
+    {
+        if (_selected == null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(_rejectionReason))
+        {
+            Snackbar.Add(
+                "Please enter a rejection reason.",
+                Severity.Warning);
+
+            return;
+        }
+
+        try
+        {
+            var result = await SubmissionApi.ReviewAsync(
+                _selected.Id,
+                new ReviewFeePaymentSubmissionRequest
+                {
+                    Approve = false,
+                    RejectionReason = _rejectionReason
+                });
+
+            if (result != null)
+            {
+                _dialogVisible = false;
+                _selected = null;
+                _rejectionReason = null;
+
+                await LoadData();
+
+                Snackbar.Add(
+                    "Payment rejected.",
+                    Severity.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to reject payment: {ex.Message}",
+                Severity.Error);
+        }
+    }
+
+
+    private async Task ViewProof()
+    {
+        if (_selected == null)
+            return;
+
+        try
+        {
+            var bytes = await SubmissionApi.GetProofAsync(
+                _selected.Id);
+
+            if (bytes == null || bytes.Length == 0)
+            {
+                Snackbar.Add(
+                    "Payment proof is empty.",
+                    Severity.Warning);
+
+                return;
+            }
+
+            _proofDataUrl =
+                $"data:image/jpeg;base64,{Convert.ToBase64String(bytes)}";
+
+            _proofDialogVisible = true;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to load payment proof: {ex.Message}",
+                Severity.Error);
+        }
+    }
+
+
+    private void CloseProofDialog()
+    {
+        _proofDialogVisible = false;
+        _proofDataUrl = null;
+    }
+
+
+    private static Color GetStatusColor(
+        AcademyERP.Domain.Enums.FeePaymentSubmissionStatus status)
+    {
+        return status switch
+        {
+            AcademyERP.Domain.Enums.FeePaymentSubmissionStatus.Approved
+                => Color.Success,
+
+            AcademyERP.Domain.Enums.FeePaymentSubmissionStatus.Rejected
+                => Color.Error,
+
+            _ => Color.Warning
+        };
+    }
+
+    private async Task ApplyFilters()
+{
+    _submissions = _allSubmissions
+        .Where(x =>
+            string.IsNullOrWhiteSpace(_teacherFilter) ||
+            x.TeacherName.Contains(
+                _teacherFilter,
+                StringComparison.OrdinalIgnoreCase))
+        .Where(x =>
+            string.IsNullOrWhiteSpace(_courseFilter) ||
+            x.CourseName.Contains(
+                _courseFilter,
+                StringComparison.OrdinalIgnoreCase))
+        .Where(x =>
+            string.IsNullOrWhiteSpace(_genderFilter) ||
+            string.Equals(
+                x.Gender,
+                _genderFilter,
+                StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    await InvokeAsync(StateHasChanged);
+}
+
+private async Task ClearFilters()
+{
+    _teacherFilter = string.Empty;
+    _courseFilter = string.Empty;
+    _genderFilter = string.Empty;
+
+    _submissions = _allSubmissions.ToList();
+
+    await InvokeAsync(StateHasChanged);
+}
+}

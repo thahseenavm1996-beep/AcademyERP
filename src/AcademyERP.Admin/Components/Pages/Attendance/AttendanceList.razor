@@ -136,16 +136,65 @@
     else if (_records.Count == 0) { <MudText Class="pa-4">No attendance records match these filters.</MudText> }
     else
     {
-        <MudTable Items="_records" Hover="true" Dense="true" Breakpoint="Breakpoint.Sm">
-            <HeaderContent><MudTh>Date</MudTh><MudTh>Student</MudTh><MudTh>Teacher</MudTh><MudTh>Program / course</MudTh><MudTh>Status</MudTh><MudTh>Remarks</MudTh><MudTh></MudTh></HeaderContent>
-            <RowTemplate>
-               <MudTd DataLabel="Date">
-    @context.ClassDate.ToString("dd MMM yyyy")
-</MudTd><MudTd DataLabel="Student">@context.StudentName</MudTd><MudTd DataLabel="Teacher">@context.TeacherName</MudTd><MudTd DataLabel="Program">@context.ProgramName · @context.CourseName</MudTd>
-                <MudTd DataLabel="Status"><MudChip T="string" Color="@StatusColor(context.Status)" Size="Size.Small">@context.Status</MudChip></MudTd><MudTd DataLabel="Remarks">@context.Remarks</MudTd>
-                <MudTd><MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="@(() => EditAttendance(context))" /></MudTd>
-            </RowTemplate>
-        </MudTable>
+       <div style="width:100%; overflow-x:auto;">
+    <MudTable Items="_records"
+              Hover="true"
+              Dense="true"
+              Bordered="true"
+              Breakpoint="Breakpoint.None"
+              Style="min-width:850px;">
+
+        <HeaderContent>
+            <MudTh>Date</MudTh>
+            <MudTh>Student</MudTh>
+            <MudTh>Teacher</MudTh>
+            <MudTh>Program / Course</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Remarks</MudTh>
+            <MudTh>Action</MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd DataLabel="Date">
+                @context.ClassDate.ToString("dd MMM yyyy")
+            </MudTd>
+
+            <MudTd DataLabel="Student">
+                @context.StudentName
+            </MudTd>
+
+            <MudTd DataLabel="Teacher">
+                @context.TeacherName
+            </MudTd>
+
+            <MudTd DataLabel="Program / Course">
+                @context.ProgramName · @context.CourseName
+            </MudTd>
+
+            <MudTd DataLabel="Status">
+                <MudChip T="string"
+                         Color="@StatusColor(context.Status)"
+                         Size="Size.Small">
+                    @context.Status
+                </MudChip>
+            </MudTd>
+
+            <MudTd DataLabel="Remarks">
+                @(string.IsNullOrWhiteSpace(context.Remarks)
+                    ? "-"
+                    : context.Remarks)
+            </MudTd>
+
+            <MudTd DataLabel="Action">
+                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               OnClick="@(() => EditAttendance(context))" />
+            </MudTd>
+        </RowTemplate>
+
+    </MudTable>
+</div>
     }
 </MudPaper>
 

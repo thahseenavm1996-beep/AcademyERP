@@ -28,6 +28,7 @@ public class ClassReport : BaseEntity
 
     public string? TeacherRemarks { get; set; }
 
+    
 
     public int ActualDurationMinutes { get; set; }
 

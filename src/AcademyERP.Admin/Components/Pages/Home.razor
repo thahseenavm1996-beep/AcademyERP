@@ -1,213 +1,2148 @@
 ﻿@page "/"
-@attribute [Authorize(Roles="SuperAdmin,Administrator")]
+
 @inject DashboardApiService DashboardApi
+@inject CommunicationApiService CommunicationApi
+@inject NavigationManager Navigation
 
 @using Microsoft.AspNetCore.Components.Authorization
 @using AcademyERP.Admin.Models
+@using AcademyERP.Admin.Models.Communication
 @using AcademyERP.Admin.Services
 @using MudBlazor
 
 <PageTitle>Dashboard</PageTitle>
 
-<MudText Typo="Typo.h3" Class="mb-4">
-    Dashboard
+<div class="dashboard-page">
+
+    <!-- Header -->
+    <div class="d-flex justify-space-between align-center mb-6 flex-wrap gap-3">
+
+        <div>
+            <MudText Typo="Typo.h4" Class="fw-bold">
+                Dashboard
+            </MudText>
+
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                Academy overview and quick access
+            </MudText>
+        </div>
+
+        <AuthorizeView>
+            <Authorized>
+                <MudChip T="string"
+                         Color="Color.Primary"
+                         Variant="Variant.Outlined"
+                         Icon="@Icons.Material.Filled.AccountCircle">
+                    Welcome, @context.User.Identity?.Name
+                </MudChip>
+            </Authorized>
+        </AuthorizeView>
+
+    </div>
+
+
+    <!-- Main Statistics -->
+    <MudGrid Class="mb-5">
+<MudItem xs="12" sm="6" md="6">
+    <MudPaper Class="dashboard-stat-card pa-5"
+              Elevation="2"
+              Style="cursor:pointer"
+              @onclick="OpenAdmissions">
+
+        <div class="d-flex justify-space-between align-start">
+            <div>
+                <MudText Typo="Typo.subtitle2"
+                         Color="Color.Secondary">
+                    New Admissions
+                </MudText>
+
+                <MudText Typo="Typo.h3"
+                         Color="Color.Error"
+                         Class="fw-bold mt-2">
+                    @(Summary?.NewAdmissions ?? 0)
+                </MudText>
+
+                <MudText Typo="Typo.caption"
+                         Color="Color.Secondary">
+                    Admissions not yet viewed
+                </MudText>
+            </div>
+
+            <MudIcon Icon="@Icons.Material.Filled.PersonAdd"
+                     Color="Color.Primary"
+                     Size="Size.Large" />
+        </div>
+
+    </MudPaper>
+</MudItem>
+
+<MudItem xs="12" sm="6" md="6">
+    <MudPaper Class="dashboard-stat-card pa-5"
+              Elevation="2"
+              Style="cursor:pointer"
+              @onclick="OpenRegistrations">
+
+        <div class="d-flex justify-space-between align-start">
+            <div>
+                <MudText Typo="Typo.subtitle2"
+                         Color="Color.Secondary">
+                    New Registrations
+                </MudText>
+
+                <MudText Typo="Typo.h3"
+                         Color="Color.Error"
+                         Class="fw-bold mt-2">
+                    @(Summary?.NewRegistrations ?? 0)
+                </MudText>
+
+                <MudText Typo="Typo.caption"
+                         Color="Color.Secondary">
+                    Registrations not yet viewed
+                </MudText>
+            </div>
+
+            <MudIcon Icon="@Icons.Material.Filled.Approval"
+                     Color="Color.Primary"
+                     Size="Size.Large" />
+        </div>
+
+    </MudPaper>
+</MudItem>
+        <MudItem xs="12" sm="6" md="6" lg="3">
+            <MudPaper Class="dashboard-stat-card pa-5"
+                      Elevation="2" Style="cursor:pointer" @onclick="OpenStudents">
+
+                <div class="d-flex justify-space-between align-start">
+
+                    <div>
+                        <MudText Typo="Typo.subtitle2"
+                                 Color="Color.Secondary">
+                            Total Students
+                        </MudText>
+
+                        <MudText Typo="Typo.h3"
+                                 Color="Color.Primary"
+                                 Class="fw-bold mt-2">
+                            @(Summary?.TotalStudents ?? 0)
+                        </MudText>
+
+                        <MudText Typo="Typo.caption"
+                                 Color="Color.Secondary">
+                            Registered students
+                        </MudText>
+                    </div>
+
+                    <MudIcon Icon="@Icons.Material.Filled.School"
+                             Color="Color.Primary"
+                             Size="Size.Large" />
+
+                </div>
+
+            </MudPaper>
+        </MudItem>
+
+
+        <MudItem xs="12" sm="6" md="6" lg="3">
+            <MudPaper Class="dashboard-stat-card pa-5"
+                      Elevation="2" Style="cursor:pointer" @onclick="OpenParents">
+
+                <div class="d-flex justify-space-between align-start">
+
+                    <div>
+                        <MudText Typo="Typo.subtitle2"
+                                 Color="Color.Secondary">
+                            Total Parents
+                        </MudText>
+
+                        <MudText Typo="Typo.h3"
+                                 Color="Color.Success"
+                                 Class="fw-bold mt-2">
+                            @(Summary?.TotalParents ?? 0)
+                        </MudText>
+
+                        <MudText Typo="Typo.caption"
+                                 Color="Color.Secondary">
+                            Registered parents
+                        </MudText>
+                    </div>
+
+                    <MudIcon Icon="@Icons.Material.Filled.FamilyRestroom"
+                             Color="Color.Success"
+                             Size="Size.Large" />
+
+                </div>
+
+            </MudPaper>
+        </MudItem>
+
+
+        <MudItem xs="12" sm="6" md="6" lg="3">
+            <MudPaper Class="dashboard-stat-card pa-5"
+                      Elevation="2" Style="cursor:pointer" @onclick="OpenTeachers">
+
+                <div class="d-flex justify-space-between align-start">
+
+                    <div>
+                        <MudText Typo="Typo.subtitle2"
+                                 Color="Color.Secondary">
+                            Total Teachers
+                        </MudText>
+
+                        <MudText Typo="Typo.h3"
+                                 Color="Color.Warning"
+                                 Class="fw-bold mt-2">
+                            @(Summary?.TotalTeachers ?? 0)
+                        </MudText>
+
+                        <MudText Typo="Typo.caption"
+                                 Color="Color.Secondary">
+                            Teaching staff
+                        </MudText>
+                    </div>
+
+                    <MudIcon Icon="@Icons.Material.Filled.Person"
+                             Color="Color.Warning"
+                             Size="Size.Large" />
+
+                </div>
+
+            </MudPaper>
+        </MudItem>
+
+
+        <MudItem xs="12" sm="6" md="6" lg="3">
+            <MudPaper Class="dashboard-stat-card pa-5"
+                      Elevation="2" Style="cursor:pointer" @onclick="OpenPrograms">
+
+                <div class="d-flex justify-space-between align-start">
+
+                    <div>
+                        <MudText Typo="Typo.subtitle2"
+                                 Color="Color.Secondary">
+                            Programs
+                        </MudText>
+
+                        <MudText Typo="Typo.h3"
+                                 Color="Color.Error"
+                                 Class="fw-bold mt-2">
+                            @(Summary?.TotalPrograms ?? 0)
+                        </MudText>
+
+                        <MudText Typo="Typo.caption"
+                                 Color="Color.Secondary">
+                            Academic programs
+                        </MudText>
+                    </div>
+
+                    <MudIcon Icon="@Icons.Material.Filled.MenuBook"
+                             Color="Color.Error"
+                             Size="Size.Large" />
+
+                </div>
+
+            </MudPaper>
+        </MudItem>
+
+    </MudGrid>
+
+
+    <!-- Operational Statistics -->
+    <MudGrid Class="mb-5">
+
+        <MudItem xs="12" md="4">
+           <MudPaper Class="dashboard-secondary-card pa-5"
+          Elevation="1"
+          Style="cursor:pointer;"
+          @onclick="OpenStudents">
+
+                <MudText Typo="Typo.subtitle2"
+                         Color="Color.Secondary">
+                    Active Students
+                </MudText>
+
+                <div class="d-flex align-center mt-2">
+                    <MudText Typo="Typo.h4" Class="fw-bold">
+                        @(Summary?.ActiveStudents ?? 0)
+                    </MudText>
+
+                    <MudIcon Icon="@Icons.Material.Filled.TrendingUp"
+                             Color="Color.Success"
+                             Class="ms-3" />
+                </div>
+
+                <MudProgressLinear Class="mt-3"
+                                   Color="Color.Primary"
+                                   Value="@GetStudentActivityPercentage()" />
+
+            </MudPaper>
+        </MudItem>
+
+
+        <MudItem xs="12" md="4">
+            <MudPaper Class="dashboard-secondary-card pa-5"
+          Elevation="1"
+          Style="cursor:pointer;"
+          @onclick="OpenTeachers">
+
+                <MudText Typo="Typo.subtitle2"
+                         Color="Color.Secondary">
+                    Active Teachers
+                </MudText>
+
+                <div class="d-flex align-center mt-2">
+                    <MudText Typo="Typo.h4" Class="fw-bold">
+                        @(Summary?.ActiveTeachers ?? 0)
+                    </MudText>
+
+                    <MudIcon Icon="@Icons.Material.Filled.VerifiedUser"
+                             Color="Color.Success"
+                             Class="ms-3" />
+                </div>
+
+                <MudProgressLinear Class="mt-3"
+                                   Color="Color.Success"
+                                   Value="@GetTeacherActivityPercentage()" />
+
+            </MudPaper>
+        </MudItem>
+
+
+        <MudItem xs="12" md="4">
+           <MudPaper Class="dashboard-secondary-card pa-5"
+          Elevation="1"
+          Style="cursor:pointer;"
+          @onclick="OpenPrograms">
+
+                <MudText Typo="Typo.subtitle2"
+                         Color="Color.Secondary">
+                    Running Programs
+                </MudText>
+
+                <div class="d-flex align-center mt-2">
+                    <MudText Typo="Typo.h4" Class="fw-bold">
+                        @(Summary?.TotalPrograms ?? 0)
+                    </MudText>
+
+                    <MudIcon Icon="@Icons.Material.Filled.PlayCircle"
+                             Color="Color.Warning"
+                             Class="ms-3" />
+                </div>
+
+                <MudText Typo="Typo.caption"
+                         Color="Color.Secondary">
+                    Currently available programs
+                </MudText>
+
+            </MudPaper>
+        </MudItem>
+
+    </MudGrid>
+
+
+<!-- Financial Overview -->
+<MudText Typo="Typo.h6"
+         Class="fw-bold mb-3">
+    Financial Overview
 </MudText>
 
-<AuthorizeView>
-    <Authorized>
-        <MudAlert Severity="Severity.Success" Dense="true" Class="mb-4">
-            Welcome, @context.User.Identity?.Name
-        </MudAlert>
-    </Authorized>
+<MudGrid Class="mb-5">
 
-    <NotAuthorized>
-        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">
-            You are not logged in.
-        </MudAlert>
-    </NotAuthorized>
-</AuthorizeView>
+    <!-- Total Collected -->
+    <MudItem xs="12" sm="6" md="6" lg="3">
+        <MudPaper Class="dashboard-finance-card pa-5"
+                  Elevation="2" Style="cursor:pointer" @onclick="OpenFees">
 
-<MudGrid Class="mb-4">
+            <div class="d-flex justify-space-between align-start">
 
-    <MudItem xs="12" sm="6" md="3">
-        <MudPaper Class="pa-4">
-            <MudText Typo="Typo.subtitle2">
-                Total Students
-            </MudText>
+                <div>
+                    <MudText Typo="Typo.subtitle2"
+                             Color="Color.Secondary">
+                        Total Collected
+                    </MudText>
 
-            <MudText Typo="Typo.h3" Color="Color.Primary">
-                @(Summary?.TotalStudents ?? 0)
-            </MudText>
+                    <MudText Typo="Typo.h5"
+                             Color="Color.Success"
+                             Class="fw-bold mt-2">
+                        @FormatCurrency(Summary?.TotalCollected ?? 0)
+                    </MudText>
+
+                    <MudText Typo="Typo.caption"
+                             Color="Color.Secondary">
+                        Payments received
+                    </MudText>
+                </div>
+
+                <MudIcon Icon="@Icons.Material.Filled.AccountBalanceWallet"
+                         Color="Color.Success"
+                         Size="Size.Large" />
+
+            </div>
+
         </MudPaper>
     </MudItem>
 
-    <MudItem xs="12" sm="6" md="3">
-        <MudPaper Class="pa-4">
-            <MudText Typo="Typo.subtitle2">
-                Total Parents
-            </MudText>
 
-            <MudText Typo="Typo.h3" Color="Color.Success">
-                @(Summary?.TotalParents ?? 0)
-            </MudText>
+    <!-- Pending Fees -->
+    <MudItem xs="12" sm="6" md="6" lg="3">
+        <MudPaper Class="dashboard-finance-card pa-5"
+                  Elevation="2" Style="cursor:pointer" @onclick="OpenFees">
+
+            <div class="d-flex justify-space-between align-start">
+
+                <div>
+                    <MudText Typo="Typo.subtitle2"
+                             Color="Color.Secondary">
+                        Pending Fees
+                    </MudText>
+
+                    <MudText Typo="Typo.h5"
+                             Color="Color.Warning"
+                             Class="fw-bold mt-2">
+                        @FormatCurrency(Summary?.PendingFees ?? 0)
+                    </MudText>
+
+                    <MudText Typo="Typo.caption"
+                             Color="Color.Secondary">
+                        Outstanding balance
+                    </MudText>
+                </div>
+
+                <MudIcon Icon="@Icons.Material.Filled.PendingActions"
+                         Color="Color.Warning"
+                         Size="Size.Large" />
+
+            </div>
+
         </MudPaper>
     </MudItem>
 
-    <MudItem xs="12" sm="6" md="3">
-        <MudPaper Class="pa-4">
-            <MudText Typo="Typo.subtitle2">
-                Total Teachers
-            </MudText>
 
-            <MudText Typo="Typo.h3" Color="Color.Warning">
-                @(Summary?.TotalTeachers ?? 0)
-            </MudText>
+    <!-- Total Invoiced -->
+    <MudItem xs="12" sm="6" md="6" lg="3">
+        <MudPaper Class="dashboard-finance-card pa-5"
+                  Elevation="2" Style="cursor:pointer" @onclick="OpenFees">
+
+            <div class="d-flex justify-space-between align-start">
+
+                <div>
+                    <MudText Typo="Typo.subtitle2"
+                             Color="Color.Secondary">
+                        Total Invoiced
+                    </MudText>
+
+                    <MudText Typo="Typo.h5"
+                             Color="Color.Primary"
+                             Class="fw-bold mt-2">
+                        @FormatCurrency(Summary?.TotalInvoiced ?? 0)
+                    </MudText>
+
+                    <MudText Typo="Typo.caption"
+                             Color="Color.Secondary">
+                        Generated invoices
+                    </MudText>
+                </div>
+
+                <MudIcon Icon="@Icons.Material.Filled.ReceiptLong"
+                         Color="Color.Primary"
+                         Size="Size.Large" />
+
+            </div>
+
         </MudPaper>
     </MudItem>
 
-    <MudItem xs="12" sm="6" md="3">
-        <MudPaper Class="pa-4">
-            <MudText Typo="Typo.subtitle2">
-                Programs
-            </MudText>
 
-            <MudText Typo="Typo.h3" Color="Color.Error">
-                @(Summary?.TotalPrograms ?? 0)
-            </MudText>
+    <!-- Overdue Fees -->
+    <MudItem xs="12" sm="6" md="6" lg="3">
+        <MudPaper Class="dashboard-finance-card pa-5"
+                  Elevation="2" Style="cursor:pointer" @onclick="OpenFees">
+
+            <div class="d-flex justify-space-between align-start">
+
+                <div>
+                    <MudText Typo="Typo.subtitle2"
+                             Color="Color.Secondary">
+                        Overdue Fees
+                    </MudText>
+
+                    <MudText Typo="Typo.h5"
+                             Color="Color.Error"
+                             Class="fw-bold mt-2">
+                        @FormatCurrency(Summary?.OverdueFees ?? 0)
+                    </MudText>
+
+                    <MudText Typo="Typo.caption"
+                             Color="Color.Secondary">
+                        Past due date
+                    </MudText>
+                </div>
+
+                <MudIcon Icon="@Icons.Material.Filled.WarningAmber"
+                         Color="Color.Error"
+                         Size="Size.Large" />
+
+            </div>
+
         </MudPaper>
     </MudItem>
 
 </MudGrid>
 
-<MudGrid Class="mb-4">
 
+<!-- Today's Overview -->
+<MudText Typo="Typo.h6"
+         Class="fw-bold mb-3">
+    Today's Overview
+</MudText>
+
+<MudGrid Class="mb-5">
+
+    <!-- Today's Classes -->
     <MudItem xs="12" sm="6" md="4">
-        <MudPaper Class="pa-4" Style="border-left:5px solid #2196F3;">
-            <MudText Typo="Typo.subtitle2">
-                Active Students
-            </MudText>
+       <MudPaper Class="dashboard-today-card pa-5"
+          Elevation="2"
+          Style="cursor:pointer;"
+          @onclick="OpenTodayClasses">
 
-            <MudText Typo="Typo.h4">
-                @(Summary?.ActiveStudents ?? 0)
-            </MudText>
+            <div class="d-flex justify-space-between align-start">
+
+                <div>
+                    <MudText Typo="Typo.subtitle2"
+                             Color="Color.Secondary">
+                        Today's Classes
+                    </MudText>
+
+                    <MudText Typo="Typo.h4"
+                             Color="Color.Primary"
+                             Class="fw-bold mt-2">
+                        @(Summary?.TodayClasses ?? 0)
+                    </MudText>
+
+                    <MudText Typo="Typo.caption"
+                             Color="Color.Secondary">
+                        Scheduled for today
+                    </MudText>
+                </div>
+
+                <MudIcon Icon="@Icons.Material.Filled.Event"
+                         Color="Color.Primary"
+                         Size="Size.Large" />
+
+            </div>
+
         </MudPaper>
     </MudItem>
 
-    <MudItem xs="12" sm="6" md="4">
-        <MudPaper Class="pa-4" Style="border-left:5px solid #4CAF50;">
-            <MudText Typo="Typo.subtitle2">
-                Active Teachers
-            </MudText>
 
-            <MudText Typo="Typo.h4">
-                @(Summary?.ActiveTeachers ?? 0)
-            </MudText>
+    <!-- Completed -->
+    <MudItem xs="12" sm="6" md="4">
+       <MudPaper Class="dashboard-today-card pa-5"
+          Elevation="2"
+          Style="cursor:pointer;"
+          @onclick="OpenCompletedClasses">
+
+            <div class="d-flex justify-space-between align-start">
+
+                <div>
+                    <MudText Typo="Typo.subtitle2"
+                             Color="Color.Secondary">
+                        Completed Today
+                    </MudText>
+
+                    <MudText Typo="Typo.h4"
+                             Color="Color.Success"
+                             Class="fw-bold mt-2">
+                        @(Summary?.TodayCompletedClasses ?? 0)
+                    </MudText>
+
+                    <MudText Typo="Typo.caption"
+                             Color="Color.Secondary">
+                        Classes completed
+                    </MudText>
+                </div>
+
+                <MudIcon Icon="@Icons.Material.Filled.TaskAlt"
+                         Color="Color.Success"
+                         Size="Size.Large" />
+
+            </div>
+
         </MudPaper>
     </MudItem>
 
-    <MudItem xs="12" sm="6" md="4">
-        <MudPaper Class="pa-4" Style="border-left:5px solid #FF9800;">
-            <MudText Typo="Typo.subtitle2">
-                Running Programs
-            </MudText>
 
-            <MudText Typo="Typo.h4">
-                @(Summary?.TotalPrograms ?? 0)
-            </MudText>
+    <!-- Upcoming -->
+    <MudItem xs="12" sm="6" md="4">
+        <MudPaper Class="dashboard-today-card pa-5"
+          Elevation="2"
+          Style="cursor:pointer;"
+         @onclick="OpenUpcomingClasses">
+
+            <div class="d-flex justify-space-between align-start">
+
+                <div>
+                    <MudText Typo="Typo.subtitle2"
+                             Color="Color.Secondary">
+                        Upcoming Today
+                    </MudText>
+
+                    <MudText Typo="Typo.h4"
+                             Color="Color.Warning"
+                             Class="fw-bold mt-2">
+                        @(Summary?.TodayUpcomingClasses ?? 0)
+                    </MudText>
+
+                    <MudText Typo="Typo.caption"
+                             Color="Color.Secondary">
+                        Not started yet
+                    </MudText>
+                </div>
+
+                <MudIcon Icon="@Icons.Material.Filled.Schedule"
+                         Color="Color.Warning"
+                         Size="Size.Large" />
+
+            </div>
+
+        </MudPaper>
+    </MudItem>
+
+
+    <!-- Missed -->
+    <MudItem xs="12" sm="6" md="4">
+       <MudPaper Class="dashboard-today-card pa-5"
+          Elevation="2"
+          Style="cursor:pointer;"
+          @onclick="OpenMissedClasses">
+
+            <div class="d-flex justify-space-between align-start">
+
+                <div>
+                    <MudText Typo="Typo.subtitle2"
+                             Color="Color.Secondary">
+                        Missed Today
+                    </MudText>
+
+                    <MudText Typo="Typo.h4"
+                             Color="Color.Error"
+                             Class="fw-bold mt-2">
+                        @(Summary?.TodayMissedClasses ?? 0)
+                    </MudText>
+
+                    <MudText Typo="Typo.caption"
+                             Color="Color.Secondary">
+                        Student absences
+                    </MudText>
+                </div>
+
+                <MudIcon Icon="@Icons.Material.Filled.EventBusy"
+                         Color="Color.Error"
+                         Size="Size.Large" />
+
+            </div>
+
+        </MudPaper>
+    </MudItem>
+
+
+    <!-- Teachers -->
+    <MudItem xs="12" sm="6" md="4">
+        <MudPaper Class="dashboard-today-card pa-5"
+          Elevation="2"
+          Style="cursor:pointer;"
+          @onclick="ToggleTodayTeachers">
+
+            <div class="d-flex justify-space-between align-start">
+
+                <div>
+                    <MudText Typo="Typo.subtitle2"
+                             Color="Color.Secondary">
+                        Teachers Today
+                    </MudText>
+
+                    <MudText Typo="Typo.h4"
+                             Color="Color.Info"
+                             Class="fw-bold mt-2">
+                        @(Summary?.TodayTeachers ?? 0)
+                    </MudText>
+
+                    <MudText Typo="Typo.caption"
+                             Color="Color.Secondary">
+                        Teachers with classes
+                    </MudText>
+                </div>
+
+                <MudIcon Icon="@Icons.Material.Filled.SupervisorAccount"
+                         Color="Color.Info"
+                         Size="Size.Large" />
+
+            </div>
+
+        </MudPaper>
+    </MudItem>
+
+
+    <!-- Students -->
+    <MudItem xs="12" sm="6" md="4">
+       <MudPaper Class="dashboard-today-card pa-5"
+          Elevation="2"
+          Style="cursor:pointer;"
+          @onclick="ToggleTodayStudents">
+
+            <div class="d-flex justify-space-between align-start">
+
+                <div>
+                    <MudText Typo="Typo.subtitle2"
+                             Color="Color.Secondary">
+                        Students Today
+                    </MudText>
+
+                    <MudText Typo="Typo.h4"
+                             Color="Color.Secondary"
+                             Class="fw-bold mt-2">
+                        @(Summary?.TodayStudents ?? 0)
+                    </MudText>
+
+                    <MudText Typo="Typo.caption"
+                             Color="Color.Secondary">
+                        Students with classes
+                    </MudText>
+                </div>
+
+                <MudIcon Icon="@Icons.Material.Filled.Groups"
+                         Color="Color.Secondary"
+                         Size="Size.Large" />
+
+            </div>
+
         </MudPaper>
     </MudItem>
 
 </MudGrid>
+@if (_dashboardDetail == "teachers")
+{
+    <MudPaper Class="pa-5 mb-5" Elevation="1">
+        <div class="d-flex justify-space-between align-center mb-4">
+            <div>
+                <MudText Typo="Typo.h6" Class="fw-bold">
+                    Teachers With Classes Today
+                </MudText>
 
-<MudPaper Class="pa-4 mb-4">
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Only teachers assigned to today's scheduled classes
+                </MudText>
+            </div>
 
-    <MudText Typo="Typo.h6" Class="mb-3">
-        Quick Actions
+            <MudChip T="string"
+                     Color="Color.Primary"
+                     Variant="Variant.Outlined">
+                @Summary.TodayTeacherList.Count teachers
+            </MudChip>
+        </div>
+
+        <MudTable Items="Summary.TodayTeacherList"
+                  Hover="true"
+                  Dense="true"
+                  Striped="true">
+
+            <HeaderContent>
+                <MudTh>Employee Code</MudTh>
+                <MudTh>Teacher Name</MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd DataLabel="Employee Code">
+                    @context.EmployeeCode
+                </MudTd>
+
+                <MudTd DataLabel="Teacher Name">
+                    <MudText Class="fw-bold">
+                        @context.FullName
+                    </MudText>
+                </MudTd>
+            </RowTemplate>
+
+        </MudTable>
+    </MudPaper>
+}
+
+@if (_dashboardDetail == "students")
+{
+    <MudPaper Class="pa-5 mb-5" Elevation="1">
+        <div class="d-flex justify-space-between align-center mb-4">
+            <div>
+                <MudText Typo="Typo.h6" Class="fw-bold">
+                    Students With Classes Today
+                </MudText>
+
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Only students who have a scheduled class today
+                </MudText>
+            </div>
+
+            <MudChip T="string"
+                     Color="Color.Primary"
+                     Variant="Variant.Outlined">
+                @Summary.TodayStudentList.Count students
+            </MudChip>
+        </div>
+
+        <MudTable Items="Summary.TodayStudentList"
+                  Hover="true"
+                  Dense="true"
+                  Striped="true">
+
+            <HeaderContent>
+                <MudTh>Admission No</MudTh>
+                <MudTh>Student Name</MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd DataLabel="Admission No">
+                    @context.AdmissionNumber
+                </MudTd>
+
+                <MudTd DataLabel="Student Name">
+                    <MudText Class="fw-bold">
+                        @context.FullName
+                    </MudText>
+                </MudTd>
+            </RowTemplate>
+
+        </MudTable>
+    </MudPaper>
+}
+<!-- Program Performance -->
+
+<MudText Typo="Typo.h6"
+         Class="fw-bold mb-3">
+    Program Performance
+</MudText>
+
+<MudGrid Class="mb-5">
+
+    <!-- Most Enrolled Program -->
+    <MudItem xs="12" md="4">
+       <MudPaper Class="dashboard-performance-highlight pa-5"
+          Elevation="2"
+          Style="cursor:pointer;"
+          @onclick="ToggleMostEnrolledProgram">
+
+            <div class="d-flex justify-space-between align-start">
+
+                <div>
+                    <MudText Typo="Typo.subtitle2"
+                             Color="Color.Secondary">
+                        Most Enrolled
+                    </MudText>
+
+                    <MudText Typo="Typo.h6"
+                             Color="Color.Primary"
+                             Class="fw-bold mt-2">
+                        @GetMostEnrolledProgramName()
+                    </MudText>
+
+                    <MudText Typo="Typo.body2"
+                             Color="Color.Secondary"
+                             Class="mt-1">
+                        @GetMostEnrolledCount() enrollments
+                    </MudText>
+                </div>
+
+                <MudIcon Icon="@Icons.Material.Filled.Groups"
+                         Color="Color.Primary"
+                         Size="Size.Large" />
+
+            </div>
+
+        </MudPaper>
+    </MudItem>
+
+
+    <!-- Best Attendance Program -->
+    <MudItem xs="12" md="4">
+        <MudPaper Class="dashboard-performance-highlight pa-5"
+                  Elevation="2">
+
+            <div class="d-flex justify-space-between align-start">
+
+                <div>
+                    <MudText Typo="Typo.subtitle2"
+                             Color="Color.Secondary">
+                        Best Attendance
+                    </MudText>
+
+                    <MudText Typo="Typo.h6"
+                             Color="Color.Success"
+                             Class="fw-bold mt-2">
+                        @GetBestAttendanceProgramName()
+                    </MudText>
+
+                    <MudText Typo="Typo.body2"
+                             Color="Color.Secondary"
+                             Class="mt-1">
+                        @GetBestAttendancePercentage().ToString("0.##")% attendance
+                    </MudText>
+                </div>
+
+                <MudIcon Icon="@Icons.Material.Filled.EventAvailable"
+                         Color="Color.Success"
+                         Size="Size.Large" />
+
+            </div>
+
+        </MudPaper>
+    </MudItem>
+
+
+    <!-- Best Performing Program -->
+    <MudItem xs="12" md="4">
+        <MudPaper Class="dashboard-performance-highlight pa-5"
+                  Elevation="2">
+
+            <div class="d-flex justify-space-between align-start">
+
+                <div>
+                    <MudText Typo="Typo.subtitle2"
+                             Color="Color.Secondary">
+                        Best Performing
+                    </MudText>
+
+                    <MudText Typo="Typo.h6"
+                             Color="Color.Warning"
+                             Class="fw-bold mt-2">
+                        @GetBestPerformingProgramName()
+                    </MudText>
+
+                    <MudText Typo="Typo.body2"
+                             Color="Color.Secondary"
+                             Class="mt-1">
+                        @GetBestPerformanceScore().ToString("0.##") / 5
+                    </MudText>
+                </div>
+
+                <MudIcon Icon="@Icons.Material.Filled.Star"
+                         Color="Color.Warning"
+                         Size="Size.Large" />
+
+            </div>
+
+        </MudPaper>
+    </MudItem>
+@if (_dashboardDetail == "program")
+{
+    <MudPaper Class="pa-5 mb-5" Elevation="1">
+
+        <div class="d-flex justify-space-between align-center mb-4">
+
+            <div>
+                <MudText Typo="Typo.h6" Class="fw-bold">
+                    @GetMostEnrolledProgramName() — Enrollments
+                </MudText>
+
+                <MudText Typo="Typo.body2"
+                         Color="Color.Secondary">
+                    Students enrolled in the most enrolled program
+                </MudText>
+            </div>
+
+            <MudChip T="string"
+                     Color="Color.Primary"
+                     Variant="Variant.Outlined">
+                @Summary.MostEnrolledProgramEnrollments.Count enrollments
+            </MudChip>
+
+        </div>
+
+        <MudTable Items="Summary.MostEnrolledProgramEnrollments"
+                  Hover="true"
+                  Dense="true"
+                  Striped="true">
+
+            <HeaderContent>
+                <MudTh>Student</MudTh>
+                <MudTh>Course</MudTh>
+                <MudTh>Teacher</MudTh>
+                <MudTh>Time Slot</MudTh>
+                <MudTh>Duration</MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+
+                <MudTd DataLabel="Student">
+                    <MudText Class="fw-bold">
+                        @context.StudentName
+                    </MudText>
+                </MudTd>
+
+                <MudTd DataLabel="Course">
+                    @context.CourseName
+                </MudTd>
+
+                <MudTd DataLabel="Teacher">
+                    @context.TeacherName
+                </MudTd>
+
+                <MudTd DataLabel="Time Slot">
+                    @context.TimeSlotName
+                </MudTd>
+
+                <MudTd DataLabel="Duration">
+                    @context.ClassDurationName
+                </MudTd>
+
+            </RowTemplate>
+
+        </MudTable>
+
+    </MudPaper>
+}
+
+    <!-- Program Analytics -->
+    <MudItem xs="12">
+
+        <MudPaper Class="pa-5"
+                  Elevation="1">
+
+            <div class="d-flex justify-space-between align-center mb-4">
+
+                <div>
+                    <MudText Typo="Typo.h6"
+                             Class="fw-bold">
+                        Program Analytics
+                    </MudText>
+
+                    <MudText Typo="Typo.body2"
+                             Color="Color.Secondary">
+                        Enrollment, attendance and academic performance by program
+                    </MudText>
+                </div>
+
+                <MudIcon Icon="@Icons.Material.Filled.BarChart"
+                         Color="Color.Primary"
+                         Size="Size.Large" />
+
+            </div>
+
+            @if (Summary?.ProgramPerformance?.Any() == true)
+            {
+                <MudGrid>
+
+                    <MudItem xs="12" lg="6">
+
+                        <MudPaper Class="program-chart-card pa-4"
+                                  Outlined="true">
+
+                            <MudText Typo="Typo.subtitle1"
+                                     Class="fw-bold mb-1">
+                                Enrollments by Program
+                            </MudText>
+
+                            <MudText Typo="Typo.caption"
+                                     Color="Color.Secondary">
+                                Number of enrollments in each program
+                            </MudText>
+
+                            <MudChart ChartType="ChartType.Bar"
+                                      ChartSeries="@GetEnrollmentChartSeries()"
+                                      ChartLabels="@GetProgramChartLabels()"
+                                      Width="100%"
+                                      Height="320px"
+                                      Class="mt-4" />
+                                      
+
+                        </MudPaper>
+
+                    </MudItem>
+
+
+                    <MudItem xs="12" lg="6">
+
+                        <MudPaper Class="program-chart-card pa-4"
+                                  Outlined="true">
+
+                            <MudText Typo="Typo.subtitle1"
+                                     Class="fw-bold mb-1">
+                                Attendance & Performance
+                            </MudText>
+
+                            <MudText Typo="Typo.caption"
+                                     Color="Color.Secondary">
+                                Attendance rate and performance score
+                            </MudText>
+
+                            <MudChart ChartType="ChartType.Bar"
+                                      ChartSeries="@GetQualityChartSeries()"
+                                      ChartLabels="@GetProgramChartLabels()"
+                                      Width="100%"
+                                      Height="320px"
+                                      Class="mt-4" />
+
+                        </MudPaper>
+
+                    </MudItem>
+
+                </MudGrid>
+            }
+            else
+            {
+                <div class="text-center pa-6">
+
+                    <MudIcon Icon="@Icons.Material.Filled.BarChart"
+                             Size="Size.Large"
+                             Color="Color.Secondary" />
+
+                    <MudText Typo="Typo.body2"
+                             Color="Color.Secondary"
+                             Class="mt-2">
+                        No program analytics available yet.
+                    </MudText>
+
+                </div>
+            }
+
+        </MudPaper>
+
+    </MudItem>
+
+</MudGrid>
+
+<!-- Recent Activity -->
+<MudGrid Class="mb-5">
+
+    <MudItem xs="12">
+
+        <MudPaper Class="pa-5"
+                  Elevation="1">
+
+            <div class="d-flex justify-space-between align-center mb-4">
+
+                <div>
+                    <MudText Typo="Typo.h6"
+                             Class="fw-bold">
+                        Recent Activity
+                    </MudText>
+
+                    <MudText Typo="Typo.body2"
+                             Color="Color.Secondary">
+                        Latest activity across the academy
+                    </MudText>
+                </div>
+
+                <MudIcon Icon="@Icons.Material.Filled.History"
+                         Color="Color.Primary"
+                         Size="Size.Large" />
+
+            </div>
+
+
+            @if (Summary?.RecentActivities?.Any() == true)
+            {
+                <MudList T="RecentActivityDto"
+         Dense="true"
+         Class="recent-activity-list">
+
+                    @foreach (var activity in Summary.RecentActivities)
+                    {
+                        <MudListItem>
+
+                            <div class="d-flex align-center w-100">
+
+                                <MudAvatar Size="Size.Medium"
+                                           Color="@GetActivityColor(activity.ActivityType)">
+                                    <MudIcon Icon="@GetActivityIcon(activity.ActivityType)"
+                                             Size="Size.Small" />
+                                </MudAvatar>
+
+                             <div class="recent-activity-content">
+
+    <MudText Typo="Typo.body2"
+             Class="fw-bold recent-activity-description">
+        @activity.Description
     </MudText>
 
-    <MudButton Href="/students"
-               Variant="Variant.Filled"
-               Color="Color.Primary"
-               StartIcon="@Icons.Material.Filled.People"
-               Class="me-2 mb-2">
-        Students
-    </MudButton>
-
-    <MudButton Href="/teachers"
-               Variant="Variant.Filled"
-               Color="Color.Success"
-               StartIcon="@Icons.Material.Filled.Person"
-               Class="me-2 mb-2">
-        Teachers
-    </MudButton>
-
-    <MudButton Href="/scheduledclasses"
-               Variant="Variant.Filled"
-               Color="Color.Warning"
-               StartIcon="@Icons.Material.Filled.Schedule"
-               Class="me-2 mb-2">
-        Schedule
-    </MudButton>
-
-    <MudButton Href="/classreports"
-               Variant="Variant.Filled"
-               Color="Color.Info"
-               StartIcon="@Icons.Material.Filled.Assessment"
-               Class="me-2 mb-2">
-        Reports
-    </MudButton>
-
-    <MudButton Href="/fees"
-               Variant="Variant.Filled"
-               Color="Color.Secondary"
-               StartIcon="@Icons.Material.Filled.Payments"
-               Class="me-2 mb-2">
-        Fees
-    </MudButton>
-
-</MudPaper>
-
-<MudPaper Class="pa-4">
-
-    <MudText Typo="Typo.h6" Class="mb-3">
-        Recent Students
+    <MudText Typo="Typo.caption"
+             Color="Color.Secondary">
+        @FormatActivityTime(activity.OccurredAt)
     </MudText>
 
-    <MudTable Items="@(Summary?.RecentStudents ?? new List<RecentStudentDto>())"
-              Hover="true"
-              Dense="true"
-              Striped="true">
+</div>
 
-        <HeaderContent>
-            <MudTh>Admission No</MudTh>
-            <MudTh>Student Name</MudTh>
-            <MudTh>Country</MudTh>
-        </HeaderContent>
+<MudButton Variant="Variant.Text"
+           Size="Size.Small"
+           Color="@GetActivityColor(activity.ActivityType)"
+           Class="recent-activity-type"
+           OnClick="@(() => ToggleRecentActivity(activity.ActivityType))">
+    @activity.ActivityType
+</MudButton>
+                            </div>
 
-        <RowTemplate>
-            <MudTd DataLabel="Admission No">
-                @context.AdmissionNumber
-            </MudTd>
+                        </MudListItem>
+                    }
 
-            <MudTd DataLabel="Student Name">
-                @context.FullName
-            </MudTd>
+                </MudList>
+            }
+            else
+            {
+                <div class="text-center pa-6">
 
-            <MudTd DataLabel="Country">
-                @context.Country
-            </MudTd>
-        </RowTemplate>
+                    <MudIcon Icon="@Icons.Material.Filled.History"
+                             Size="Size.Large"
+                             Color="Color.Secondary" />
 
-    </MudTable>
+                    <MudText Typo="Typo.body2"
+                             Color="Color.Secondary"
+                             Class="mt-2">
+                        No recent activity available.
+                    </MudText>
 
-</MudPaper>
+                </div>
+            }
+
+        </MudPaper>
+
+    </MudItem>
+
+</MudGrid>
+@if (_recentActivityDetail == "Enrollment" &&
+     Summary?.RecentEnrollmentDetails?.Any() == true)
+{
+    <MudPaper Class="pa-5 mb-5" Elevation="1">
+
+        <div class="d-flex justify-space-between align-center mb-4">
+
+            <div>
+                <MudText Typo="Typo.h6" Class="fw-bold">
+                    Recent Enrollments
+                </MudText>
+
+                <MudText Typo="Typo.body2"
+                         Color="Color.Secondary">
+                    Latest enrollment information
+                </MudText>
+            </div>
+
+            <MudChip T="string"
+                     Color="Color.Info"
+                     Variant="Variant.Outlined">
+                @Summary.RecentEnrollmentDetails.Count enrollments
+            </MudChip>
+
+        </div>
+
+        <MudTable Items="Summary.RecentEnrollmentDetails"
+                  Hover="true"
+                  Dense="true"
+                  Striped="true">
+
+            <HeaderContent>
+                <MudTh>Student</MudTh>
+                <MudTh>Course</MudTh>
+                <MudTh>Teacher</MudTh>
+                <MudTh>Time Slot</MudTh>
+                <MudTh>Duration</MudTh>
+                <MudTh>Start Date</MudTh>
+                <MudTh>Monthly Fee</MudTh>
+                <MudTh>Status</MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd DataLabel="Student">
+                    <MudText Class="fw-bold">
+                        @context.StudentName
+                    </MudText>
+                </MudTd>
+
+                <MudTd DataLabel="Course">
+                    @context.CourseName
+                </MudTd>
+
+                <MudTd DataLabel="Teacher">
+                    @context.TeacherName
+                </MudTd>
+
+                <MudTd DataLabel="Time Slot">
+                    @context.TimeSlotName
+                </MudTd>
+
+                <MudTd DataLabel="Duration">
+                    @context.ClassDurationName
+                </MudTd>
+
+                <MudTd DataLabel="Start Date">
+                    @context.StartDate.ToString("dd MMM yyyy")
+                </MudTd>
+
+                <MudTd DataLabel="Monthly Fee">
+                    @FormatCurrency(context.FinalMonthlyFee)
+                </MudTd>
+
+                <MudTd DataLabel="Status">
+                    @context.Status
+                </MudTd>
+            </RowTemplate>
+
+        </MudTable>
+
+    </MudPaper>
+}
+@if (_recentActivityDetail == "Invoice" &&
+     Summary?.RecentFeeDetails?.Any() == true)
+{
+    <MudPaper Class="pa-5 mb-5" Elevation="1">
+
+        <div class="d-flex justify-space-between align-center mb-4">
+
+            <div>
+                <MudText Typo="Typo.h6" Class="fw-bold">
+                    Recent Fee Invoices
+                </MudText>
+
+                <MudText Typo="Typo.body2"
+                         Color="Color.Secondary">
+                    Latest fee and payment information
+                </MudText>
+            </div>
+
+            <MudChip T="string"
+                     Color="Color.Warning"
+                     Variant="Variant.Outlined">
+                @Summary.RecentFeeDetails.Count invoices
+            </MudChip>
+
+        </div>
+
+        <MudTable Items="Summary.RecentFeeDetails"
+                  Hover="true"
+                  Dense="true"
+                  Striped="true">
+
+            <HeaderContent>
+                <MudTh>Invoice</MudTh>
+                <MudTh>Student</MudTh>
+                <MudTh>Course</MudTh>
+                <MudTh>Amount</MudTh>
+                <MudTh>Paid</MudTh>
+                <MudTh>Balance</MudTh>
+                <MudTh>Invoice Date</MudTh>
+                <MudTh>Due Date</MudTh>
+                <MudTh>Status</MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd DataLabel="Invoice">
+                    <MudText Class="fw-bold">
+                        @context.InvoiceNumber
+                    </MudText>
+                </MudTd>
+
+                <MudTd DataLabel="Student">
+                    @context.StudentName
+                </MudTd>
+
+                <MudTd DataLabel="Course">
+                    @context.CourseName
+                </MudTd>
+
+                <MudTd DataLabel="Amount">
+                    @FormatCurrency(context.Amount)
+                </MudTd>
+
+                <MudTd DataLabel="Paid">
+                    @FormatCurrency(context.PaidAmount)
+                </MudTd>
+
+                <MudTd DataLabel="Balance">
+                    @FormatCurrency(context.BalanceAmount)
+                </MudTd>
+
+                <MudTd DataLabel="Invoice Date">
+                    @context.InvoiceDate.ToString("dd MMM yyyy")
+                </MudTd>
+
+                <MudTd DataLabel="Due Date">
+                    @context.DueDate.ToString("dd MMM yyyy")
+                </MudTd>
+
+                <MudTd DataLabel="Status">
+                    @context.Status
+                </MudTd>
+            </RowTemplate>
+
+        </MudTable>
+
+    </MudPaper>
+}
+@if (_recentActivityDetail == "Registration" &&
+     Summary?.RecentRegistrationDetails?.Any() == true)
+{
+    <MudPaper Class="pa-5 mb-5" Elevation="1">
+
+        <div class="d-flex justify-space-between align-center mb-4">
+
+            <div>
+                <MudText Typo="Typo.h6" Class="fw-bold">
+                    Recent Registration Requests
+                </MudText>
+
+                <MudText Typo="Typo.body2"
+                         Color="Color.Secondary">
+                    Latest registration requests received by the academy
+                </MudText>
+            </div>
+
+            <MudChip T="string"
+                     Color="Color.Secondary"
+                     Variant="Variant.Outlined">
+                @Summary.RecentRegistrationDetails.Count registrations
+            </MudChip>
+
+        </div>
+
+        <MudTable Items="Summary.RecentRegistrationDetails"
+                  Hover="true"
+                  Dense="true"
+                  Striped="true">
+
+            <HeaderContent>
+                <MudTh>Parent</MudTh>
+                <MudTh>Students</MudTh>
+                <MudTh>Email</MudTh>
+                <MudTh>Phone</MudTh>
+                <MudTh>Country</MudTh>
+                <MudTh>Submitted</MudTh>
+                <MudTh>Status</MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd DataLabel="Parent">
+                    <MudText Class="fw-bold">
+                        @context.ParentName
+                    </MudText>
+                </MudTd>
+
+                <MudTd DataLabel="Students">
+                    @context.StudentNames
+                </MudTd>
+
+                <MudTd DataLabel="Email">
+                    @context.Email
+                </MudTd>
+
+                <MudTd DataLabel="Phone">
+                    @context.PhoneNumber
+                </MudTd>
+
+                <MudTd DataLabel="Country">
+                    @context.Country
+                </MudTd>
+
+                <MudTd DataLabel="Submitted">
+                    @context.SubmittedAt.ToLocalTime().ToString("dd MMM yyyy, hh:mm tt")
+                </MudTd>
+
+                <MudTd DataLabel="Status">
+                    @context.Status
+                </MudTd>
+            </RowTemplate>
+
+        </MudTable>
+
+    </MudPaper>
+}
+
+    <!-- Messages + Quick Actions -->
+    <MudGrid Class="mb-5">
+
+        <!-- Messages -->
+        <MudItem xs="12" md="4">
+
+            <MudPaper Class="message-card pa-5"
+                      Elevation="2"
+                      @onclick='() => Navigation.NavigateTo("/admin/messages")'>
+
+               <div class="d-flex justify-space-between align-start">
+
+    <div>
+        <MudText Typo="Typo.subtitle1"
+                 Class="fw-bold">
+            Messages
+        </MudText>
+
+        <MudText Typo="Typo.body2"
+                 Color="Color.Secondary"
+                 Class="mt-1">
+            Communication Center
+        </MudText>
+    </div>
+
+    <MudIcon Icon="@Icons.Material.Filled.MarkEmailUnread"
+             Color="Color.Info"
+             Size="Size.Large" />
+
+</div>
+
+
+<div class="d-flex align-center mt-4">
+
+    <MudText Typo="Typo.h3"
+             Color="Color.Info"
+             Class="fw-bold">
+        @UnreadMessageCount
+    </MudText>
+
+    <MudText Typo="Typo.body2"
+             Color="Color.Secondary"
+             Class="ms-2">
+        unread
+    </MudText>
+
+</div>
+
+
+@if (RecentConversations.Any())
+{
+    <MudDivider Class="my-4" />
+
+    <MudText Typo="Typo.caption"
+             Color="Color.Secondary"
+             Class="fw-bold">
+        Recent Conversations
+    </MudText>
+
+    @foreach (var conversation in RecentConversations)
+    {
+        <div class="message-preview mt-3">
+
+            <div class="d-flex align-center">
+
+                <MudAvatar Size="Size.Small"
+                           Color="Color.Info">
+                    <MudIcon Icon="@Icons.Material.Filled.Person"
+                             Size="Size.Small" />
+                </MudAvatar>
+
+                <div class="ms-2 flex-grow-1"
+                     style="min-width: 0;">
+
+                    <MudText Typo="Typo.body2"
+                             Class="fw-bold"
+                             Style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        @conversation.OtherUserName
+                    </MudText>
+
+                    <MudText Typo="Typo.caption"
+                             Color="Color.Secondary"
+                             Style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        @conversation.LastMessage
+                    </MudText>
+
+                </div>
+
+                <MudText Typo="Typo.caption"
+                         Color="Color.Secondary"
+                         Class="ms-2">
+                    @FormatMessageTime(conversation.LastMessageAt)
+                </MudText>
+
+            </div>
+
+        </div>
+    }
+}
+else
+{
+    <MudText Typo="Typo.caption"
+             Color="Color.Success"
+             Class="mt-4">
+        You're all caught up
+    </MudText>
+}
+
+            </MudPaper>
+
+        </MudItem>
+
+
+        <!-- Quick Actions -->
+        <MudItem xs="12" md="8">
+
+            <MudPaper Class="pa-5"
+                      Elevation="1">
+
+                <MudText Typo="Typo.h6"
+                         Class="fw-bold mb-4">
+                    Quick Actions
+                </MudText>
+
+                <div class="d-flex flex-wrap gap-2">
+
+                    <MudButton Href="/students"
+                               Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.People">
+                        Students
+                    </MudButton>
+
+                    <MudButton Href="/teachers"
+                               Variant="Variant.Filled"
+                               Color="Color.Success"
+                               StartIcon="@Icons.Material.Filled.Person">
+                        Teachers
+                    </MudButton>
+
+                    <MudButton Href="/scheduledclasses"
+                               Variant="Variant.Filled"
+                               Color="Color.Warning"
+                               StartIcon="@Icons.Material.Filled.Schedule">
+                        Schedule
+                    </MudButton>
+
+                    <MudButton Href="/classreports"
+                               Variant="Variant.Filled"
+                               Color="Color.Info"
+                               StartIcon="@Icons.Material.Filled.Assessment">
+                        Reports
+                    </MudButton>
+
+                    <MudButton Href="/fees"
+                               Variant="Variant.Filled"
+                               Color="Color.Secondary"
+                               StartIcon="@Icons.Material.Filled.Payments">
+                        Fees
+                    </MudButton>
+
+                    <MudButton Href="/admin/messages"
+                               Variant="Variant.Outlined"
+                               Color="Color.Info"
+                               StartIcon="@Icons.Material.Filled.Chat">
+                        Communication
+                    </MudButton>
+
+                </div>
+
+            </MudPaper>
+
+        </MudItem>
+
+    </MudGrid>
+
+
+    <!-- Recent Students -->
+    <MudPaper Class="pa-5"
+              Elevation="1">
+
+        <div class="d-flex justify-space-between align-center mb-4">
+
+            <div>
+                <MudText Typo="Typo.h6"
+                         Class="fw-bold">
+                    Recent Students
+                </MudText>
+
+                <MudText Typo="Typo.body2"
+                         Color="Color.Secondary">
+                    Recently added students
+                </MudText>
+            </div>
+
+            <MudButton Href="/students"
+                       Variant="Variant.Text"
+                       Color="Color.Primary"
+                       EndIcon="@Icons.Material.Filled.ArrowForward">
+                View All
+            </MudButton>
+
+        </div>
+
+
+        <MudTable Items="@(Summary?.RecentStudents ?? new List<RecentStudentDto>())"
+                  Hover="true"
+                  Dense="true"
+                  Striped="true"
+                  Elevation="0">
+
+            <HeaderContent>
+
+                <MudTh>Admission No</MudTh>
+                <MudTh>Student Name</MudTh>
+                <MudTh>Country</MudTh>
+
+            </HeaderContent>
+
+            <RowTemplate>
+
+                <MudTd DataLabel="Admission No">
+                    <MudText Typo="Typo.body2"
+                             Class="fw-bold">
+                        @context.AdmissionNumber
+                    </MudText>
+                </MudTd>
+
+                <MudTd DataLabel="Student Name">
+                    @context.FullName
+                </MudTd>
+
+                <MudTd DataLabel="Country">
+                    @context.Country
+                </MudTd>
+
+            </RowTemplate>
+
+        </MudTable>
+
+    </MudPaper>
+
+</div>
+
+
+<style>
+
+    .dashboard-page {
+        width: 100%;
+    }
+
+    .dashboard-stat-card,
+    .dashboard-secondary-card,
+    .message-card {
+        height: 100%;
+        border-radius: 14px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .dashboard-stat-card:hover,
+    .dashboard-secondary-card:hover,
+    .message-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+    }
+
+    .message-card {
+        cursor: pointer;
+    }
+
+    .message-card:hover {
+        cursor: pointer;
+    }
+
+    @@media (max-width: 600px) {
+
+        .dashboard-stat-card,
+        .dashboard-secondary-card,
+        .message-card {
+            border-radius: 10px;
+        }
+
+    }
+.dashboard-finance-card {
+    height: 100%;
+    border-radius: 14px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-finance-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+}
+.dashboard-today-card {
+    height: 100%;
+    border-radius: 14px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-today-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+}
+
+.program-chart-card {
+    height: 100%;
+    border-radius: 12px;
+}
+
+.recent-activity-list .mud-list-item {
+    border-radius: 10px;
+    margin-bottom: 4px;
+}
+
+.recent-activity-list .mud-list-item:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+.recent-activity-content {
+    margin-left: 12px;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.recent-activity-description {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.recent-activity-type {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+@@media (max-width: 600px) {
+
+    .recent-activity-list .mud-list-item {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    .recent-activity-list .mud-list-item > div {
+        min-width: 0;
+    }
+
+    .recent-activity-content {
+        min-width: 0;
+    }
+
+    .recent-activity-description {
+        line-height: 1.35;
+    }
+
+    .recent-activity-type {
+        margin-left: 4px;
+        padding-left: 6px;
+        padding-right: 6px;
+    }
+}
+</style>
+
 
 @code
 {
     private DashboardSummaryResponse? Summary;
 
-    protected override async Task OnInitializedAsync()
+    private int UnreadMessageCount;
+
+    private List<ConversationDto> RecentConversations = new();
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+{
+    if (!firstRender)
+        return;
+
+    try
     {
         Summary = await DashboardApi.GetSummaryAsync();
+
+        UnreadMessageCount =
+            await CommunicationApi.GetAdminUnreadMessageCountAsync();
+
+        RecentConversations =
+            (await CommunicationApi.GetAdminConversationsAsync())
+            .OrderByDescending(x => x.LastMessageAt)
+            .Take(3)
+            .ToList();
+
+        StateHasChanged();
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Dashboard loading failed: {ex.Message}");
+    }
+}
+    private double GetStudentActivityPercentage()
+    {
+        if (Summary is null || Summary.TotalStudents == 0)
+            return 0;
+
+        return Math.Clamp(
+            (double)Summary.ActiveStudents / Summary.TotalStudents * 100,
+            0,
+            100);
+    }
+
+    private double GetTeacherActivityPercentage()
+    {
+        if (Summary is null || Summary.TotalTeachers == 0)
+            return 0;
+
+        return Math.Clamp(
+            (double)Summary.ActiveTeachers / Summary.TotalTeachers * 100,
+            0,
+            100);
+    }
+
+    private static string FormatCurrency(decimal amount)
+{
+    return $"₹{amount:N2}";
+}
+
+private static string GetActivityIcon(string activityType)
+{
+    return activityType switch
+    {
+        "Student" =>
+            Icons.Material.Filled.PersonAdd,
+            "Registration" =>
+    Icons.Material.Filled.Approval,
+
+        "Enrollment" =>
+            Icons.Material.Filled.Assignment,
+
+        "Invoice" =>
+            Icons.Material.Filled.ReceiptLong,
+
+        "Payment" =>
+            Icons.Material.Filled.Payments,
+
+        "Class" =>
+            Icons.Material.Filled.Event,
+
+        "Missed" =>
+            Icons.Material.Filled.EventBusy,
+
+        _ =>
+            Icons.Material.Filled.History
+    };
+}
+
+private static Color GetActivityColor(string activityType)
+{
+    return activityType switch
+    {
+        "Student" => Color.Primary,
+         "Registration" => Color.Secondary,
+        "Enrollment" => Color.Info,
+        "Invoice" => Color.Warning,
+        "Payment" => Color.Success,
+        "Class" => Color.Secondary,
+        "Missed" => Color.Error,
+        _ => Color.Default
+    };
+}
+
+private string GetMostEnrolledProgramName()
+{
+    return Summary?.ProgramPerformance?
+        .OrderByDescending(x => x.EnrollmentCount)
+        .FirstOrDefault()?
+        .ProgramName
+        ?? "No data";
+}
+
+private int GetMostEnrolledCount()
+{
+    return Summary?.ProgramPerformance?
+        .OrderByDescending(x => x.EnrollmentCount)
+        .FirstOrDefault()?
+        .EnrollmentCount
+        ?? 0;
+}
+
+private string GetBestAttendanceProgramName()
+{
+    return Summary?.ProgramPerformance?
+        .Where(x => x.AttendanceCount > 0)
+        .OrderByDescending(x => x.AttendancePercentage)
+        .FirstOrDefault()?
+        .ProgramName
+        ?? "No data";
+}
+
+private decimal GetBestAttendancePercentage()
+{
+    return Summary?.ProgramPerformance?
+        .Where(x => x.AttendanceCount > 0)
+        .OrderByDescending(x => x.AttendancePercentage)
+        .FirstOrDefault()?
+        .AttendancePercentage
+        ?? 0m;
+}
+
+private string GetBestPerformingProgramName()
+{
+    return Summary?.ProgramPerformance?
+        .Where(x => x.PerformanceReportCount >= 3)
+        .OrderByDescending(x => x.AveragePerformance)
+        .FirstOrDefault()?
+        .ProgramName
+        ?? "No data";
+}
+
+private decimal GetBestPerformanceScore()
+{
+    return Summary?.ProgramPerformance?
+        .Where(x => x.PerformanceReportCount >= 3)
+        .OrderByDescending(x => x.AveragePerformance)
+        .FirstOrDefault()?
+        .AveragePerformance
+        ?? 0m;
+}
+
+private double GetPerformancePercentage(decimal performance)
+{
+    return Math.Clamp(
+        (double)(performance / 5m * 100m),
+        0,
+        100);
+}
+
+private string[] GetProgramChartLabels()
+{
+    return Summary?.ProgramPerformance?
+        .Select(x => x.ProgramName)
+        .ToArray()
+        ?? Array.Empty<string>();
+}
+
+private List<ChartSeries<double>> GetEnrollmentChartSeries()
+{
+    return new List<ChartSeries<double>>
+    {
+        new ChartSeries<double>
+        {
+            Name = "Enrollments",
+            Data = Summary?.ProgramPerformance?
+                .Select(x => (double)x.EnrollmentCount)
+                .ToArray()
+                ?? Array.Empty<double>()
+        }
+    };
+}
+
+private List<ChartSeries<double>> GetQualityChartSeries()
+{
+    return new List<ChartSeries<double>>
+    {
+        new ChartSeries<double>
+        {
+            Name = "Attendance %",
+            Data = Summary?.ProgramPerformance?
+                .Select(x => (double)x.AttendancePercentage)
+                .ToArray()
+                ?? Array.Empty<double>()
+        },
+
+        new ChartSeries<double>
+        {
+            Name = "Performance %",
+            Data = Summary?.ProgramPerformance?
+                .Select(x => GetPerformancePercentage(x.AveragePerformance))
+                .ToArray()
+                ?? Array.Empty<double>()
+        }
+    };
+}
+
+
+private static string FormatActivityTime(DateTime dateTime)
+{
+    var localTime = dateTime.ToLocalTime();
+
+    var difference = DateTime.Now - localTime;
+
+    if (difference.TotalMinutes < 1)
+        return "Just now";
+
+    if (difference.TotalMinutes < 60)
+        return $"{(int)difference.TotalMinutes} minute{((int)difference.TotalMinutes == 1 ? "" : "s")} ago";
+
+    if (difference.TotalHours < 24)
+        return $"{(int)difference.TotalHours} hour{((int)difference.TotalHours == 1 ? "" : "s")} ago";
+
+    if (difference.TotalDays < 7)
+        return $"{(int)difference.TotalDays} day{((int)difference.TotalDays == 1 ? "" : "s")} ago";
+
+    return localTime.ToString("dd MMM yyyy, hh:mm tt");
+}
+
+private static string FormatMessageTime(DateTime dateTime)
+{
+    var localTime = dateTime.ToLocalTime();
+    var difference = DateTime.Now - localTime;
+
+    if (difference.TotalMinutes < 1)
+        return "Just now";
+
+    if (difference.TotalMinutes < 60)
+        return $"{(int)difference.TotalMinutes}m";
+
+    if (difference.TotalHours < 24)
+        return $"{(int)difference.TotalHours}h";
+
+    if (difference.TotalDays < 7)
+        return $"{(int)difference.TotalDays}d";
+
+    return localTime.ToString("dd MMM");
+}
+
+private void OpenAdmissions() => Navigation.NavigateTo("/admissions");
+private void OpenRegistrations() => Navigation.NavigateTo("/registration-requests");
+
+private void OpenStudents() => Navigation.NavigateTo("/students");
+private void OpenParents() => Navigation.NavigateTo("/parents");
+private void OpenTeachers() => Navigation.NavigateTo("/Teachers");
+private void OpenPrograms() => Navigation.NavigateTo("/programs");
+private void OpenFees() => Navigation.NavigateTo("/fees");
+private void OpenTodayClasses() =>
+    Navigation.NavigateTo("/scheduledclasses?filter=today");
+
+private void OpenCompletedClasses() =>
+    Navigation.NavigateTo("/scheduledclasses?filter=completed");
+
+private void OpenUpcomingClasses() =>
+    Navigation.NavigateTo("/scheduledclasses?filter=upcoming");
+
+private void OpenMissedClasses() =>
+    Navigation.NavigateTo("/scheduledclasses?filter=missed");
+
+    private void OpenMostEnrolledProgram()
+{
+    var program = Summary?.ProgramPerformance?
+        .OrderByDescending(x => x.EnrollmentCount)
+        .FirstOrDefault();
+
+    if (program is null)
+        return;
+
+    Navigation.NavigateTo($"/programs?programId={program.ProgramId}");
+}
+
+private string? _dashboardDetail;
+
+private void ToggleTodayTeachers()
+{
+    _dashboardDetail =
+        _dashboardDetail == "teachers"
+            ? null
+            : "teachers";
+}
+
+private void ToggleTodayStudents()
+{
+    _dashboardDetail =
+        _dashboardDetail == "students"
+            ? null
+            : "students";
+}
+
+private void ToggleMostEnrolledProgram()
+{
+    _dashboardDetail =
+        _dashboardDetail == "program"
+            ? null
+            : "program";
+}
+
+private string? _recentActivityDetail;
+
+private void ToggleRecentActivity(string activityType)
+{
+    if (activityType != "Enrollment" &&
+        activityType != "Invoice" &&
+        activityType != "Registration")
+    {
+        return;
+    }
+
+    _recentActivityDetail =
+        _recentActivityDetail == activityType
+            ? null
+            : activityType;
+}
+
 }

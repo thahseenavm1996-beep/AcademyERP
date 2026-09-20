@@ -2,7 +2,8 @@ using AcademyERP.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AcademyERP.Infrastructure.Services;
-
+using AcademyERP.Application.DTOs.StudentReports;
+using AcademyERP.Domain.Enums;
 namespace AcademyERP.API.Controllers;
 
 [ApiController]
@@ -37,12 +38,12 @@ private readonly StudentReportDashboardService _dashboardService;
 
         return Ok(result);
     }
-    [HttpGet("dashboard")]
-public async Task<IActionResult> GetDashboard()
+    
+[HttpGet("dashboard")]
+public async Task<ActionResult<StudentReportDashboardResponse>> GetDashboard(
+    string? courseName = null,
+    Gender? gender = null)
 {
-    var result =
-        await _dashboardService.GetDashboardAsync();
-
-    return Ok(result);
+    return Ok(await _dashboardService.GetDashboardAsync(courseName, gender));
 }
 }

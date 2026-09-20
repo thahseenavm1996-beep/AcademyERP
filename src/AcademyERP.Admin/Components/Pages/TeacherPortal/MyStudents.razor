@@ -1,0 +1,104 @@
+@page "/teacher/students"
+@layout TeacherLayout
+
+@using AcademyERP.Admin.Models.TeacherPortal
+@using AcademyERP.Admin.Services
+
+@inject TeacherPortalApiService TeacherApi
+
+
+<MudText Typo="Typo.h4">
+    My Students
+</MudText>
+
+
+@if (_students == null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (!_students.Any())
+{
+    <MudAlert Severity="Severity.Info"
+              Class="mt-4">
+        No students assigned.
+    </MudAlert>
+}
+else
+{
+
+    <MudGrid Class="mt-4">
+
+        @foreach(var student in _students)
+        {
+            <MudItem xs="12"
+                     md="6"
+                     lg="4">
+
+                <MudCard Elevation="3">
+
+                    <MudCardContent>
+
+                        <MudAvatar Color="Color.Primary"
+                                   Class="mb-3">
+                            @student.StudentName.Substring(0,1)
+                        </MudAvatar>
+
+
+                        <MudText Typo="Typo.h5">
+                            @student.StudentName
+                        </MudText>
+
+
+                        <MudDivider Class="my-3"/>
+
+
+                        <MudText>
+                            📚 Course:
+                            <b>@student.CourseName</b>
+                        </MudText>
+
+
+                        <MudText>
+                            👨‍👩‍👧 Parent:
+                            <b>@student.ParentName</b>
+                        </MudText>
+
+
+                        <MudText>
+                            📊 Attendance:
+                            <b>@student.AttendancePercentage%</b>
+                        </MudText>
+
+
+                        <MudChip T="string"
+                                 Color="Color.Success"
+                                 Class="mt-3">
+                            @student.Status
+                        </MudChip>
+
+
+                    </MudCardContent>
+
+                </MudCard>
+
+            </MudItem>
+        }
+
+    </MudGrid>
+
+}
+
+
+
+@code {
+
+    private List<TeacherStudentDto>? _students;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        _students =
+            await TeacherApi.GetStudentsAsync();
+    }
+
+}

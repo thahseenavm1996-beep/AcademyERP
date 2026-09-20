@@ -1,4 +1,6 @@
+using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using AcademyERP.Admin.Models.Enrollments;
 
 namespace AcademyERP.Admin.Services;
@@ -25,13 +27,12 @@ public class EnrollmentApiService
         var response = await _httpClient.GetAsync(
             $"api/enrollments/{id}");
 
-        if (response.StatusCode ==
-            System.Net.HttpStatusCode.NotFound)
+        if (response.StatusCode == HttpStatusCode.NotFound)
         {
             return null;
         }
 
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response);
 
         return await response.Content
             .ReadFromJsonAsync<EnrollmentResponse>();
@@ -44,7 +45,7 @@ public class EnrollmentApiService
             "api/enrollments",
             request);
 
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response);
 
         return await response.Content
             .ReadFromJsonAsync<EnrollmentResponse>();
@@ -58,13 +59,12 @@ public class EnrollmentApiService
             $"api/enrollments/{id}",
             request);
 
-        if (response.StatusCode ==
-            System.Net.HttpStatusCode.NotFound)
+        if (response.StatusCode == HttpStatusCode.NotFound)
         {
             return null;
         }
 
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response);
 
         return await response.Content
             .ReadFromJsonAsync<EnrollmentResponse>();
@@ -75,14 +75,57 @@ public class EnrollmentApiService
         var response = await _httpClient.DeleteAsync(
             $"api/enrollments/{id}");
 
-        if (response.StatusCode ==
-            System.Net.HttpStatusCode.NotFound)
+        if (response.StatusCode == HttpStatusCode.NotFound)
         {
             return false;
         }
 
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response);
 
         return true;
+    }
+
+    private static async Task EnsureSuccessAsync(
+        HttpResponseMessage response)
+    {
+        if (response.IsSuccessStatusCode)
+        {
+            return;
+        }
+
+        var responseBody =
+            await response.Content.ReadAsStringAsync();
+
+        string? message = null;
+
+        if (!string.IsNullOrWhiteSpace(responseBody))
+        {
+            try
+            {
+                var error =
+                    JsonSerializer.Deserialize<ApiErrorResponse>(
+                        responseBody,
+                        new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        });
+
+                message = error?.Message;
+            }
+            catch (JsonException)
+            {
+                // Ignore invalid error JSON and use the HTTP message.
+            }
+        }
+
+        throw new HttpRequestException(
+            message
+            ?? $"Request failed with status code {(int)response.StatusCode} " +
+               $"({response.StatusCode}).");
+    }
+
+    private sealed class ApiErrorResponse
+    {
+        public string? Message { get; set; }
     }
 }

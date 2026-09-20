@@ -1,0 +1,89 @@
+@page "/teacher/schedule"
+@layout TeacherLayout
+
+@using AcademyERP.Admin.Services
+@using AcademyERP.Admin.Models.TeacherPortal
+@inject TeacherPortalApiService Api
+
+
+<MudText Typo="Typo.h4">
+    My Schedule 📅
+</MudText>
+
+
+<MudGrid Class="mt-5">
+
+@if(_schedule.Count == 0)
+{
+    <MudText>
+        No classes scheduled.
+    </MudText>
+}
+else
+{
+
+@foreach(var item in _schedule)
+{
+    <MudItem xs="12" md="4">
+
+        <MudCard>
+
+            <MudCardContent>
+
+                <MudText Typo="Typo.h6">
+                    @item.StudentName
+                </MudText>
+
+
+                <MudText>
+                    📚 @item.CourseName
+                </MudText>
+
+
+                <MudText>
+                    📅 @item.ClassDate.ToString("dd MMM yyyy")
+                </MudText>
+
+
+                <MudText>
+                    🕒 
+                    @item.StartTime.ToString("hh:mm tt")
+                    -
+                    @item.EndTime.ToString("hh:mm tt")
+                </MudText>
+
+
+                <MudChip T="string"
+                         Class="mt-3"
+                         Color="Color.Info">
+
+                    @item.Status
+
+                </MudChip>
+
+
+            </MudCardContent>
+
+        </MudCard>
+
+    </MudItem>
+}
+
+}
+
+</MudGrid>
+
+
+
+@code {
+
+private List<TeacherClassDto> _schedule = new();
+
+
+protected override async Task OnInitializedAsync()
+{
+    _schedule =
+        await Api.GetScheduleAsync();
+}
+
+}

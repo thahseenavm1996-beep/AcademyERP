@@ -71,4 +71,15 @@ public async Task<IActionResult> Update(
 
     return Ok(result);
 }
+
+[HttpPost("{id}/absent")]
+public async Task<IActionResult> MarkStudentAbsent(Guid id)
+{
+    await _service.MarkStudentAbsentAsync(id);
+
+    return Ok(new
+    {
+        message = "Student marked as absent."
+    });
+}
 }

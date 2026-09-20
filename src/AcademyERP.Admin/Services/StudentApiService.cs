@@ -1,3 +1,4 @@
+
 using System.Net.Http.Json;
 using AcademyERP.Admin.Models;
 
@@ -11,30 +12,42 @@ public class StudentApiService
     {
         _httpClient = httpClient;
     }
-    public async Task<StudentListResponse?> GetStudentsAsync(StudentQueryRequest request)
+   public async Task<StudentListResponse?> GetStudentsAsync(StudentQueryRequest request)
+{
+    Console.WriteLine("===== STUDENTS ENDPOINT HIT =====");
+
+    var url =
+        $"api/Students?page={request.Page}" +
+        $"&pageSize={request.PageSize}" +
+        $"&search={Uri.EscapeDataString(request.Search ?? string.Empty)}";
+
+    if (request.CourseId.HasValue)
     {
-        Console.WriteLine("===== STUDENTS ENDPOINT HIT =====");
-        var response = await _httpClient.GetAsync(
-            $"api/Students?page={request.Page}&pageSize={request.PageSize}&search={request.Search}");
-
-        Console.WriteLine("STATUS = " + response.StatusCode);
-
-        Console.WriteLine("AUTH HEADER = " +
-            response.RequestMessage?.Headers.Authorization);
-
-        var body = await response.Content.ReadAsStringAsync();
-
-        Console.WriteLine(body);
-
-        response.EnsureSuccessStatusCode();
-
-        return System.Text.Json.JsonSerializer.Deserialize<StudentListResponse>(
-            body,
-            new System.Text.Json.JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
+        url += $"&courseId={request.CourseId.Value}";
     }
+
+    if (!string.IsNullOrWhiteSpace(request.Gender))
+    {
+        url += $"&gender={Uri.EscapeDataString(request.Gender)}";
+    }
+
+    var response = await _httpClient.GetAsync(url);
+
+    Console.WriteLine("STATUS = " + response.StatusCode);
+
+    var body = await response.Content.ReadAsStringAsync();
+
+    Console.WriteLine(body);
+
+    response.EnsureSuccessStatusCode();
+
+    return System.Text.Json.JsonSerializer.Deserialize<StudentListResponse>(
+        body,
+        new System.Text.Json.JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+}
     /* public async Task<StudentListResponse?> GetStudentsAsync(StudentQueryRequest request)
      {
          /* var response =

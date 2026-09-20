@@ -1,0 +1,280 @@
+@page "/attendance/absence-alerts"
+
+@using AcademyERP.Admin.Models.AttendanceAlerts
+@using AcademyERP.Admin.Services
+@using MudBlazor
+
+@inject AttendanceApiService AttendanceApi
+@inject ISnackbar Snackbar
+
+<PageTitle>Student Absence Alerts</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="pa-4">
+
+    <MudStack Row="true"
+              Justify="Justify.SpaceBetween"
+              AlignItems="AlignItems.Center"
+              Class="mb-4">
+
+        <div>
+            <MudText Typo="Typo.h4">
+                Student Absence Alerts
+            </MudText>
+
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                Monitor students with consecutive missed classes.
+            </MudText>
+        </div>
+
+        <MudButton Variant="Variant.Outlined"
+                   StartIcon="@Icons.Material.Filled.Refresh"
+                   OnClick="LoadAlerts"
+                   Disabled="_loading">
+            Refresh
+        </MudButton>
+
+    </MudStack>
+
+    <MudGrid Class="mb-4">
+
+        <MudItem xs="12" sm="4">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Total Alerts
+                </MudText>
+
+                <MudText Typo="Typo.h4">
+                    @_alerts.Count
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="4">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Warnings
+                </MudText>
+
+                <MudText Typo="Typo.h4">
+                    @_alerts.Count(x => x.AlertLevel == "Warning")
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="4">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Critical
+                </MudText>
+
+                <MudText Typo="Typo.h4">
+                    @_alerts.Count(x => x.AlertLevel == "Critical")
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+    </MudGrid>
+
+    @if (_loading)
+    {
+        <MudProgressLinear Indeterminate="true"
+                           Color="Color.Primary"
+                           Class="mb-4" />
+    }
+
+    @if (!_loading && !_alerts.Any())
+    {
+        <MudAlert Severity="Severity.Success">
+            No students currently have 2 or more consecutive missed classes.
+        </MudAlert>
+    }
+    else if (_alerts.Any())
+    {
+        <MudTable Items="_alerts"
+                  Hover="true"
+                  Dense="true"
+                  Striped="true"
+                  Bordered="true">
+
+            <HeaderContent>
+
+                <MudTh>Alert</MudTh>
+                <MudTh>Student</MudTh>
+                <MudTh>Parent</MudTh>
+                <MudTh>Teacher</MudTh>
+                <MudTh>Course</MudTh>
+                <MudTh>Missed Classes</MudTh>
+                <MudTh>Last Missed</MudTh>
+                <MudTh>Last Attended</MudTh>
+                <MudTh>Action</MudTh>
+
+            </HeaderContent>
+
+            <RowTemplate>
+
+                <MudTd>
+
+                    @if (context.AlertLevel == "Critical")
+                    {
+                        <MudChip T="string"
+                                 Color="Color.Error"
+                                 Variant="Variant.Filled">
+                            CRITICAL
+                        </MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string"
+                                 Color="Color.Warning"
+                                 Variant="Variant.Filled">
+                            WARNING
+                        </MudChip>
+                    }
+
+                </MudTd>
+
+                <MudTd>
+
+                    <MudText Typo="Typo.body1">
+                        <b>@context.StudentName</b>
+                    </MudText>
+
+                </MudTd>
+
+                <MudTd>
+
+                    <MudText Typo="Typo.body2">
+                        @context.ParentName
+                    </MudText>
+
+                    @if (!string.IsNullOrWhiteSpace(context.ParentPhoneNumber))
+                    {
+                        <MudText Typo="Typo.caption"
+                                 Color="Color.Secondary">
+                            @context.ParentPhoneNumber
+                        </MudText>
+                    }
+
+                </MudTd>
+
+                <MudTd>
+                    @context.TeacherName
+                </MudTd>
+
+                <MudTd>
+                    @context.CourseName
+                </MudTd>
+
+                <MudTd>
+
+                    <MudChip T="string"
+                             Color="Color.Error"
+                             Variant="Variant.Outlined">
+                        @context.ConsecutiveMissedClasses
+                    </MudChip>
+
+                </MudTd>
+
+                <MudTd>
+                    @context.LastMissedDate.ToString("dd MMM yyyy")
+                </MudTd>
+
+                <MudTd>
+
+                    @if (context.LastAttendedDate.HasValue)
+                    {
+                        @context.LastAttendedDate.Value.ToString("dd MMM yyyy")
+                    }
+                    else
+                    {
+                        <MudText Color="Color.Secondary">
+                            No attendance
+                        </MudText>
+                    }
+
+                </MudTd>
+
+                <MudTd>
+
+                    @if (!string.IsNullOrWhiteSpace(context.ParentPhoneNumber))
+                    {
+                        <MudButton Color="Color.Success"
+                                   Variant="Variant.Filled"
+                                   Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Message"
+                                   Href="@GetWhatsAppUrl(context)"
+                                   Target="_blank">
+                            WhatsApp
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudChip T="string"
+                                 Color="Color.Default"
+                                 Variant="Variant.Outlined">
+                            No phone
+                        </MudChip>
+                    }
+
+                </MudTd>
+
+            </RowTemplate>
+
+        </MudTable>
+    }
+
+</MudContainer>
+
+@code {
+
+    private List<StudentAbsenceAlertResponse> _alerts = new();
+    private bool _loading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAlerts();
+    }
+
+    private async Task LoadAlerts()
+    {
+        try
+        {
+            _loading = true;
+
+            _alerts = await AttendanceApi
+                .GetStudentAbsenceAlertsAsync(2);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to load absence alerts: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static string GetWhatsAppUrl(
+        StudentAbsenceAlertResponse alert)
+    {
+        var phone = new string(
+            alert.ParentPhoneNumber
+                .Where(char.IsDigit)
+                .ToArray());
+
+        var message =
+            $"Assalamu Alaikum {alert.ParentName},%0A%0A" +
+            $"We noticed that {alert.StudentName} " +
+            $"has missed {alert.ConsecutiveMissedClasses} " +
+            $"consecutive classes for {alert.CourseName}.%0A%0A" +
+            $"Last missed class: " +
+            $"{alert.LastMissedDate:dd MMM yyyy}.%0A%0A" +
+            "Please let us know if there is any difficulty " +
+            "or if you need any assistance.%0A%0A" +
+            "Thank you.";
+
+        return $"https://wa.me/{phone}?text={message}";
+    }
+}

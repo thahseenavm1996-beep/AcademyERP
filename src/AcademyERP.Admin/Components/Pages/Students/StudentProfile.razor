@@ -1,5 +1,5 @@
 @page "/students/{Id:guid}"
-@attribute [Authorize]
+
 
 @using Microsoft.AspNetCore.Authorization
 @using AcademyERP.Admin.Models
@@ -235,7 +235,136 @@ else
         <MudItem xs="12">
 
             <MudPaper Class="pa-5 mt-4">
+<MudText Typo="Typo.h6" Class="mt-6 mb-3">
+    Family Information
+</MudText>
 
+<MudGrid Spacing="3">
+
+    <!-- Parents -->
+    <MudItem xs="12" md="6">
+        <MudPaper Class="pa-4" Elevation="1">
+
+            <MudText Typo="Typo.subtitle1" Class="mb-3">
+                <MudIcon Icon="@Icons.Material.Filled.FamilyRestroom"
+                         Class="mr-2" />
+                Parent / Guardian
+            </MudText>
+
+            @if (_student?.Parents?.Any() == true)
+            {
+                @foreach (var parent in _student.Parents)
+                {
+                    <MudPaper Class="pa-3 mb-3" Outlined="true">
+
+                        <MudText Typo="Typo.subtitle2">
+                            @parent.FullName
+
+                            @if (parent.IsPrimaryContact)
+                            {
+                                <MudChip T="string"
+                                         Size="Size.Small"
+                                         Color="Color.Primary"
+                                         Class="ml-2">
+                                    Primary Contact
+                                </MudChip>
+                            }
+                        </MudText>
+
+                        <MudText Typo="Typo.body2" Class="mt-2">
+                            <MudIcon Icon="@Icons.Material.Filled.Phone"
+                                     Size="Size.Small"
+                                     Class="mr-1" />
+                            @(string.IsNullOrWhiteSpace(parent.PhoneNumber)
+                                ? "No phone number"
+                                : parent.PhoneNumber)
+                        </MudText>
+
+                        <MudText Typo="Typo.body2">
+                            <MudIcon Icon="@Icons.Material.Filled.Email"
+                                     Size="Size.Small"
+                                     Class="mr-1" />
+                            @(string.IsNullOrWhiteSpace(parent.Email)
+                                ? "No email"
+                                : parent.Email)
+                        </MudText>
+
+                    </MudPaper>
+                }
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info">
+                    No parent or guardian is linked to this student.
+                </MudAlert>
+            }
+
+        </MudPaper>
+    </MudItem>
+
+    <!-- Siblings -->
+    <MudItem xs="12" md="6">
+        <MudPaper Class="pa-4" Elevation="1">
+
+            <MudText Typo="Typo.subtitle1" Class="mb-3">
+                <MudIcon Icon="@Icons.Material.Filled.Groups"
+                         Class="mr-2" />
+                Siblings Studying Here
+            </MudText>
+
+            @if (_student?.Siblings?.Any() == true)
+            {
+                @foreach (var sibling in _student.Siblings)
+                {
+                    <MudPaper Class="pa-3 mb-3" Outlined="true">
+
+                        <MudStack Row="true"
+                                  AlignItems="AlignItems.Center"
+                                  Justify="Justify.SpaceBetween">
+
+                            <div>
+                                <MudText Typo="Typo.subtitle2">
+                                    @sibling.FullName
+                                </MudText>
+
+                                <MudText Typo="Typo.body2">
+                                    Admission No: @sibling.AdmissionNumber
+                                </MudText>
+
+                                <MudText Typo="Typo.body2">
+                                    Gender: @sibling.Gender
+                                </MudText>
+
+                                <MudChip T="string"
+                                         Size="Size.Small"
+                                         Color="Color.Default">
+                                    @sibling.Status
+                                </MudChip>
+                            </div>
+
+                            <MudButton Variant="Variant.Outlined"
+                                       Size="Size.Small"
+                                       StartIcon="@Icons.Material.Filled.OpenInNew"
+                                       OnClick="@(() => Navigation.NavigateTo($"/students/{sibling.StudentId}"))">
+                                View
+                            </MudButton>
+
+                        </MudStack>
+
+                    </MudPaper>
+                }
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info">
+                    No siblings studying in the institute.
+                </MudAlert>
+            }
+
+        </MudPaper>
+    </MudItem>
+
+</MudGrid>
                 <MudText Typo="Typo.h6">
                     Academic Information
                 </MudText>
@@ -690,33 +819,7 @@ else
 
     </MudPaper>
 }
-@if (Performance != null)
-{
-    <MudDivider Class="my-6" />
 
-    <MudPaper Class="pa-5">
-
-        <MudText Typo="Typo.h6">
-            Performance Status
-        </MudText>
-
-        <MudDivider Class="my-3" />
-
-        <MudChip T="string"
-                 Color="@GetPerformanceColor()"
-                 Size="Size.Large">
-
-            @GetPerformanceStatus()
-
-        </MudChip>
-
-        <MudText Class="mt-3">
-            Overall Score:
-            <b>@GetOverallPerformanceScore()%</b>
-        </MudText>
-
-    </MudPaper>
-}
 }
 
 @code

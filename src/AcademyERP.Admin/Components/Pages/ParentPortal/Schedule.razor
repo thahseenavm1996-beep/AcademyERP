@@ -1,0 +1,319 @@
+@page "/parent/schedule"
+@layout ParentLayout
+
+@using AcademyERP.Admin.Models.ParentPortal
+@using AcademyERP.Admin.Services
+
+@inject ParentPortalApiService ParentPortalApi
+
+<PageTitle>Class Schedule</PageTitle>
+
+<MudText Typo="Typo.h4">
+    Class Schedule
+</MudText>
+
+<MudText Typo="Typo.body2"
+         Color="Color.Secondary"
+         Class="mb-5">
+    View your children's upcoming classes.
+</MudText>
+
+<MudPaper Class="pa-4 mb-5">
+
+    <MudGrid>
+
+        <MudItem xs="12" sm="6" md="4">
+            <MudSelect T="Guid?"
+                       Label="Child"
+                       @bind-Value="_studentId"
+                       Variant="Variant.Outlined"
+                       Clearable="true">
+
+                <MudSelectItem T="Guid?" Value="@((Guid?)null)">
+                    All Children
+                </MudSelectItem>
+
+                @foreach (var child in _children)
+                {
+                    <MudSelectItem T="Guid?"
+                                   Value="@((Guid?)child.StudentId)">
+                        @child.StudentName
+                    </MudSelectItem>
+                }
+
+            </MudSelect>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="4">
+            <MudDatePicker Label="From Date"
+                           @bind-Date="_fromDate"
+                           Variant="Variant.Outlined" />
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="4">
+            <MudDatePicker Label="To Date"
+                           @bind-Date="_toDate"
+                           Variant="Variant.Outlined" />
+        </MudItem>
+
+        <MudItem xs="12">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Search"
+                       OnClick="LoadSchedule">
+                Apply Filters
+            </MudButton>
+        </MudItem>
+
+    </MudGrid>
+
+</MudPaper>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" />
+}
+else if (_schedule == null)
+{
+    <MudAlert Severity="Severity.Error">
+        Unable to load the class schedule.
+    </MudAlert>
+}
+else if (!_schedule.Any())
+{
+    <MudPaper Class="pa-8 text-center">
+        <MudIcon Icon="@Icons.Material.Filled.EventBusy"
+                 Size="Size.Large"
+                 Color="Color.Primary" />
+
+        <MudText Typo="Typo.h6" Class="mt-3">
+            No classes found
+        </MudText>
+    </MudPaper>
+}
+else
+{
+    <MudPaper Class="schedule-table-container"
+              Elevation="0"
+              Outlined="true">
+
+        <MudTable Items="_schedule"
+                  Hover="true"
+                  Dense="false"
+                  Striped="false"
+                  Bordered="false"
+                  Breakpoint="Breakpoint.None"
+                  Class="modern-schedule-table">
+
+            <HeaderContent>
+                <MudTh Class="schedule-date-column">
+                    Date
+                </MudTh>
+
+                <MudTh>
+                    Student
+                </MudTh>
+
+                <MudTh>
+                    Course
+                </MudTh>
+
+                <MudTh>
+                    Teacher
+                </MudTh>
+
+                <MudTh>
+                    Time
+                </MudTh>
+
+                <MudTh Class="schedule-duration-column">
+                    Duration
+                </MudTh>
+            </HeaderContent>
+
+            <RowTemplate Context="item">
+
+                <MudTd DataLabel="Date"
+                       Class="schedule-date-column">
+                    <MudText Typo="Typo.body2"
+                             Class="schedule-date">
+                        @item.ClassDate
+                    </MudText>
+                </MudTd>
+
+                <MudTd DataLabel="Student">
+                    <MudText Typo="Typo.body2"
+                             Class="schedule-student">
+                        @item.StudentName
+                    </MudText>
+                </MudTd>
+
+                <MudTd DataLabel="Course">
+                    <MudText Typo="Typo.body2"
+                             Class="schedule-course">
+                        @item.CourseName
+                    </MudText>
+                </MudTd>
+
+                <MudTd DataLabel="Teacher">
+                    <MudText Typo="Typo.body2">
+                        @item.TeacherName
+                    </MudText>
+                </MudTd>
+
+                <MudTd DataLabel="Time">
+                    <MudText Typo="Typo.body2"
+                             Class="schedule-time">
+                        @item.StartTime
+–
+@item.EndTime
+                    </MudText>
+                </MudTd>
+
+                <MudTd DataLabel="Duration"
+                       Class="schedule-duration-column">
+                    <MudChip T="string"
+                             Size="Size.Small"
+                             Variant="Variant.Outlined">
+                        @item.DurationMinutes min
+                    </MudChip>
+                </MudTd>
+
+            </RowTemplate>
+
+        </MudTable>
+
+    </MudPaper>
+}
+<style>
+    .schedule-table-container {
+        overflow-x: auto;
+        border-radius: 12px;
+    }
+
+    .modern-schedule-table {
+        min-width: 760px;
+    }
+
+    .modern-schedule-table .mud-table-head {
+        background-color: #f8fafc;
+    }
+
+    .modern-schedule-table .mud-table-head .mud-table-cell {
+        font-weight: 600;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+        padding: 14px 16px;
+    }
+
+    .modern-schedule-table .mud-table-body .mud-table-cell {
+        padding: 16px;
+        vertical-align: middle;
+    }
+
+    .modern-schedule-table .mud-table-row {
+        transition: background-color 0.15s ease;
+    }
+
+    .modern-schedule-table .mud-table-row:hover {
+        background-color: #f8fafc;
+    }
+
+    .schedule-date {
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .schedule-student {
+        font-weight: 600;
+    }
+
+    .schedule-course {
+        font-weight: 500;
+    }
+
+    .schedule-time {
+        white-space: nowrap;
+    }
+
+    .schedule-date-column {
+        min-width: 120px;
+    }
+
+    .schedule-duration-column {
+        min-width: 100px;
+        white-space: nowrap;
+    }
+
+   @@media (max-width: 800px) {
+        .modern-schedule-table {
+            min-width: 680px;
+        }
+
+        .modern-schedule-table .mud-table-head .mud-table-cell,
+        .modern-schedule-table .mud-table-body .mud-table-cell {
+            padding: 12px;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .schedule-table-container {
+            margin-left: -4px;
+            margin-right: -4px;
+            border-radius: 10px;
+        }
+
+        .modern-schedule-table {
+            min-width: 680px;
+        }
+    }
+</style>
+@code {
+    private List<ParentChildSummaryDto> _children = [];
+    private List<ParentScheduleDto>? _schedule;
+
+    private Guid? _studentId;
+    private DateTime? _fromDate = DateTime.Today;
+    private DateTime? _toDate = DateTime.Today.AddDays(30);
+
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _children =
+                await ParentPortalApi.GetChildrenAsync() ?? [];
+
+            await LoadSchedule();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task LoadSchedule()
+    {
+        _loading = true;
+
+        try
+        {
+            _schedule =
+                await ParentPortalApi.GetScheduleAsync(
+                    _studentId,
+                    _fromDate.HasValue
+                        ? DateOnly.FromDateTime(_fromDate.Value)
+                        : null,
+                    _toDate.HasValue
+                        ? DateOnly.FromDateTime(_toDate.Value)
+                        : null);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

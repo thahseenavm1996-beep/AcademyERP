@@ -1,11 +1,14 @@
 @page "/fees"
 
 @using AcademyERP.Admin.Models
+@using AcademyERP.Admin.Models.Courses
 @using AcademyERP.Admin.Services
 @using MudBlazor
 
 @inject FeeInvoiceApiService FeeInvoiceApi
 @inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject CourseApiService CourseApi
 
 <PageTitle>Fees</PageTitle>
 
@@ -22,23 +25,147 @@
         <MudTabPanel Text="Invoices">
 
             <MudStack Row="true"
-                      Justify="Justify.SpaceBetween"
-                      Class="mb-4">
+          Justify="Justify.SpaceBetween"
+          AlignItems="AlignItems.Center"
+          Class="fee-invoice-header">
 
                 <MudText Typo="Typo.h6">
-                    Fee Invoices
+                    Generated Fee Invoices
                 </MudText>
 
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.Add"
-                           OnClick="@CreateInvoice">
-                    Create Invoice
-                </MudButton>
+                <MudStack Row="true" Spacing="2" Class="fee-invoice-actions">
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Autorenew"
+                               OnClick="@GenerateDueFees">
+                        Generate All Fees
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Add"
+                               OnClick="@CreateInvoice">
+                        Create Invoice
+                    </MudButton>
+                </MudStack>
 
             </MudStack>
 
-            <MudTable Items="_invoices"
+           <MudGrid Class="mb-2">
+
+    <MudItem xs="12" sm="6" md="3">
+
+        <MudSelect T="string"
+                   Label="Student section"
+                   Variant="Variant.Outlined"
+                   @bind-Value="_genderFilter">
+
+            <MudSelectItem T="string" Value="@("All")">
+                All students
+            </MudSelectItem>
+
+            <MudSelectItem T="string" Value="@("Male")">
+                Boys
+            </MudSelectItem>
+
+            <MudSelectItem T="string" Value="@("Female")">
+                Girls
+            </MudSelectItem>
+
+        </MudSelect>
+
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+
+        <MudSelect T="string"
+                   Label="Course"
+                   Variant="Variant.Outlined"
+                   Clearable="true"
+                   @bind-Value="_courseFilter">
+
+            <MudSelectItem T="string" Value="@("All")">
+                All courses
+            </MudSelectItem>
+
+            @foreach (var course in _courses)
+            {
+                <MudSelectItem T="string" Value="@course.CourseName">
+                    @course.CourseName
+                </MudSelectItem>
+            }
+
+        </MudSelect>
+
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+
+        <MudSelect T="string"
+                   Label="Fee status"
+                   Variant="Variant.Outlined"
+                   @bind-Value="_dueFilter">
+
+            <MudSelectItem T="string" Value="@("All")">
+                All fees
+            </MudSelectItem>
+
+            <MudSelectItem T="string" Value="@("Due")">
+                Due today
+            </MudSelectItem>
+
+            <MudSelectItem T="string" Value="@("Near")">
+                Nearing overdue (next 7 days)
+            </MudSelectItem>
+
+            <MudSelectItem T="string" Value="@("Overdue")">
+                Past overdue
+            </MudSelectItem>
+
+        </MudSelect>
+
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3" Class="d-flex align-center">
+    <MudStack Row="true"
+              Spacing="1"
+              Wrap="Wrap.NoWrap"
+              Style="width:100%; overflow-x:auto;">
+
+        <MudChip T="string"
+                 Size="Size.Small"
+                 Color="Color.Primary"
+                 Variant="Variant.Outlined">
+            All: @FilteredInvoices.Count()
+        </MudChip>
+
+        <MudChip T="string"
+                 Size="Size.Small"
+                 Color="Color.Warning"
+                 Variant="Variant.Outlined">
+            Due: @DueInvoices.Count()
+        </MudChip>
+
+        <MudChip T="string"
+                 Size="Size.Small"
+                 Color="Color.Error"
+                 Variant="Variant.Outlined">
+            Overdue: @OverdueInvoices.Count()
+        </MudChip>
+
+        <MudChip T="string"
+                 Size="Size.Small"
+                 Color="Color.Info"
+                 Variant="Variant.Outlined">
+            Nearing: @NearingDueInvoices.Count()
+        </MudChip>
+
+    </MudStack>
+</MudItem>
+
+</MudGrid>
+
+            <MudTable Items="FilteredInvoices"
                       Hover="true"
                       Dense="true"
                       Striped="true">
@@ -47,6 +174,7 @@
 
                     <MudTh>Invoice No</MudTh>
                     <MudTh>Student</MudTh>
+                    <MudTh>Section</MudTh>
                     <MudTh>Course</MudTh>
                     <MudTh>Amount</MudTh>
                     <MudTh>Paid</MudTh>
@@ -54,6 +182,7 @@
                     <MudTh>Status</MudTh>
                     <MudTh>Invoice Date</MudTh>
                     <MudTh>Due Date</MudTh>
+                    <MudTh>Reminder</MudTh>
                     <MudTh>Actions</MudTh>
 
                 </HeaderContent>
@@ -72,6 +201,8 @@
 
                     <MudTd>@context.StudentName</MudTd>
 
+                    <MudTd>@GetSection(context)</MudTd>
+
                     <MudTd>@context.CourseName</MudTd>
 
                     <MudTd>@context.Amount</MudTd>
@@ -81,7 +212,9 @@
                     <MudTd>@context.BalanceAmount</MudTd>
 
                     <MudTd>
-                        @GetStatusText(context.Status)
+                        <MudChip T="string" Size="Size.Small" Color="@GetFeeStateColor(context)">
+                            @GetFeeState(context)
+                        </MudChip>
                     </MudTd>
 
                     <MudTd>
@@ -90,6 +223,32 @@
 
                     <MudTd>
                         @context.DueDate.ToShortDateString()
+                    </MudTd>
+
+                    <MudTd>
+                        @if (CanSendWhatsAppReminder(context))
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.Send"
+                                           Color="Color.Success"
+                                           Title="@GetReminderButtonTitle(context)"
+                                           Href="@GetWhatsAppUrl(context)"
+                                           Target="_blank" />
+                                           <MudText Typo="Typo.caption"
+         Color="Color.Secondary"
+         Class="ml-1">
+    @GetReminderStageText(context)
+</MudText>
+                        }
+                        else if (context.BalanceAmount > 0)
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                No parent phone
+                            </MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">-</MudText>
+                        }
                     </MudTd>
 
                     <MudTd>
@@ -126,15 +285,67 @@
 {
     private List<FeeInvoiceResponse> _invoices = new();
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadData();
-    }
+private List<CourseResponse> _courses = new();
 
+private string _genderFilter = "All";
+
+private string _courseFilter = "All";
+
+private string _dueFilter = "All";
+
+   private IEnumerable<FeeInvoiceResponse> BaseFilteredInvoices =>
+    _invoices.Where(invoice =>
+        (_genderFilter == "All" ||
+         invoice.Gender == _genderFilter) &&
+
+        (_courseFilter == "All" ||
+         invoice.CourseName == _courseFilter));
+
+private IEnumerable<FeeInvoiceResponse> DueInvoices =>
+    BaseFilteredInvoices.Where(IsDueToday);
+
+private IEnumerable<FeeInvoiceResponse> OverdueInvoices =>
+    BaseFilteredInvoices.Where(IsOverdue);
+
+private IEnumerable<FeeInvoiceResponse> NearingDueInvoices =>
+    BaseFilteredInvoices.Where(IsNearingDue);
+
+private IEnumerable<FeeInvoiceResponse> FilteredInvoices =>
+    BaseFilteredInvoices.Where(invoice =>
+        _dueFilter == "All" ||
+        (_dueFilter == "Due" && IsDueToday(invoice)) ||
+        (_dueFilter == "Near" && IsNearingDue(invoice)) ||
+        (_dueFilter == "Overdue" && IsOverdue(invoice)));
+
+   protected override async Task OnInitializedAsync()
+{
+    await LoadCourses();
+    await LoadData();
+}
     private async Task LoadData()
     {
         _invoices = await FeeInvoiceApi.GetAllAsync();
     }
+    private async Task LoadCourses()
+{
+    try
+    {
+        _courses = await CourseApi.GetAllAsync();
+
+        _courses = _courses
+            .Where(x => x.IsActive)
+            .OrderBy(x => x.CourseName)
+            .ToList();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(ex);
+
+        Snackbar.Add(
+            "Unable to load courses.",
+            Severity.Error);
+    }
+}
 
     private async Task Delete(Guid id)
     {
@@ -177,6 +388,27 @@
         await LoadData();
 
         StateHasChanged();
+    }
+
+    private async Task GenerateDueFees()
+    {
+        try
+        {
+            var generated = await FeeInvoiceApi.GenerateAsync(DateTime.Today);
+            Snackbar.Add(
+                generated > 0
+                    ? $"{generated} fee invoice(s) generated."
+                    : "No additional fee cycles are ready to generate.",
+                generated > 0 ? Severity.Success : Severity.Info);
+
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to generate due fees: {ex.Message}",
+                Severity.Error);
+        }
     }
 
    private async Task Edit(Guid id)
@@ -237,7 +469,7 @@ private async Task ViewDetails(Guid id)
         "Invoice Details",
         parameters);
 }
-    private string GetStatusText(int status)
+    private static string GetStatusText(int status)
     {
         return status switch
         {
@@ -248,4 +480,165 @@ private async Task ViewDetails(Guid id)
             _ => "Unknown"
         };
     }
+
+    private static bool HasOutstandingBalance(FeeInvoiceResponse invoice) =>
+        invoice.BalanceAmount > 0;
+
+    private static bool IsDueToday(FeeInvoiceResponse invoice) =>
+        HasOutstandingBalance(invoice) && invoice.DueDate.Date == DateTime.Today;
+
+    private static bool IsOverdue(FeeInvoiceResponse invoice) =>
+        HasOutstandingBalance(invoice) && invoice.DueDate.Date < DateTime.Today;
+
+    private static bool IsNearingDue(FeeInvoiceResponse invoice) =>
+        HasOutstandingBalance(invoice) &&
+        invoice.DueDate.Date > DateTime.Today &&
+        invoice.DueDate.Date <= DateTime.Today.AddDays(7);
+
+    private static string GetSection(FeeInvoiceResponse invoice) =>
+        invoice.Gender == "Male" ? "Boys" :
+        invoice.Gender == "Female" ? "Girls" : "Unspecified";
+
+    private static Color GetFeeStateColor(FeeInvoiceResponse invoice) =>
+        IsOverdue(invoice) ? Color.Error :
+        IsDueToday(invoice) ? Color.Warning :
+        IsNearingDue(invoice) ? Color.Info : Color.Default;
+
+    private static string GetFeeState(FeeInvoiceResponse invoice) =>
+        IsOverdue(invoice) ? "Overdue" :
+        IsDueToday(invoice) ? "Due today" :
+        IsNearingDue(invoice) ? "Due soon" : GetStatusText(invoice.Status);
+
+    private enum FeeReminderStage
+{
+    None,
+    SevenDaysBefore,
+    ThreeDaysBefore,
+    DueToday,
+    Overdue
+}
+
+private static FeeReminderStage GetReminderStage(FeeInvoiceResponse invoice)
+{
+    if (!HasOutstandingBalance(invoice))
+        return FeeReminderStage.None;
+
+    var daysUntilDue =
+        (invoice.DueDate.Date - DateTime.Today).Days;
+
+    return daysUntilDue switch
+    {
+        < 0 => FeeReminderStage.Overdue,
+        0 => FeeReminderStage.DueToday,
+        <= 3 => FeeReminderStage.ThreeDaysBefore,
+        <= 7 => FeeReminderStage.SevenDaysBefore,
+        _ => FeeReminderStage.None
+    };
+}
+
+private static bool CanSendWhatsAppReminder(FeeInvoiceResponse invoice) =>
+    GetReminderStage(invoice) != FeeReminderStage.None &&
+    !string.IsNullOrWhiteSpace(invoice.ParentPhoneNumber);
+
+private static string GetReminderButtonTitle(FeeInvoiceResponse invoice)
+{
+    return GetReminderStage(invoice) switch
+    {
+        FeeReminderStage.SevenDaysBefore =>
+            "Send 7-day fee reminder",
+
+        FeeReminderStage.ThreeDaysBefore =>
+            "Send 3-day fee reminder",
+
+        FeeReminderStage.DueToday =>
+            "Send due-today fee reminder",
+
+        FeeReminderStage.Overdue =>
+            "Send overdue fee reminder",
+
+        _ =>
+            "Send WhatsApp fee reminder"
+    };
+}
+
+private static string GetReminderStageText(FeeInvoiceResponse invoice)
+{
+    return GetReminderStage(invoice) switch
+    {
+        FeeReminderStage.SevenDaysBefore =>
+            "7-day reminder",
+
+        FeeReminderStage.ThreeDaysBefore =>
+            "3-day reminder",
+
+        FeeReminderStage.DueToday =>
+            "Due today",
+
+        FeeReminderStage.Overdue =>
+            "Overdue",
+
+        _ => string.Empty
+    };
+}
+
+private static string GetWhatsAppUrl(FeeInvoiceResponse invoice)
+{
+    var phone = new string(
+        (invoice.ParentPhoneNumber ?? string.Empty)
+            .Where(char.IsDigit)
+            .ToArray());
+
+    var stage = GetReminderStage(invoice);
+
+    var message = stage switch
+    {
+        FeeReminderStage.SevenDaysBefore =>
+            $"Assalamu Alaikum {invoice.ParentName ?? "Parent"},\n\n" +
+            $"This is a friendly reminder that the fee payment for " +
+            $"{invoice.StudentName} ({invoice.CourseName}) " +
+            $"is due in 7 days.\n\n" +
+            $"Invoice: {invoice.InvoiceNumber}\n" +
+            $"Amount Due: ₹{invoice.BalanceAmount:N2}\n" +
+            $"Due Date: {invoice.DueDate:dd MMM yyyy}\n\n" +
+            $"Kindly arrange the payment before the due date.\n\n" +
+            $"JazakAllahu Khairan.",
+
+        FeeReminderStage.ThreeDaysBefore =>
+            $"Assalamu Alaikum {invoice.ParentName ?? "Parent"},\n\n" +
+            $"This is a gentle reminder that the fee payment for " +
+            $"{invoice.StudentName} ({invoice.CourseName}) " +
+            $"is due in 3 days.\n\n" +
+            $"Invoice: {invoice.InvoiceNumber}\n" +
+            $"Amount Due: ₹{invoice.BalanceAmount:N2}\n" +
+            $"Due Date: {invoice.DueDate:dd MMM yyyy}\n\n" +
+            $"Kindly arrange the payment before the due date.\n\n" +
+            $"JazakAllahu Khairan.",
+
+        FeeReminderStage.DueToday =>
+            $"Assalamu Alaikum {invoice.ParentName ?? "Parent"},\n\n" +
+            $"This is a reminder that the fee payment for " +
+            $"{invoice.StudentName} ({invoice.CourseName}) " +
+            $"is due today.\n\n" +
+            $"Invoice: {invoice.InvoiceNumber}\n" +
+            $"Amount Due: ₹{invoice.BalanceAmount:N2}\n" +
+            $"Due Date: {invoice.DueDate:dd MMM yyyy}\n\n" +
+            $"Kindly arrange the payment today.\n\n" +
+            $"JazakAllahu Khairan.",
+
+        FeeReminderStage.Overdue =>
+            $"Assalamu Alaikum {invoice.ParentName ?? "Parent"},\n\n" +
+            $"This is a reminder that the fee payment for " +
+            $"{invoice.StudentName} ({invoice.CourseName}) " +
+            $"is overdue.\n\n" +
+            $"Invoice: {invoice.InvoiceNumber}\n" +
+            $"Outstanding Amount: ₹{invoice.BalanceAmount:N2}\n" +
+            $"Due Date: {invoice.DueDate:dd MMM yyyy}\n\n" +
+            $"Kindly arrange the payment at your earliest convenience.\n\n" +
+            $"JazakAllahu Khairan.",
+
+        _ => string.Empty
+    };
+
+    return $"https://wa.me/{phone}?text={Uri.EscapeDataString(message)}";
+}
 }

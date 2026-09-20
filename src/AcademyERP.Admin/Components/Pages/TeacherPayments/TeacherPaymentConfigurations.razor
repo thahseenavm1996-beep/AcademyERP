@@ -1,0 +1,1070 @@
+@page "/TeacherPaymentConfigurations"
+
+@using AcademyERP.Admin.Models
+@using AcademyERP.Admin.Models.Enrollments
+@using AcademyERP.Admin.Models.TeacherPayments
+@using AcademyERP.Admin.Services
+
+@inject TeacherApiService TeacherApi
+@inject EnrollmentApiService EnrollmentApi
+@inject TeacherPaymentApiService TeacherPaymentApi
+@inject ISnackbar Snackbar
+
+<PageTitle>Teacher Payment Configuration</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">
+    Teacher Payment Configuration
+</MudText>
+
+<MudPaper Class="pa-4 mb-4">
+
+    <MudText Typo="Typo.h6" Class="mb-3">
+        Add Payment Configuration
+    </MudText>
+
+    <MudGrid>
+
+        <MudItem xs="12" md="6">
+            <MudSelect T="Guid"
+                       Label="Teacher"
+                       Variant="Variant.Outlined"
+                       @bind-Value="_teacherId">
+
+                <MudSelectItem Value="Guid.Empty">
+                    Select Teacher
+                </MudSelectItem>
+
+                @foreach (var teacher in _teachers)
+                {
+                    <MudSelectItem Value="@teacher.Id">
+                        @teacher.FullName
+                    </MudSelectItem>
+                }
+
+            </MudSelect>
+        </MudItem>
+
+        <MudItem xs="12" md="6">
+            <MudSelect T="Guid"
+                       Label="Student / Enrollment"
+                       Variant="Variant.Outlined"
+                       @bind-Value="_enrollmentId">
+
+                <MudSelectItem Value="Guid.Empty">
+                    Select Enrollment
+                </MudSelectItem>
+
+                @foreach (var enrollment in FilteredEnrollments)
+                {
+                    <MudSelectItem Value="@enrollment.Id">
+                        @enrollment.StudentName - @enrollment.CourseName
+                    </MudSelectItem>
+                }
+
+            </MudSelect>
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudNumericField T="decimal"
+                             Label="Teacher Payment Amount"
+                             Variant="Variant.Outlined"
+                             Adornment="Adornment.Start"
+                             AdornmentText="₹"
+                             Min="0"
+                             @bind-Value="_paymentAmount" />
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudDatePicker Label="Effective From"
+                           Variant="Variant.Outlined"
+                           @bind-Date="_effectiveFrom" />
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudDatePicker Label="Effective To (Optional)"
+                           Variant="Variant.Outlined"
+                           @bind-Date="_effectiveTo" />
+        </MudItem>
+
+        <MudItem xs="12">
+            <MudTextField T="string"
+                          Label="Remarks"
+                          Variant="Variant.Outlined"
+                          Lines="2"
+                          @bind-Value="_remarks" />
+        </MudItem>
+
+        <MudItem xs="12">
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Save"
+                       Disabled="_saving"
+                       OnClick="SaveConfiguration">
+
+                @if (_saving)
+                {
+                    <span>Saving...</span>
+                }
+                else
+                {
+                    <span>Save Configuration</span>
+                }
+
+            </MudButton>
+
+            <MudButton Variant="Variant.Outlined"
+                       Class="ml-2"
+                       OnClick="ResetForm">
+
+                Clear
+
+            </MudButton>
+
+        </MudItem>
+
+    </MudGrid>
+
+</MudPaper>
+
+<MudPaper Class="pa-4">
+
+    <MudStack Row="true"
+              Justify="Justify.SpaceBetween"
+              AlignItems="AlignItems.Center"
+              Class="mb-3">
+
+        <MudText Typo="Typo.h6">
+            Existing Configurations
+        </MudText>
+
+        <MudButton Variant="Variant.Outlined"
+                   StartIcon="@Icons.Material.Filled.Refresh"
+                   OnClick="LoadConfigurations">
+
+            Refresh
+
+        </MudButton>
+
+    </MudStack>
+
+    <MudTable T="TeacherPaymentConfigurationResponse"
+              Items="_configurations"
+              Loading="_loading"
+              Hover="true"
+              Dense="true"
+              Striped="true">
+
+        <HeaderContent>
+
+            <MudTh>Teacher</MudTh>
+            <MudTh>Student</MudTh>
+            <MudTh>Course</MudTh>
+            <MudTh>Amount</MudTh>
+            <MudTh>Effective From</MudTh>
+            <MudTh>Effective To</MudTh>
+            <MudTh>Remarks</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Actions</MudTh>
+
+        </HeaderContent>
+
+        <RowTemplate>
+
+            <MudTd>
+                @context.TeacherName
+            </MudTd>
+
+            <MudTd>
+                @context.StudentName
+            </MudTd>
+
+            <MudTd>
+                @context.CourseName
+            </MudTd>
+
+            <MudTd>
+                ₹@context.PaymentAmount.ToString("N2")
+            </MudTd>
+
+            <MudTd>
+                @context.EffectiveFrom.ToLocalTime().ToString("dd MMM yyyy")
+            </MudTd>
+
+            <MudTd>
+                @(context.EffectiveTo.HasValue
+                    ? context.EffectiveTo.Value.ToLocalTime().ToString("dd MMM yyyy")
+                    : "Current")
+            </MudTd>
+
+            <MudTd>
+                @(string.IsNullOrWhiteSpace(context.Remarks)
+                    ? "-"
+                    : context.Remarks)
+            </MudTd>
+
+           <MudTd>
+
+    @if (context.EffectiveTo.HasValue &&
+         context.EffectiveTo.Value.Date <= DateTime.Today)
+    {
+        <MudChip T="string"
+                 Size="Size.Small"
+                 Color="Color.Error">
+            Stopped
+        </MudChip>
+    }
+    else if (context.IsPaused)
+    {
+        <MudChip T="string"
+                 Size="Size.Small"
+                 Color="Color.Warning">
+            Paused
+        </MudChip>
+    }
+    else
+    {
+        <MudChip T="string"
+                 Size="Size.Small"
+                 Color="Color.Success">
+            Active
+        </MudChip>
+    }
+
+</MudTd>
+
+           <MudTd>
+
+    @if (!context.EffectiveTo.HasValue ||
+         context.EffectiveTo.Value.Date > DateTime.Today)
+    {
+        @if (context.IsPaused)
+        {
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Success"
+                       Size="Size.Small"
+                       StartIcon="@Icons.Material.Filled.PlayArrow"
+                       OnClick="@(() => OpenResumeDialog(context))">
+
+                Resume
+
+            </MudButton>
+        }
+        else
+        {
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Warning"
+                       Size="Size.Small"
+                       StartIcon="@Icons.Material.Filled.PauseCircle"
+                       OnClick="@(() => OpenPauseDialog(context))">
+
+                Pause
+
+            </MudButton>
+        }
+
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Error"
+                   Size="Size.Small"
+                   Class="ml-1"
+                   StartIcon="@Icons.Material.Filled.StopCircle"
+                   OnClick="@(() => OpenStopDialog(context))">
+
+            Stop
+
+        </MudButton>
+    }
+
+    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                   Color="Color.Error"
+                   Size="Size.Small"
+                   Class="ml-1"
+                   OnClick="@(() => DeleteConfiguration(context))" />
+
+</MudTd>
+        </RowTemplate>
+
+        <NoRecordsContent>
+
+            <MudText Class="pa-4">
+                No teacher payment configurations found.
+            </MudText>
+
+        </NoRecordsContent>
+
+    </MudTable>
+
+    <MudDialog @bind-Visible="_stopDialogOpen">
+
+        <TitleContent>
+
+            <MudText Typo="Typo.h6">
+                Stop Teacher Payment Configuration
+            </MudText>
+
+        </TitleContent>
+
+        <DialogContent>
+
+            @if (_stoppingConfiguration != null)
+            {
+                <MudAlert Severity="Severity.Warning" Class="mb-4">
+
+                    <strong>
+                        @_stoppingConfiguration.TeacherName
+                    </strong>
+                    -
+                    @_stoppingConfiguration.StudentName
+
+                    <br />
+
+                    The selected date will be the
+                    <strong>first non-payment day</strong>.
+
+                    <br />
+
+                    Payment will be calculated through the previous day.
+
+                </MudAlert>
+            }
+
+            <MudDatePicker Label="Stop Date"
+                           @bind-Date="_stopDate"
+                           MinDate="_minimumStopDate"
+                           Required="true"
+                           DateFormat="dd MMM yyyy"
+                           Variant="Variant.Outlined" />
+
+        </DialogContent>
+
+        <DialogActions>
+
+            <MudButton Variant="Variant.Text"
+                       OnClick="CloseStopDialog">
+
+                Cancel
+
+            </MudButton>
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Error"
+                       Disabled="@(!_stopDate.HasValue || _stoppingConfigurationId == Guid.Empty)"
+                       OnClick="ConfirmStopConfiguration">
+
+                Stop Configuration
+
+            </MudButton>
+
+        </DialogActions>
+
+    </MudDialog>
+
+    <MudDialog @bind-Visible="_pauseDialogOpen">
+
+    <TitleContent>
+
+        <MudText Typo="Typo.h6">
+            Pause Teacher Payment
+        </MudText>
+
+    </TitleContent>
+
+    <DialogContent>
+
+        @if (_pausingConfiguration != null)
+        {
+            <MudAlert Severity="Severity.Warning"
+                      Class="mb-4">
+
+                <strong>
+                    @_pausingConfiguration.TeacherName
+                </strong>
+                -
+                @_pausingConfiguration.StudentName
+
+                <br />
+
+                Salary generation will be temporarily paused
+                from the selected date.
+
+                <br />
+
+                The paused period will not be treated as
+                teacher absence.
+
+            </MudAlert>
+        }
+
+        <MudDatePicker Label="Pause From"
+                       @bind-Date="_pauseStartDate"
+                       MinDate="_minimumPauseDate"
+                       Required="true"
+                       DateFormat="dd MMM yyyy"
+                       Variant="Variant.Outlined" />
+
+        <MudTextField T="string"
+                      Label="Reason"
+                      Variant="Variant.Outlined"
+                      Lines="2"
+                      Class="mt-3"
+                      @bind-Value="_pauseReason" />
+
+    </DialogContent>
+
+    <DialogActions>
+
+        <MudButton Variant="Variant.Text"
+                   OnClick="ClosePauseDialog">
+
+            Cancel
+
+        </MudButton>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Warning"
+                   Disabled="@(!_pauseStartDate.HasValue ||
+                               _pausingConfigurationId == Guid.Empty)"
+                   OnClick="ConfirmPauseConfiguration">
+
+            Pause Payment
+
+        </MudButton>
+
+    </DialogActions>
+
+</MudDialog>
+
+<MudDialog @bind-Visible="_resumeDialogOpen">
+
+    <TitleContent>
+
+        <MudText Typo="Typo.h6">
+            Resume Teacher Payment
+        </MudText>
+
+    </TitleContent>
+
+    <DialogContent>
+
+        @if (_resumingConfiguration != null)
+        {
+            <MudAlert Severity="Severity.Info"
+                      Class="mb-4">
+
+                <strong>
+                    @_resumingConfiguration.TeacherName
+                </strong>
+                -
+                @_resumingConfiguration.StudentName
+
+                <br />
+
+                Payment generation will continue from the
+                selected resume date.
+
+            </MudAlert>
+        }
+
+        <MudDatePicker Label="Resume From"
+                       @bind-Date="_resumeDate"
+                       MinDate="_minimumResumeDate"
+                       Required="true"
+                       DateFormat="dd MMM yyyy"
+                       Variant="Variant.Outlined" />
+
+    </DialogContent>
+
+    <DialogActions>
+
+        <MudButton Variant="Variant.Text"
+                   OnClick="CloseResumeDialog">
+
+            Cancel
+
+        </MudButton>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Success"
+                   Disabled="@(!_resumeDate.HasValue ||
+                               _resumingConfigurationId == Guid.Empty)"
+                   OnClick="ConfirmResumeConfiguration">
+
+            Resume Payment
+
+        </MudButton>
+
+    </DialogActions>
+
+</MudDialog>
+
+</MudPaper>
+
+@code
+{
+    private List<TeacherResponse> _teachers = new();
+    private List<EnrollmentResponse> _enrollments = new();
+    private List<TeacherPaymentConfigurationResponse> _configurations = new();
+
+    private Guid _teacherId = Guid.Empty;
+    private Guid _enrollmentId = Guid.Empty;
+
+    private decimal _paymentAmount;
+    private DateTime? _effectiveFrom = DateTime.Today;
+    private DateTime? _effectiveTo;
+    private string? _remarks;
+
+    private bool _loading;
+    private bool _saving;
+
+    private bool _stopDialogOpen;
+    private Guid _stoppingConfigurationId;
+    private DateTime? _stopDate;
+    private DateTime? _minimumStopDate;
+
+    private bool _pauseDialogOpen;
+private bool _resumeDialogOpen;
+
+private Guid _pausingConfigurationId;
+private Guid _resumingConfigurationId;
+
+private DateTime? _pauseStartDate;
+private DateTime? _minimumPauseDate;
+
+private DateTime? _resumeDate;
+private DateTime? _minimumResumeDate;
+
+private string? _pauseReason;
+
+private TeacherPaymentConfigurationResponse?
+    _pausingConfiguration;
+
+private TeacherPaymentConfigurationResponse?
+    _resumingConfiguration;
+
+    private TeacherPaymentConfigurationResponse? _stoppingConfiguration;
+
+    private IEnumerable<EnrollmentResponse> FilteredEnrollments =>
+        _teacherId == Guid.Empty
+            ? Enumerable.Empty<EnrollmentResponse>()
+            : _enrollments.Where(x =>
+                x.TeacherId == _teacherId);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _loading = true;
+
+        try
+        {
+            var teacherTask = TeacherApi.GetTeachersAsync(
+                new TeacherQueryRequest
+                {
+                    Page = 1,
+                    PageSize = 500
+                });
+
+            var enrollmentTask = EnrollmentApi.GetAllAsync();
+            var configurationTask = TeacherPaymentApi.GetConfigurationsAsync();
+
+            await Task.WhenAll(
+                teacherTask,
+                enrollmentTask,
+                configurationTask);
+
+            var teacherResponse = await teacherTask;
+
+            _teachers = teacherResponse?.Data.Items ?? new();
+            _enrollments = await enrollmentTask;
+            _configurations = await configurationTask;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Failed to load teacher payment data: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task LoadConfigurations()
+    {
+        try
+        {
+            _configurations =
+                await TeacherPaymentApi.GetConfigurationsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Failed to load configurations: {ex.Message}",
+                Severity.Error);
+        }
+    }
+
+    private async Task SaveConfiguration()
+    {
+        if (_teacherId == Guid.Empty)
+        {
+            Snackbar.Add(
+                "Please select a teacher.",
+                Severity.Warning);
+
+            return;
+        }
+
+        if (_enrollmentId == Guid.Empty)
+        {
+            Snackbar.Add(
+                "Please select an enrollment.",
+                Severity.Warning);
+
+            return;
+        }
+
+        if (_paymentAmount < 0)
+        {
+            Snackbar.Add(
+                "Payment amount cannot be negative.",
+                Severity.Warning);
+
+            return;
+        }
+
+        if (!_effectiveFrom.HasValue)
+        {
+            Snackbar.Add(
+                "Please select an effective-from date.",
+                Severity.Warning);
+
+            return;
+        }
+
+        if (_effectiveTo.HasValue &&
+            _effectiveTo.Value.Date < _effectiveFrom.Value.Date)
+        {
+            Snackbar.Add(
+                "Effective-to date cannot be before effective-from date.",
+                Severity.Warning);
+
+            return;
+        }
+
+        _saving = true;
+
+        try
+        {
+            var request = new CreateTeacherPaymentConfigurationRequest
+            {
+                TeacherId = _teacherId,
+                EnrollmentId = _enrollmentId,
+                PaymentAmount = _paymentAmount,
+                EffectiveFrom = _effectiveFrom.Value,
+                EffectiveTo = _effectiveTo,
+                Remarks = _remarks
+            };
+
+            var result =
+                await TeacherPaymentApi.CreateConfigurationAsync(request);
+
+            if (result is null)
+            {
+                Snackbar.Add(
+                    "Unable to create payment configuration.",
+                    Severity.Error);
+
+                return;
+            }
+
+            Snackbar.Add(
+                "Teacher payment configuration saved successfully.",
+                Severity.Success);
+
+            ResetForm();
+
+            await LoadConfigurations();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Failed to save configuration: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task DeleteConfiguration(
+        TeacherPaymentConfigurationResponse configuration)
+    {
+        var success =
+            await TeacherPaymentApi.DeleteConfigurationAsync(
+                configuration.Id);
+
+        if (success)
+        {
+            Snackbar.Add(
+                "Configuration deleted successfully.",
+                Severity.Success);
+
+            await LoadConfigurations();
+        }
+        else
+        {
+            Snackbar.Add(
+                "Unable to delete configuration. It may already have payment history.",
+                Severity.Error);
+        }
+    }
+
+    private void ResetForm()
+    {
+        _teacherId = Guid.Empty;
+        _enrollmentId = Guid.Empty;
+        _paymentAmount = 0;
+        _effectiveFrom = DateTime.Today;
+        _effectiveTo = null;
+        _remarks = null;
+    }
+
+
+    private void OpenPauseDialog(
+    TeacherPaymentConfigurationResponse configuration)
+{
+    if (configuration.EffectiveTo.HasValue &&
+        configuration.EffectiveTo.Value.Date <= DateTime.Today)
+    {
+        Snackbar.Add(
+            "This configuration has already been stopped.",
+            Severity.Info);
+
+        return;
+    }
+
+    if (configuration.IsPaused)
+    {
+        Snackbar.Add(
+            "This configuration is already paused.",
+            Severity.Info);
+
+        return;
+    }
+
+    _pausingConfiguration = configuration;
+    _pausingConfigurationId = configuration.Id;
+
+    var effectiveFrom =
+        configuration.EffectiveFrom.Date;
+
+    var today = DateTime.Today;
+
+    _minimumPauseDate =
+        effectiveFrom > today
+            ? effectiveFrom
+            : today;
+
+    _pauseStartDate = _minimumPauseDate;
+    _pauseReason = null;
+
+    _pauseDialogOpen = true;
+}
+
+
+private void ClosePauseDialog()
+{
+    _pauseDialogOpen = false;
+
+    _pausingConfigurationId = Guid.Empty;
+    _pausingConfiguration = null;
+
+    _pauseStartDate = null;
+    _minimumPauseDate = null;
+
+    _pauseReason = null;
+}
+
+
+private async Task ConfirmPauseConfiguration()
+{
+    if (!_pauseStartDate.HasValue)
+    {
+        Snackbar.Add(
+            "Please select a pause date.",
+            Severity.Warning);
+
+        return;
+    }
+
+    if (_pausingConfigurationId == Guid.Empty)
+    {
+        Snackbar.Add(
+            "No payment configuration was selected.",
+            Severity.Error);
+
+        return;
+    }
+
+    try
+    {
+        var selectedDate =
+            _pauseStartDate.Value.Date;
+
+        var result =
+            await TeacherPaymentApi.PauseConfigurationAsync(
+                _pausingConfigurationId,
+                selectedDate,
+                _pauseReason);
+
+        if (result == null)
+        {
+            Snackbar.Add(
+                "Failed to pause the payment configuration.",
+                Severity.Error);
+
+            return;
+        }
+
+        ClosePauseDialog();
+
+        Snackbar.Add(
+            $"Teacher payment paused from {selectedDate:dd MMM yyyy}.",
+            Severity.Success);
+
+        await LoadConfigurations();
+    }
+    catch (Exception ex)
+    {
+        Snackbar.Add(
+            $"Failed to pause configuration: {ex.Message}",
+            Severity.Error);
+    }
+}
+
+private void OpenResumeDialog(
+    TeacherPaymentConfigurationResponse configuration)
+{
+    if (!configuration.IsPaused)
+    {
+        Snackbar.Add(
+            "This configuration is not currently paused.",
+            Severity.Info);
+
+        return;
+    }
+
+    _resumingConfiguration = configuration;
+    _resumingConfigurationId = configuration.Id;
+
+    var pauseStart =
+        configuration.PauseStartDate?.Date
+        ?? DateTime.Today;
+
+    _minimumResumeDate =
+        pauseStart.AddDays(1);
+
+    _resumeDate = _minimumResumeDate;
+
+    _resumeDialogOpen = true;
+}
+
+
+private void CloseResumeDialog()
+{
+    _resumeDialogOpen = false;
+
+    _resumingConfigurationId = Guid.Empty;
+    _resumingConfiguration = null;
+
+    _resumeDate = null;
+    _minimumResumeDate = null;
+}
+
+
+private async Task ConfirmResumeConfiguration()
+{
+    if (!_resumeDate.HasValue)
+    {
+        Snackbar.Add(
+            "Please select a resume date.",
+            Severity.Warning);
+
+        return;
+    }
+
+    if (_resumingConfigurationId == Guid.Empty)
+    {
+        Snackbar.Add(
+            "No payment configuration was selected.",
+            Severity.Error);
+
+        return;
+    }
+
+    if (_minimumResumeDate.HasValue &&
+        _resumeDate.Value.Date <
+        _minimumResumeDate.Value.Date)
+    {
+        Snackbar.Add(
+            "Resume date must be after the pause start date.",
+            Severity.Error);
+
+        return;
+    }
+
+    try
+    {
+        var selectedDate =
+            _resumeDate.Value.Date;
+
+        var result =
+            await TeacherPaymentApi.ResumeConfigurationAsync(
+                _resumingConfigurationId,
+                selectedDate);
+
+        if (result == null)
+        {
+            Snackbar.Add(
+                "Failed to resume the payment configuration.",
+                Severity.Error);
+
+            return;
+        }
+
+        CloseResumeDialog();
+
+        Snackbar.Add(
+            $"Teacher payment resumed from {selectedDate:dd MMM yyyy}.",
+            Severity.Success);
+
+        await LoadConfigurations();
+    }
+    catch (Exception ex)
+    {
+        Snackbar.Add(
+            $"Failed to resume configuration: {ex.Message}",
+            Severity.Error);
+    }
+}
+
+    private void OpenStopDialog(
+        TeacherPaymentConfigurationResponse configuration)
+    {
+        if (configuration.EffectiveTo.HasValue &&
+            configuration.EffectiveTo.Value.Date <= DateTime.Today)
+        {
+            Snackbar.Add(
+                "This configuration has already been stopped.",
+                Severity.Info);
+
+            return;
+        }
+
+        _stoppingConfiguration = configuration;
+        _stoppingConfigurationId = configuration.Id;
+
+        var effectiveFrom = configuration.EffectiveFrom.Date;
+        var today = DateTime.Today;
+
+        /*
+         * Stop date is the FIRST non-payment day.
+         *
+         * Therefore:
+         * Stop Date = 5 Oct
+         * Payment is payable through = 4 Oct
+         */
+        _minimumStopDate =
+            effectiveFrom > today
+                ? effectiveFrom
+                : today;
+
+        _stopDate = _minimumStopDate;
+
+        _stopDialogOpen = true;
+    }
+
+    private void CloseStopDialog()
+    {
+        _stopDialogOpen = false;
+        _stoppingConfigurationId = Guid.Empty;
+        _stoppingConfiguration = null;
+        _stopDate = null;
+        _minimumStopDate = null;
+    }
+
+    private async Task ConfirmStopConfiguration()
+    {
+        if (!_stopDate.HasValue)
+        {
+            Snackbar.Add(
+                "Please select a stop date.",
+                Severity.Warning);
+
+            return;
+        }
+
+        if (_stoppingConfigurationId == Guid.Empty)
+        {
+            Snackbar.Add(
+                "No payment configuration was selected.",
+                Severity.Error);
+
+            return;
+        }
+
+        if (_minimumStopDate.HasValue &&
+            _stopDate.Value.Date < _minimumStopDate.Value.Date)
+        {
+            Snackbar.Add(
+                "Stop date cannot be before the configuration start date.",
+                Severity.Error);
+
+            return;
+        }
+
+        try
+        {
+            var selectedStopDate = _stopDate.Value.Date;
+
+            var result =
+                await TeacherPaymentApi.StopConfigurationAsync(
+                    _stoppingConfigurationId,
+                    selectedStopDate);
+
+            if (result == null)
+            {
+                Snackbar.Add(
+                    "Failed to stop the payment configuration.",
+                    Severity.Error);
+
+                return;
+            }
+
+            _stopDialogOpen = false;
+
+            Snackbar.Add(
+                $"Payment configuration stopped from {selectedStopDate:dd MMM yyyy}.",
+                Severity.Success);
+
+            _stoppingConfigurationId = Guid.Empty;
+            _stoppingConfiguration = null;
+            _stopDate = null;
+            _minimumStopDate = null;
+
+            await LoadConfigurations();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Failed to stop configuration: {ex.Message}",
+                Severity.Error);
+        }
+    }
+}

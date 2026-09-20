@@ -61,17 +61,52 @@ public class AdmissionApplicationService : IAdmissionApplicationService
     public async Task<AdmissionApplicationResponse?> UpdateStatusAsync(
     Guid id,
     AdmissionStatus status)
+{
+    var application = await _repository
+        .Query()
+        .Include(x => x.Program)
+        .Include(x => x.Course)
+        .FirstOrDefaultAsync(x =>
+            x.Id == id &&
+            !x.IsDeleted);
+
+    if (application == null)
+        return null;
+
+    var previousStatus = application.Status;
+
+    application.Status = status;
+
+    // Demo has just started
+    if (status == AdmissionStatus.DemoStarted &&
+        previousStatus != AdmissionStatus.DemoStarted)
     {
-        var application = await _repository.GetByIdAsync(id);
-
-        if (application == null)
-            return null;
-
-        application.Status = status;
-
-        await _repository.UpdateAsync(application);
-
-        return _mapper.Map<AdmissionApplicationResponse>(
-            application);
+        application.DemoStartedAt = DateTime.UtcNow;
+        application.DemoFeeReminderSentAt = null;
     }
+
+    await _repository.UpdateAsync(application);
+
+    return _mapper.Map<AdmissionApplicationResponse>(application);
+}
+
+public async Task<bool> MarkAsViewedAsync(Guid id)
+{
+    var application = await _repository
+        .Query()
+        .FirstOrDefaultAsync(x =>
+            x.Id == id &&
+            !x.IsDeleted);
+
+    if (application == null)
+        return false;
+
+    if (application.ViewedByAdminAt == null)
+    {
+        application.ViewedByAdminAt = DateTime.UtcNow;
+        await _repository.UpdateAsync(application);
+    }
+
+    return true;
+}
 }

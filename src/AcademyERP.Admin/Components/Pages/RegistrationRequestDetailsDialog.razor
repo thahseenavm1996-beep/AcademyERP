@@ -10,6 +10,8 @@
 @inject CourseApiService CourseApi
 @inject TeacherApiService TeacherApi
 @inject LookupApiService LookupApi
+@inject ISnackbar Snackbar
+@inject TeachingScheduleApiService TeachingScheduleApi
 
 <MudDialog>
 
@@ -41,122 +43,173 @@
 
             <MudText>
                 Status:
-                @(_request.Status switch
-                {
-                    1 => "Pending",
-                    2 => "Approved",
-                    3 => "Rejected",
-                    _ => "Unknown"
-                })
+                @GetStatusText(_request.Status)
             </MudText>
 
-            <MudText Typo="Typo.h6">
+            <MudText Typo="Typo.h6" Class="mt-4 mb-3">
                 Students
             </MudText>
 
-           @foreach (var student in _request.Students)
-{
-    var approval = _studentApprovals
-        .FirstOrDefault(x => x.RegistrationStudentId == student.Id);
+            @foreach (var student in _request.Students)
+            {
+                var approval = _studentApprovals
+                    .FirstOrDefault(x =>
+                        x.RegistrationStudentId == student.Id);
 
-    if (approval == null)
-    {
-        continue;
-    }
+                if (approval == null)
+                {
+                    continue;
+                }
 
-    <MudPaper Class="pa-3 mb-4">
+                <MudPaper Class="pa-4 mb-4"
+                          Outlined="true">
 
-                    <MudText Typo="Typo.h6">
+                    <MudText Typo="Typo.h6" Class="mb-2">
                         @student.StudentName
                     </MudText>
 
-                    <MudText>
+                    <MudText Typo="Typo.body2">
+                        Gender: @GetGenderText(student.Gender)
+                    </MudText>
+
+                    <MudText Typo="Typo.body2">
                         Program: @student.ProgramName
                     </MudText>
-                    @if (!string.IsNullOrWhiteSpace(student.CourseName))
-{
-    <MudText>
-        Course: @student.CourseName
-    </MudText>
-}
 
-@if (!string.IsNullOrWhiteSpace(student.PreferredTime))
-{
-    <MudText>
-        Preferred Time: @student.PreferredTime
-    </MudText>
-}
-                    <MudText>
-    Preferred Time:
-    @(string.IsNullOrWhiteSpace(student.PreferredTime)
-        ? "Not specified"
-        : student.PreferredTime)
-</MudText>
+                    @if (!string.IsNullOrWhiteSpace(student.PreferredTime))
+                    {
+                        <MudText Typo="Typo.body2">
+                            Preferred Time: @student.PreferredTime
+                        </MudText>
+                    }
 
-@if (!string.IsNullOrWhiteSpace(student.CourseName))
-{
-    <MudText>
-        Selected Course: @student.CourseName
-    </MudText>
-}
+                    <MudDivider Class="my-3" />
 
-
+                    <!-- COURSE -->
                     <MudSelect T="Guid?"
                                Label="Course"
-                               @bind-Value="approval.CourseId" Disabled="@(_request?.Status != 1)">
+                               Variant="Variant.Outlined"
+                               @bind-Value="approval.CourseId"
+                               Disabled="@(_request.Status != 1)"
+                               Class="mb-3">
 
                         @foreach (var course in _courses
-                                     .Where(x => x.ProgramId == student.ProgramId))
+                            .Where(x => x.ProgramId == student.ProgramId))
                         {
                             <MudSelectItem T="Guid?"
-               Value="@((Guid?)course.Id)">
-    @course.CourseName
-</MudSelectItem>
+                                           Value="@((Guid?)course.Id)">
+                                @course.CourseName
+                            </MudSelectItem>
                         }
 
                     </MudSelect>
 
-                   <MudSelect T="Guid?"
-           Label="Teacher"
-           @bind-Value="approval.TeacherId" Disabled="@(_request?.Status != 1)">
-
-    @foreach (var teacher in _teachers)
-    {
-        <MudSelectItem T="Guid?"
-                       Value="@((Guid?)teacher.Id)">
-            @teacher.FullName
-        </MudSelectItem>
-    }
-
-</MudSelect>
-
+                    <!-- TIME SLOT -->
                     <MudSelect T="Guid?"
                                Label="Time Slot"
-                               @bind-Value="approval.TimeSlotId" Disabled="@(_request?.Status != 1)">
+                               Variant="Variant.Outlined"
+                               @bind-Value="approval.TimeSlotId"
+                               Disabled="@(_request.Status != 1)"
+                               Class="mb-3">
 
                         @foreach (var slot in _timeSlots)
                         {
-                           <MudSelectItem T="Guid?"
-               Value="@((Guid?)slot.Id)">
-    @slot.Name
-</MudSelectItem>
+                            <MudSelectItem T="Guid?"
+                                           Value="@((Guid?)slot.Id)">
+                                @slot.Name
+                            </MudSelectItem>
                         }
 
                     </MudSelect>
 
+                    <!-- CLASS DURATION -->
                     <MudSelect T="Guid?"
                                Label="Class Duration"
-                               @bind-Value="approval.ClassDurationId" Disabled="@(_request?.Status != 1)">
+                               Variant="Variant.Outlined"
+                               @bind-Value="approval.ClassDurationId"
+                               Disabled="@(_request.Status != 1)"
+                               Class="mb-3">
 
                         @foreach (var duration in _classDurations)
                         {
                             <MudSelectItem T="Guid?"
-               Value="@((Guid?)duration.Id)">
-    @duration.Name
-</MudSelectItem>
+                                           Value="@((Guid?)duration.Id)">
+                                @duration.Name
+                            </MudSelectItem>
                         }
 
                     </MudSelect>
+
+                    <!-- DAYS -->
+                    <MudSelect T="DayOfWeek"
+                               Label="Days Of Week"
+                               Variant="Variant.Outlined"
+                               Required="true"
+                               MultiSelection="true"
+                               SelectedValues="@approval.DaysOfWeek"
+                               SelectedValuesChanged="@(days => OnDaysChanged(approval, days))"
+                               Disabled="@(_request.Status != 1)"
+                               Class="mb-4">
+
+                        @foreach (var day in Enum.GetValues<DayOfWeek>())
+                        {
+                            <MudSelectItem T="DayOfWeek"
+                                           Value="@day">
+                                @day
+                            </MudSelectItem>
+                        }
+
+                    </MudSelect>
+
+                    @if (approval.DaysOfWeek.Count > 0)
+                    {
+                        <MudText Typo="Typo.caption"
+                                 Color="Color.Secondary"
+                                 Class="mb-3">
+
+                            @approval.DaysOfWeek.Count day(s) selected
+
+                        </MudText>
+                    }
+
+                    <!-- TEACHER -->
+                    <MudSelect T="Guid?"
+                               Label="Teacher"
+                               Variant="Variant.Outlined"
+                               @bind-Value="approval.TeacherId"
+                               Disabled="@(_request.Status != 1)"
+                               Class="mb-2">
+
+                        @foreach (var teacher in GetAvailableTeachers(
+                            student,
+                            approval))
+                        {
+                            <MudSelectItem T="Guid?"
+                                           Value="@((Guid?)teacher.Id)">
+
+                                @teacher.FullName
+
+                            </MudSelectItem>
+                        }
+
+                    </MudSelect>
+
+                    @if (approval.TimeSlotId.HasValue &&
+                         approval.DaysOfWeek.Count > 0)
+                    {
+                        var availableTeacherCount =
+                            GetAvailableTeachers(
+                                student,
+                                approval).Count;
+
+                        <MudText Typo="Typo.caption"
+                                 Color="Color.Secondary">
+
+                            @availableTeacherCount teacher(s) available
+for the selected time slot and days.
+
+                        </MudText>
+                    }
 
                 </MudPaper>
             }
@@ -166,30 +219,39 @@
 
     <DialogActions>
 
-    @if (_request?.Status == 1)
-    {
-        <MudButton Color="Color.Success"
-                   OnClick="Approve">
-            APPROVE
+        @if (_request?.Status == 1)
+        {
+            <MudButton Color="Color.Success"
+                       Variant="Variant.Filled"
+                       OnClick="Approve">
+
+                APPROVE
+
+            </MudButton>
+
+            <MudButton Color="Color.Error"
+                       Variant="Variant.Outlined"
+                       OnClick="Reject">
+
+                REJECT
+
+            </MudButton>
+        }
+        else if (_request != null)
+        {
+            <MudChip T="string"
+                     Color="Color.Success">
+
+                @GetStatusText(_request.Status)
+
+            </MudChip>
+        }
+
+        <MudButton OnClick="Close">
+            Close
         </MudButton>
 
-        <MudButton Color="Color.Error"
-                   OnClick="Reject">
-            REJECT
-        </MudButton>
-    }
-    else if (_request != null)
-    {
-        <MudChip T="string" Color="Color.Success">
-            @GetStatusText(_request.Status)
-        </MudChip>
-    }
-
-    <MudButton OnClick="Close">
-        Close
-    </MudButton>
-
-</DialogActions>
+    </DialogActions>
 
 </MudDialog>
 
@@ -197,6 +259,9 @@
 
     [Parameter]
     public Guid RequestId { get; set; }
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
 
     private RegistrationRequestResponse? _request;
 
@@ -209,95 +274,321 @@
     private List<TimeSlotResponse> _timeSlots = new();
 
     private List<ClassDurationResponse> _classDurations = new();
+    private List<TeachingScheduleResponse> _existingTeachingSchedules = new();
 
     protected override async Task OnInitializedAsync()
     {
-        _request =
-            await Api.GetByIdAsync(RequestId);
-if (_request != null)
-{
-    foreach (var student in _request.Students)
-    {
-        Console.WriteLine(
-            $"{student.StudentName} | " +
-            $"{student.CourseId} | " +
-            $"{student.CourseName} | " +
-            $"{student.PreferredTime}");
-    }
-}
-
-        _courses =
-            await CourseApi.GetAllAsync();
-
-        var teachersResult =
-            await TeacherApi.GetTeachersAsync(
-                new TeacherQueryRequest
-                {
-                    Page = 1,
-                    PageSize = 1000
-                });
-
-        _teachers =
-            teachersResult?.Data?.Items ?? new();
-
-        _timeSlots =
-            await LookupApi.GetTimeSlotsAsync();
-
-        _classDurations =
-            await LookupApi.GetClassDurationsAsync();
-
-        if (_request != null)
+        try
         {
-           _studentApprovals =
-    _request.Students
-        .Select(x =>
-            new StudentApprovalModel
-            {
-                RegistrationStudentId = x.Id,
+            _request =
+                await Api.GetByIdAsync(RequestId);
 
-                CourseId = x.CourseId,
-                TeacherId = x.TeacherId,
-                TimeSlotId = x.TimeSlotId,
-                ClassDurationId = x.ClassDurationId
-            })
-        .ToList();
+          _courses =
+    await CourseApi.GetAllAsync();
+
+var teachersResult =
+    await TeacherApi.GetTeachersAsync(
+        new TeacherQueryRequest
+        {
+            Page = 1,
+            PageSize = 1000
+        });
+
+_teachers =
+    teachersResult?.Data?.Items ?? new();
+
+var schedules =
+    await TeachingScheduleApi.GetAllAsync();
+
+_existingTeachingSchedules =
+    schedules ?? new();
+
+_timeSlots =
+    await LookupApi.GetTimeSlotsAsync();
+            _teachers =
+                teachersResult?.Data?.Items ?? new();
+
+            _timeSlots =
+                await LookupApi.GetTimeSlotsAsync();
+
+            _classDurations =
+                await LookupApi.GetClassDurationsAsync();
+
+            if (_request != null)
+            {
+                _studentApprovals =
+                    _request.Students
+                        .Select(x =>
+                        {
+                            return new StudentApprovalModel
+                            {
+                                RegistrationStudentId = x.Id,
+
+                                CourseId = x.CourseId,
+
+                                TeacherId = x.TeacherId,
+
+                                TimeSlotId = x.TimeSlotId,
+
+                                ClassDurationId =
+                                    x.ClassDurationId,
+
+                                DaysOfWeek =
+                                    new List<DayOfWeek>()
+                            };
+                        })
+                        .ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to load registration request: {ex.Message}",
+                Severity.Error);
         }
     }
 
-    [CascadingParameter]
-    private IMudDialogInstance MudDialog { get; set; } = default!;
+    private void OnDaysChanged(
+        StudentApprovalModel approval,
+        IEnumerable<DayOfWeek> days)
+    {
+        approval.DaysOfWeek =
+            days
+                .Distinct()
+                .ToList();
+
+        // Teacher must be selected again if days change.
+        approval.TeacherId = null;
+    }
+
+    private List<TeacherResponse> GetAvailableTeachers(
+    RegistrationStudentResponse student,
+    StudentApprovalModel approval)
+{
+    if (!approval.TimeSlotId.HasValue ||
+        approval.DaysOfWeek.Count == 0)
+    {
+        return new();
+    }
+
+    return _teachers
+        .Where(t => t.IsActive)
+
+        // Teacher must be available on EVERY selected day
+        // at the selected time slot.
+        .Where(t =>
+            approval.DaysOfWeek.All(day =>
+                t.Availability.Any(a =>
+                    a.DayOfWeek == day &&
+                    a.TimeSlotId == approval.TimeSlotId.Value)))
+
+        // Teacher must not have an existing
+        // overlapping teaching schedule.
+        .Where(t =>
+            approval.DaysOfWeek.All(day =>
+                !HasScheduleConflict(
+                    t.Id,
+                    day,
+                    approval)))
+
+        .OrderBy(t => t.FullName)
+        .ToList();
+}
+
+private bool HasScheduleConflict(
+    Guid teacherId,
+    DayOfWeek day,
+    StudentApprovalModel approval)
+{
+    if (!approval.TimeSlotId.HasValue)
+        return false;
+
+    var timeSlot = _timeSlots
+        .FirstOrDefault(x =>
+            x.Id == approval.TimeSlotId.Value);
+
+    if (timeSlot == null)
+        return false;
+
+    var requestedStart =
+        timeSlot.StartTime.ToTimeSpan();
+
+    var requestedEnd =
+        timeSlot.EndTime.ToTimeSpan();
+
+    return _existingTeachingSchedules.Any(schedule =>
+    {
+        if (schedule.TeacherId != teacherId)
+            return false;
+
+        if (schedule.DayOfWeek != day)
+            return false;
+
+        var existingStart =
+            schedule.StartTime.ToTimeSpan();
+
+        var existingEnd =
+            schedule.EndTime.ToTimeSpan();
+
+        return existingStart < requestedEnd &&
+               existingEnd > requestedStart;
+    });
+}
+
+    private async Task Approve()
+    {
+        if (_request == null)
+        {
+            return;
+        }
+
+        foreach (var student in _request.Students)
+        {
+            var approval =
+                _studentApprovals.FirstOrDefault(
+                    x =>
+                        x.RegistrationStudentId ==
+                        student.Id);
+
+            if (approval == null)
+            {
+                continue;
+            }
+
+            if (!approval.CourseId.HasValue)
+            {
+                Snackbar.Add(
+                    $"Please select a course for {student.StudentName}.",
+                    Severity.Warning);
+
+                return;
+            }
+
+            if (!approval.TimeSlotId.HasValue)
+            {
+                Snackbar.Add(
+                    $"Please select a time slot for {student.StudentName}.",
+                    Severity.Warning);
+
+                return;
+            }
+
+            if (!approval.ClassDurationId.HasValue)
+            {
+                Snackbar.Add(
+                    $"Please select a class duration for {student.StudentName}.",
+                    Severity.Warning);
+
+                return;
+            }
+
+            if (approval.DaysOfWeek.Count == 0)
+            {
+                Snackbar.Add(
+                    $"Please select at least one day for {student.StudentName}.",
+                    Severity.Warning);
+
+                return;
+            }
+
+            if (!approval.TeacherId.HasValue)
+            {
+                Snackbar.Add(
+                    $"Please select an available teacher for {student.StudentName}.",
+                    Severity.Warning);
+
+                return;
+            }
+
+            var availableTeachers =
+                GetAvailableTeachers(
+                    student,
+                    approval);
+
+            if (!availableTeachers.Any(
+                    x =>
+                        x.Id ==
+                        approval.TeacherId.Value))
+            {
+                Snackbar.Add(
+                    $"The selected teacher is not available for {student.StudentName}'s selected time and days.",
+                    Severity.Error);
+
+                return;
+            }
+        }
+
+        try
+        {
+            await Api.ApproveAsync(
+                RequestId,
+                _studentApprovals);
+
+            Snackbar.Add(
+                "Registration approved successfully.",
+                Severity.Success);
+
+            MudDialog.Close(
+                DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                ex.Message,
+                Severity.Error);
+        }
+    }
+
+    private async Task Reject()
+    {
+        try
+        {
+            await Api.RejectAsync(
+                RequestId,
+                "Rejected by admin");
+
+            Snackbar.Add(
+                "Registration rejected.",
+                Severity.Success);
+
+            MudDialog.Close(
+                DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                ex.Message,
+                Severity.Error);
+        }
+    }
 
     private void Close()
     {
         MudDialog.Cancel();
     }
 
-    private async Task Approve()
-{
-    await Api.ApproveAsync(
-        RequestId,
-        _studentApprovals);
-
-    MudDialog.Close(
-        DialogResult.Ok(true));
-}
-
-    private async Task Reject()
-    {
-        await Api.RejectAsync(
-            RequestId,
-            "Rejected by admin");
-
-        MudDialog.Close(DialogResult.Ok(true));
-    }
     private string GetStatusText(int status)
-{
-    return status switch
     {
-        1 => "Pending",
-        2 => "Approved",
-        3 => "Rejected",
-        _ => "Unknown"
+        return status switch
+        {
+            1 => "Pending",
+            2 => "Approved",
+            3 => "Rejected",
+            _ => "Unknown"
+        };
+    }
+
+    private static string GetGenderText(object? gender)
+{
+    return gender?.ToString() switch
+    {
+        "1" => "Male",
+        "2" => "Female",
+        "3" => "Other",
+        "Male" => "Male",
+        "Female" => "Female",
+        "Other" => "Other",
+        _ => gender?.ToString() ?? "—"
     };
 }
 }

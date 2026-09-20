@@ -1,0 +1,475 @@
+@using AcademyERP.Admin.Models.Registration
+@using AcademyERP.Admin.Services
+@using AcademyERP.Admin.Models.Courses
+@using AcademyERP.Application.DTOs.Programs
+@using AcademyERP.Domain.Enums
+@using MudBlazor
+
+@inject RegistrationRequestApiService Api
+@inject CourseApiService CourseApi
+@inject ProgramApiService ProgramApi
+@inject ISnackbar Snackbar
+
+<MudDialog>
+
+    <DialogContent>
+
+        <MudText Typo="Typo.h6" Class="mb-4">
+            Parent Information
+        </MudText>
+
+        <MudGrid>
+
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Parent Name"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              RequiredError="Parent name is required."
+                              @bind-Value="_request.ParentName" />
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Email"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              RequiredError="Email is required."
+                              @bind-Value="_request.Email" />
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Phone Number"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              RequiredError="Phone number is required."
+                              @bind-Value="_request.PhoneNumber" />
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudTextField T="string"
+                              Label="Country"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              RequiredError="Country is required."
+                              @bind-Value="_request.Country" />
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudTextField T="string"
+                              Label="Address"
+                              Variant="Variant.Outlined"
+                              Lines="2"
+                              @bind-Value="_request.Address" />
+            </MudItem>
+
+        </MudGrid>
+
+        <MudDivider Class="my-5" />
+
+        <MudStack Row="true"
+                  Justify="Justify.SpaceBetween"
+                  AlignItems="AlignItems.Center"
+                  Class="mb-3">
+
+            <MudText Typo="Typo.h6">
+                Student Information
+            </MudText>
+
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="AddStudent">
+
+                Add Student
+
+            </MudButton>
+
+        </MudStack>
+
+        @foreach (var student in _request.Students.Select((value, index) => new { value, index }))
+        {
+            <MudPaper Outlined="true"
+                      Class="pa-4 mb-4">
+
+                <MudStack Row="true"
+                          Justify="Justify.SpaceBetween"
+                          AlignItems="AlignItems.Center"
+                          Class="mb-3">
+
+                    <MudText Typo="Typo.subtitle1">
+                        Student @(student.index + 1)
+                    </MudText>
+
+                    @if (_request.Students.Count > 1)
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                       Color="Color.Error"
+                                       OnClick="@(() => RemoveStudent(student.value))" />
+                    }
+
+                </MudStack>
+
+                <MudGrid>
+
+                    <MudItem xs="12" md="6">
+
+                        <MudTextField T="string"
+                                      Label="Student Name"
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      RequiredError="Student name is required."
+                                      @bind-Value="student.value.StudentName" />
+
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+
+                        <MudDatePicker Label="Date of Birth"
+                                       Variant="Variant.Outlined"
+                                       Required="true"
+                                       @bind-Date="_dateValues[student.value]" />
+
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+
+                        <MudSelect T="Gender"
+                                   Label="Gender"
+                                   Variant="Variant.Outlined"
+                                   @bind-Value="student.value.Gender">
+
+                            <MudSelectItem Value="@Gender.Male">
+                                Male
+                            </MudSelectItem>
+
+                            <MudSelectItem Value="@Gender.Female">
+                                Female
+                            </MudSelectItem>
+
+                            <MudSelectItem Value="@Gender.Other">
+                                Other
+                            </MudSelectItem>
+
+                        </MudSelect>
+
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+
+                        <MudSelect T="Guid"
+                                   Label="Program"
+                                   Variant="Variant.Outlined"
+                                   Required="true"
+                                   @bind-Value="student.value.ProgramId">
+
+                            @foreach (var program in _programs)
+                            {
+                                <MudSelectItem Value="@program.Id">
+                                    @program.ProgramName
+                                </MudSelectItem>
+                            }
+
+                        </MudSelect>
+
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+
+                        <MudSelect T="Guid?"
+                                   Label="Course"
+                                   Variant="Variant.Outlined"
+                                   Clearable="true"
+                                   @bind-Value="student.value.CourseId">
+
+                            <MudSelectItem T="Guid?" Value="@((Guid?)null)">
+                                No Course Selected
+                            </MudSelectItem>
+
+                           @foreach (var course in _courses
+    .Where(x => x.ProgramId == student.value.ProgramId)
+    .OrderBy(x => x.CourseName))
+{
+    <MudSelectItem T="Guid?"
+                   Value="@((Guid?)course.Id)">
+        @course.CourseName
+    </MudSelectItem>
+}
+                        </MudSelect>
+
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+
+                        <MudTextField T="string"
+                                      Label="Preferred Time"
+                                      Variant="Variant.Outlined"
+                                      Placeholder="Example: 7:00 PM"
+                                      @bind-Value="student.value.PreferredTime" />
+
+                    </MudItem>
+
+                    <MudItem xs="12">
+
+                        <MudTextField T="string"
+                                      Label="Remarks"
+                                      Variant="Variant.Outlined"
+                                      Lines="2"
+                                      @bind-Value="student.value.Remarks" />
+
+                    </MudItem>
+
+                </MudGrid>
+
+            </MudPaper>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(_error))
+        {
+            <MudAlert Severity="Severity.Error"
+                      Class="mt-3">
+                @_error
+            </MudAlert>
+        }
+
+    </DialogContent>
+
+    <DialogActions>
+
+        <MudButton Variant="Variant.Outlined"
+                   OnClick="Cancel"
+                   Disabled="_saving">
+
+            Cancel
+
+        </MudButton>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Save"
+                   OnClick="Save"
+                   Disabled="_saving">
+
+            @if (_saving)
+            {
+                <MudProgressCircular Size="Size.Small"
+                                     Indeterminate="true"
+                                     Class="mr-2" />
+
+                <span>Saving...</span>
+            }
+            else
+            {
+                <span>Create Registration Request</span>
+            }
+
+        </MudButton>
+
+    </DialogActions>
+
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private CreateRegistrationRequest _request = new();
+
+    private List<CourseResponse> _courses = new();
+
+    private List<ProgramResponse> _programs = new();
+
+    private readonly Dictionary<
+        CreateRegistrationRequestStudent,
+        DateTime?>
+        _dateValues = new();
+
+    private bool _saving;
+
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var student = new CreateRegistrationRequestStudent();
+
+        _request.Students.Add(student);
+
+        _dateValues[student] = student.DateOfBirth;
+
+        try
+        {
+            _courses = await CourseApi.GetAllAsync();
+
+            _courses = _courses
+                .Where(x => x.IsActive)
+                .OrderBy(x => x.CourseName)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            _courses = new();
+        }
+
+        try
+        {
+            _programs = await ProgramApi.GetAllAsync();
+
+            _programs = _programs
+                .Where(x => x.IsActive)
+                .OrderBy(x => x.ProgramName)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            _programs = new();
+        }
+    }
+
+    private void AddStudent()
+    {
+        var student =
+            new CreateRegistrationRequestStudent();
+
+        _request.Students.Add(student);
+
+        _dateValues[student] =
+            student.DateOfBirth;
+    }
+
+    private void RemoveStudent(
+        CreateRegistrationRequestStudent student)
+    {
+        _request.Students.Remove(student);
+
+        _dateValues.Remove(student);
+    }
+
+    private async Task Save()
+    {
+        _error = null;
+
+        if (string.IsNullOrWhiteSpace(
+                _request.ParentName))
+        {
+            _error =
+                "Please enter the parent name.";
+
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(
+                _request.Email))
+        {
+            _error =
+                "Please enter the parent email.";
+
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(
+                _request.PhoneNumber))
+        {
+            _error =
+                "Please enter the phone number.";
+
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(
+                _request.Country))
+        {
+            _error =
+                "Please enter the country.";
+
+            return;
+        }
+
+        if (!_request.Students.Any())
+        {
+            _error =
+                "Please add at least one student.";
+
+            return;
+        }
+
+        foreach (var student in _request.Students)
+        {
+            if (string.IsNullOrWhiteSpace(
+                    student.StudentName))
+            {
+                _error =
+                    "Please enter the name of every student.";
+
+                return;
+            }
+
+            if (student.ProgramId == Guid.Empty)
+            {
+                _error =
+                    "Please select a program for every student.";
+
+                return;
+            }
+
+            if (_dateValues.TryGetValue(
+                    student,
+                    out var date))
+            {
+                student.DateOfBirth =
+                    date ?? DateTime.Today.AddYears(-5);
+            }
+        }
+
+        try
+        {
+            _saving = true;
+
+            var result =
+                await Api.CreateAsync(_request);
+
+            if (result != null)
+            {
+                Snackbar.Add(
+                    "Registration request created successfully.",
+                    Severity.Success);
+
+                MudDialog.Close(
+                    DialogResult.Ok(result));
+            }
+            else
+            {
+                _error =
+                    "Registration request could not be created.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task LoadProgramsAsync()
+{
+    try
+    {
+        _programs = await ProgramApi.GetAllAsync();
+    }
+    catch
+    {
+        _programs = new();
+    }
+}
+}

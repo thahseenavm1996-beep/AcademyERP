@@ -3,21 +3,26 @@ using AcademyERP.Application.Interfaces;
 using AcademyERP.Application.Services;
 using AcademyERP.Domain.Entities.Programs;
 using AutoMapper;
+using AcademyERP.Domain.Entities.Courses;
+using Microsoft.EntityFrameworkCore;
 
 namespace AcademyERP.Infrastructure.Services;
 
 public class ProgramService : IProgramService
 {
     private readonly IRepository<Program> _repository;
-    private readonly IMapper _mapper;
+private readonly IRepository<Course> _courseRepository;
+private readonly IMapper _mapper;
 
     public ProgramService(
-        IRepository<Program> repository,
-        IMapper mapper)
-    {
-        _repository = repository;
-        _mapper = mapper;
-    }
+    IRepository<Program> repository,
+    IRepository<Course> courseRepository,
+    IMapper mapper)
+{
+    _repository = repository;
+    _courseRepository = courseRepository;
+    _mapper = mapper;
+}
 
     public async Task<List<ProgramResponse>> GetAllAsync()
     {
@@ -60,14 +65,23 @@ public class ProgramService : IProgramService
     }
 
     public async Task<bool> DeleteAsync(Guid id)
+{
+    var program = await _repository.GetByIdAsync(id);
+
+    if (program == null)
+        return false;
+
+    var courses = await _courseRepository.Query()
+        .Where(x => x.ProgramId == id && !x.IsDeleted)
+        .ToListAsync();
+
+    foreach (var course in courses)
     {
-        var program = await _repository.GetByIdAsync(id);
-
-        if (program == null)
-            return false;
-
-        await _repository.DeleteAsync(id);
-
-        return true;
+        await _courseRepository.DeleteAsync(course.Id);
     }
+
+    await _repository.DeleteAsync(id);
+
+    return true;
+}
 }

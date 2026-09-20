@@ -56,6 +56,13 @@ public class EnrollmentsController : ControllerBase
                 message = ex.Message
             });
         }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new
+            {
+                message = ex.Message
+            });
+        }
     }
 
     [HttpPut("{id:guid}")]
@@ -73,6 +80,13 @@ public class EnrollmentsController : ControllerBase
             return Ok(result);
         }
         catch (ArgumentException ex)
+        {
+            return BadRequest(new
+            {
+                message = ex.Message
+            });
+        }
+        catch (InvalidOperationException ex)
         {
             return BadRequest(new
             {

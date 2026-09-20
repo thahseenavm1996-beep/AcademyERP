@@ -28,6 +28,17 @@ public class AdmissionApplicationApiService
             .GetFromJsonAsync<AdmissionApplicationResponse>(
                 $"api/AdmissionApplications/{id}");
     }
+    public async Task<List<AvailableTeacherResponse>> GetAvailableTeachersAsync(Guid id)
+    {
+        return await _httpClient.GetFromJsonAsync<List<AvailableTeacherResponse>>(
+            $"api/AdmissionApplications/{id}/available-teachers") ?? new();
+    }
+    public async Task AssignTeacherAsync(Guid id, Guid teacherId)
+    {
+        var response = await _httpClient.PutAsJsonAsync(
+            $"api/AdmissionApplications/{id}/assigned-teacher", teacherId);
+        response.EnsureSuccessStatusCode();
+    }
     public async Task UpdateStatusAsync(
     Guid id,
     int status)
@@ -41,4 +52,13 @@ public class AdmissionApplicationApiService
 
         response.EnsureSuccessStatusCode();
     }
+
+    public async Task<bool> MarkAsViewedAsync(Guid id)
+{
+    var response = await _httpClient.PutAsync(
+        $"api/AdmissionApplications/{id}/viewed",
+        null);
+
+    return response.IsSuccessStatusCode;
+}
 }

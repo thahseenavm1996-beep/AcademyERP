@@ -29,11 +29,11 @@ public class CreateStudentRequest : IValidatableObject
     [Required]
     public string Country { get; set; } = string.Empty;
 
-    [Required]
+    
     public string TimeZone { get; set; } = string.Empty;
 
     [Required]
-    [MinLength(8)]
+    [MinLength(6)]
     public string Password { get; set; } = string.Empty;
 
     public string? Remarks { get; set; }

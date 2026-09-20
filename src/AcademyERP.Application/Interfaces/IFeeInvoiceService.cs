@@ -1,5 +1,6 @@
 using AcademyERP.Application.Common;
 using AcademyERP.Application.DTOs.Fees;
+using AcademyERP.Application.DTOs.Enrollments;
 
 namespace AcademyERP.Application.Interfaces;
 
@@ -18,4 +19,18 @@ public interface IFeeInvoiceService
         UpdateFeeInvoiceRequest request);
 
     Task<bool> DeleteAsync(Guid id);
+
+    Task<int> GeneratePendingCyclesAsync(DateTime asOfDate);
+
+    Task<EnrollmentResponse?> PauseEnrollmentAsync(
+        Guid enrollmentId,
+        DateTime pauseStartDate,
+        string? reason);
+
+    Task<EnrollmentResponse?> ResumeEnrollmentAsync(
+        Guid enrollmentId,
+        DateTime resumeDate);
+
+        Task<List<FeeInvoiceResponse>> GetTeacherOutstandingInvoicesAsync(
+    Guid applicationUserId);
 }

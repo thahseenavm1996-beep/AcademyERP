@@ -33,6 +33,7 @@ public class UpdateTeacherRequest : IValidatableObject
     public string Country { get; set; } = string.Empty;
 
     [Required]
+    public List<TeacherAvailabilityRequest> Availability { get; set; } = new();
     public string TimeZone { get; set; } = string.Empty;
 
     public string? Address { get; set; }

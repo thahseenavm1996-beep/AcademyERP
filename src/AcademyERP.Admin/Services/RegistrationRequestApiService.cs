@@ -22,61 +22,116 @@ public class RegistrationRequestApiService
                 "api/RegistrationRequests")
             ?? new();
     }
+
     public async Task<RegistrationRequestResponse?>
-    GetByIdAsync(Guid id)
-{
-    return await _httpClient
-        .GetFromJsonAsync<
-            RegistrationRequestResponse>(
-            $"api/RegistrationRequests/{id}");
-}
-public async Task<bool> ApproveAsync(
-    Guid requestId,
-    List<StudentApprovalModel> students)
-{
-    var request =
-        new
+        GetByIdAsync(Guid id)
+    {
+        return await _httpClient
+            .GetFromJsonAsync<
+                RegistrationRequestResponse>(
+                $"api/RegistrationRequests/{id}");
+    }
+
+    public async Task<RegistrationRequestResponse?>
+        CreateAsync(
+            CreateRegistrationRequest request)
+    {
+        var response =
+            await _httpClient.PostAsJsonAsync(
+                "api/RegistrationRequests",
+                request);
+
+        if (!response.IsSuccessStatusCode)
         {
-            RegistrationRequestId = requestId,
-            Students = students.Select(x => new
+            var error =
+                await response.Content
+                    .ReadAsStringAsync();
+
+            throw new HttpRequestException(
+                string.IsNullOrWhiteSpace(error)
+                    ? $"Failed to create registration request. Status: {response.StatusCode}"
+                    : error);
+        }
+
+        return await response.Content
+            .ReadFromJsonAsync<
+                RegistrationRequestResponse>();
+    }
+
+    public async Task<bool> ApproveAsync(
+        Guid requestId,
+        List<StudentApprovalModel> students)
+    {
+        var request =
+            new
             {
-                RegistrationStudentId =
-                    x.RegistrationStudentId,
+                RegistrationRequestId =
+                    requestId,
 
-                CourseId =
-                    x.CourseId,
+                Students =
+                    students.Select(x =>
+                        new
+                        {
+                            RegistrationStudentId =
+                                x.RegistrationStudentId,
 
-                TeacherId =
-                    x.TeacherId,
+                            CourseId =
+                                x.CourseId,
 
-                TimeSlotId =
-                    x.TimeSlotId,
+                            TeacherId =
+                                x.TeacherId,
 
-                ClassDurationId =
-                    x.ClassDurationId
-            })
-        };
+                            TimeSlotId =
+                                x.TimeSlotId,
 
-    var response =
-        await _httpClient.PostAsJsonAsync(
-            "api/RegistrationRequests/approve",
-            request);
+                            ClassDurationId =
+                                x.ClassDurationId,
 
-    response.EnsureSuccessStatusCode();
+                            DaysOfWeek =
+                                x.DaysOfWeek
+                        })
+            };
 
-    return true;
-}
-public async Task<bool> RejectAsync(
-    Guid id,
-    string remarks)
+        var response =
+            await _httpClient.PostAsJsonAsync(
+                "api/RegistrationRequests/approve",
+                request);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var error =
+                await response.Content
+                    .ReadAsStringAsync();
+
+            throw new HttpRequestException(
+                string.IsNullOrWhiteSpace(error)
+                    ? $"Registration approval failed. Status: {response.StatusCode}"
+                    : error);
+        }
+
+        return true;
+    }
+
+    public async Task<bool> RejectAsync(
+        Guid id,
+        string remarks)
+    {
+        var response =
+            await _httpClient.PostAsJsonAsync(
+                $"api/RegistrationRequests/{id}/reject",
+                remarks);
+
+        response.EnsureSuccessStatusCode();
+
+        return true;
+    }
+
+    public async Task<bool> MarkAsViewedAsync(Guid id)
 {
-    var response =
-        await _httpClient.PostAsJsonAsync(
-            $"api/RegistrationRequests/{id}/reject",
-            remarks);
+    var response = await _httpClient.PutAsync(
+        $"api/RegistrationRequests/{id}/viewed",
+        null);
 
-    response.EnsureSuccessStatusCode();
-
-    return true;
+    return response.IsSuccessStatusCode;
 }
 }

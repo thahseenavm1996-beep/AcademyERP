@@ -15,11 +15,12 @@ public class CourseService : ICourseService
         _context = context;
     }
 
-    public async Task<List<CourseResponse>> GetAllAsync()
-    {
-        return await _context.Courses
-            .Include(x => x.Program)
-            .Select(x => new CourseResponse
+   public async Task<List<CourseResponse>> GetAllAsync()
+{
+    return await _context.Courses
+        .Where(x => !x.IsDeleted)
+        .Include(x => x.Program)
+        .Select(x => new CourseResponse
             {
                 Id = x.Id,
                 ProgramId = x.ProgramId,
@@ -38,7 +39,7 @@ public class CourseService : ICourseService
     {
         var course = await _context.Courses
             .Include(x => x.Program)
-            .FirstOrDefaultAsync(x => x.Id == id);
+           .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
 
         if (course == null)
             return null;
@@ -122,12 +123,17 @@ public class CourseService : ICourseService
     }
 
     public async Task DeleteAsync(Guid id)
-    {
-        var course = await _context.Courses
-            .FirstAsync(x => x.Id == id);
+{
+    var course = await _context.Courses
+        .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
 
-        _context.Courses.Remove(course);
+    if (course == null)
+        return;
 
-        await _context.SaveChangesAsync();
-    }
+    course.IsDeleted = true;
+    course.DeletedAt = DateTime.UtcNow;
+    course.IsActive = false;
+
+    await _context.SaveChangesAsync();
+}
 }

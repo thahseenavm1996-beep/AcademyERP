@@ -4,6 +4,8 @@ public class TeachingScheduleResponse
 {
     public Guid Id { get; set; }
 
+    public Guid TeacherId { get; set; }
+
     public string StudentName { get; set; } = string.Empty;
 
     public string TeacherName { get; set; } = string.Empty;

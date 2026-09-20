@@ -23,7 +23,7 @@ else
     <MudGrid Class="mt-6">
 
 
-        <MudItem xs="12" sm="6" md="3">
+        <MudItem xs="12" sm="6" md="4">
 
             <MudCard>
 
@@ -45,7 +45,7 @@ else
 
 
 
-        <MudItem xs="12" sm="6" md="3">
+       <MudItem xs="12" sm="6" md="4">
 
             <MudCard>
 
@@ -67,7 +67,7 @@ else
 
 
 
-        <MudItem xs="12" sm="6" md="3">
+       <MudItem xs="12" sm="6" md="4">
 
             <MudCard>
 
@@ -89,7 +89,7 @@ else
 
 
 
-        <MudItem xs="12" sm="6" md="3">
+       <MudItem xs="12" sm="6" md="4">
 
             <MudCard>
 
@@ -108,6 +108,25 @@ else
             </MudCard>
 
         </MudItem>
+        <MudItem xs="12" sm="6" md="4">
+
+    <MudCard>
+
+        <MudCardContent>
+
+            <MudText Typo="Typo.subtitle2">
+                Customer Credit
+            </MudText>
+
+            <MudText Typo="Typo.h4">
+                ₹ @_dashboard.CustomerCredit
+            </MudText>
+
+        </MudCardContent>
+
+    </MudCard>
+
+</MudItem>
 
 
     </MudGrid>
@@ -126,10 +145,10 @@ else
 
 
         <MudChart T="double"
-                  ChartType="ChartType.Line"
-                  ChartSeries="@RevenueSeries"
-                  XAxisLabels="@RevenueLabels"
-                  Height="350px" />
+          ChartType="ChartType.Line"
+          ChartSeries="@RevenueSeries"
+          ChartLabels="@RevenueLabels"
+          Height="400px" />
 
     </MudPaper>
 
@@ -141,9 +160,9 @@ else
 
     <MudPaper Class="pa-4 mt-6">
 
-        <MudText Typo="Typo.h5">
-            📊 Payment Status Distribution
-        </MudText>
+       <MudText Typo="Typo.h5">
+    📊 Fee Status Distribution
+</MudText>
 
 
         <MudChart T="double"
@@ -167,11 +186,12 @@ else
         </MudText>
 
 
-        <MudChart T="double"
-                  ChartType="ChartType.Bar"
-                  ChartSeries="@CourseRevenueSeries"
-                  ChartLabels="@CourseRevenueLabels"
-                  Height="350px" />
+       <MudChart T="double"
+          ChartType="ChartType.Bar"
+          ChartSeries="@CourseRevenueSeries"
+          ChartLabels="@CourseRevenueLabels"
+          ChartOptions="@CourseChartOptions"
+          Height="450px" />
 
     </MudPaper>
 
@@ -363,7 +383,9 @@ else
 
     private List<ChartSeries<double>> RevenueSeries = new();
 
-    private string[] RevenueLabels = Array.Empty<string>();
+private string[] RevenueLabels = Array.Empty<string>();
+
+
 
 
 
@@ -377,7 +399,12 @@ else
 
     private string[] CourseRevenueLabels = Array.Empty<string>();
 
-
+private BarChartOptions CourseChartOptions = new()
+{
+    XAxisLabelRotation = 45,
+    XAxisTitle = "Courses",
+    YAxisTitle = "Revenue"
+};
 
 
 
@@ -428,7 +455,7 @@ else
         [
             new ChartSeries<double>
             {
-                Name = "Payments",
+                Name = "Invoices",
 
                 Data =
                     _dashboard.PaymentStatusDistribution

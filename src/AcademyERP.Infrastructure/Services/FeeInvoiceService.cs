@@ -1,6 +1,9 @@
 using AcademyERP.Application.Common;
 using AcademyERP.Application.DTOs.Fees;
 using AcademyERP.Application.Interfaces;
+using AcademyERP.Application.Services;
+using AcademyERP.Application.DTOs.Enrollments;
+using AcademyERP.Domain.Entities.Enrollments;
 using AcademyERP.Domain.Entities.Finance;
 using AcademyERP.Domain.Enums;
 using AcademyERP.Persistence.Context;
@@ -11,10 +14,14 @@ namespace AcademyERP.Infrastructure.Services;
 public class FeeInvoiceService : IFeeInvoiceService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IEnrollmentService _enrollmentService;
 
-    public FeeInvoiceService(ApplicationDbContext context)
+    public FeeInvoiceService(
+        ApplicationDbContext context,
+        IEnrollmentService enrollmentService)
     {
         _context = context;
+        _enrollmentService = enrollmentService;
     }
 
     public async Task<PagedResponse<FeeInvoiceResponse>> GetAllAsync(
@@ -23,6 +30,8 @@ public class FeeInvoiceService : IFeeInvoiceService
         var query = _context.FeeInvoices
             .Include(x => x.Enrollment)
                 .ThenInclude(x => x.Student)
+                    .ThenInclude(x => x.StudentParents)
+                        .ThenInclude(x => x.Parent)
             .Include(x => x.Enrollment)
                 .ThenInclude(x => x.Course)
             .AsQueryable();
@@ -62,6 +71,8 @@ public class FeeInvoiceService : IFeeInvoiceService
         var invoice = await _context.FeeInvoices
             .Include(x => x.Enrollment)
                 .ThenInclude(x => x.Student)
+                    .ThenInclude(x => x.StudentParents)
+                        .ThenInclude(x => x.Parent)
             .Include(x => x.Enrollment)
                 .ThenInclude(x => x.Course)
             .FirstOrDefaultAsync(x => x.Id == id);
@@ -114,6 +125,8 @@ public class FeeInvoiceService : IFeeInvoiceService
         invoice = await _context.FeeInvoices
             .Include(x => x.Enrollment)
                 .ThenInclude(x => x.Student)
+                    .ThenInclude(x => x.StudentParents)
+                        .ThenInclude(x => x.Parent)
             .Include(x => x.Enrollment)
                 .ThenInclude(x => x.Course)
             .FirstAsync(x => x.Id == invoice.Id);
@@ -128,6 +141,8 @@ public class FeeInvoiceService : IFeeInvoiceService
         var invoice = await _context.FeeInvoices
             .Include(x => x.Enrollment)
                 .ThenInclude(x => x.Student)
+                    .ThenInclude(x => x.StudentParents)
+                        .ThenInclude(x => x.Parent)
             .Include(x => x.Enrollment)
                 .ThenInclude(x => x.Course)
             .FirstOrDefaultAsync(x => x.Id == id);
@@ -163,6 +178,154 @@ Console.WriteLine($"ENTITY DUE DATE : {invoice.DueDate}");
         return true;
     }
 
+    public async Task<int> GeneratePendingCyclesAsync(DateTime asOfDate)
+    {
+        var today = asOfDate.Date;
+        var enrollments = await _context.Enrollments
+            .Include(x => x.FeePauses)
+            .Where(x => x.Status == EnrollmentStatus.Active &&
+                        x.NextBillingDate.Date <= today)
+            .ToListAsync();
+
+        var generated = 0;
+
+        foreach (var enrollment in enrollments)
+        {
+            while (enrollment.NextBillingDate.Date <= today)
+            {
+                var billingDate = enrollment.NextBillingDate.Date;
+
+                if (enrollment.EndDate.HasValue &&
+                    enrollment.EndDate.Value.Date < billingDate)
+                {
+                    break;
+                }
+
+                // The final due date cannot be known until an open leave ends.
+                if (enrollment.FeePauses.Any(x =>
+                        !x.ResumeDate.HasValue &&
+                        x.PauseStartDate.Date <= billingDate))
+                {
+                    break;
+                }
+
+                var alreadyGenerated = await _context.FeeInvoices.AnyAsync(x =>
+                    x.EnrollmentId == enrollment.Id &&
+                    x.InvoiceDate.Date == billingDate);
+
+                if (!alreadyGenerated)
+                {
+                    _context.FeeInvoices.Add(new FeeInvoice
+                    {
+                        EnrollmentId = enrollment.Id,
+                        InvoiceNumber =
+                            $"INV-{billingDate:yyyyMMdd}-{enrollment.Id.ToString()[..8]}",
+                        Amount = enrollment.FinalMonthlyFee,
+                        DiscountAmount = enrollment.DiscountAmount +
+                            enrollment.ScholarshipAmount,
+                        PaidAmount = 0,
+                        BalanceAmount = enrollment.FinalMonthlyFee,
+                        InvoiceDate = billingDate,
+                        DueDate = billingDate,
+                        Status = FeeStatus.Pending,
+                        Remarks = "Generated from the enrollment billing cycle."
+                    });
+
+                    generated++;
+                }
+
+                enrollment.NextBillingDate = billingDate.AddMonths(1);
+            }
+        }
+
+        if (generated > 0 || enrollments.Any())
+            await _context.SaveChangesAsync();
+
+        return generated;
+    }
+
+    public async Task<EnrollmentResponse?> PauseEnrollmentAsync(
+        Guid enrollmentId,
+        DateTime pauseStartDate,
+        string? reason)
+    {
+        var enrollment = await _context.Enrollments
+            .Include(x => x.FeePauses)
+            .FirstOrDefaultAsync(x => x.Id == enrollmentId);
+
+        if (enrollment == null)
+            return null;
+
+        var date = pauseStartDate.Date;
+
+        if (date < enrollment.StartDate.Date)
+            throw new InvalidOperationException(
+                "Leave date cannot be before the enrollment start date.");
+
+        if (enrollment.EndDate.HasValue &&
+            date > enrollment.EndDate.Value.Date)
+            throw new InvalidOperationException(
+                "Leave date cannot be after the enrollment end date.");
+
+        if (enrollment.FeePauses.Any(x => !x.ResumeDate.HasValue))
+            throw new InvalidOperationException(
+                "Fee generation is already paused for this enrollment.");
+
+        if (enrollment.FeePauses.Any(x =>
+                date >= x.PauseStartDate.Date &&
+                (!x.ResumeDate.HasValue || date < x.ResumeDate.Value.Date)))
+            throw new InvalidOperationException(
+                "The leave date overlaps an existing fee pause.");
+
+        _context.EnrollmentFeePauses.Add(new EnrollmentFeePause
+        {
+            EnrollmentId = enrollment.Id,
+            PauseStartDate = date,
+            Reason = reason
+        });
+
+        await _context.SaveChangesAsync();
+        return await _enrollmentService.GetByIdAsync(enrollmentId);
+    }
+
+    public async Task<EnrollmentResponse?> ResumeEnrollmentAsync(
+        Guid enrollmentId,
+        DateTime resumeDate)
+    {
+        var enrollment = await _context.Enrollments
+            .Include(x => x.FeePauses)
+            .FirstOrDefaultAsync(x => x.Id == enrollmentId);
+
+        if (enrollment == null)
+            return null;
+
+        var activePause = enrollment.FeePauses
+            .Where(x => !x.ResumeDate.HasValue)
+            .OrderByDescending(x => x.PauseStartDate)
+            .FirstOrDefault();
+
+        if (activePause == null)
+            throw new InvalidOperationException(
+                "Fee generation is not currently paused for this enrollment.");
+
+        var date = resumeDate.Date;
+        if (date <= activePause.PauseStartDate.Date)
+            throw new InvalidOperationException(
+                "Resume date must be after the leave start date.");
+
+        if (enrollment.EndDate.HasValue &&
+            date > enrollment.EndDate.Value.Date)
+            throw new InvalidOperationException(
+                "Resume date cannot be after the enrollment end date.");
+
+        activePause.ResumeDate = date;
+        enrollment.NextBillingDate = enrollment.NextBillingDate.Date
+            .AddDays((date - activePause.PauseStartDate.Date).Days);
+
+        await _context.SaveChangesAsync();
+        return await _enrollmentService.GetByIdAsync(enrollmentId);
+    }
+
     private static FeeInvoiceResponse MapToResponse(
         FeeInvoice invoice)
     {
@@ -179,6 +342,18 @@ Console.WriteLine($"ENTITY DUE DATE : {invoice.DueDate}");
             CourseName =
                 invoice.Enrollment.Course.CourseName,
 
+            Gender = invoice.Enrollment.Student.Gender.ToString(),
+
+            ParentName = invoice.Enrollment.Student.StudentParents
+                .OrderByDescending(x => x.IsPrimaryContact)
+                .Select(x => x.Parent.FullName)
+                .FirstOrDefault(),
+
+            ParentPhoneNumber = invoice.Enrollment.Student.StudentParents
+                .OrderByDescending(x => x.IsPrimaryContact)
+                .Select(x => x.Parent.PhoneNumber)
+                .FirstOrDefault(),
+
             Amount = invoice.Amount,
             DiscountAmount = invoice.DiscountAmount,
             PaidAmount = invoice.PaidAmount,
@@ -193,4 +368,35 @@ Console.WriteLine($"ENTITY DUE DATE : {invoice.DueDate}");
             Remarks = invoice.Remarks
         };
     }
+
+    public async Task<List<FeeInvoiceResponse>>
+    GetTeacherOutstandingInvoicesAsync(Guid applicationUserId)
+{
+    var teacherId = await _context.Teachers
+        .Where(x => x.ApplicationUserId == applicationUserId)
+        .Select(x => x.Id)
+        .FirstOrDefaultAsync();
+
+    if (teacherId == Guid.Empty)
+        return new List<FeeInvoiceResponse>();
+
+    var invoices = await _context.FeeInvoices
+        .AsNoTracking()
+        .Include(x => x.Enrollment)
+            .ThenInclude(x => x.Student)
+                .ThenInclude(x => x.StudentParents)
+                    .ThenInclude(x => x.Parent)
+        .Include(x => x.Enrollment)
+            .ThenInclude(x => x.Course)
+        .Where(x =>
+            _context.TeachingSchedules.Any(s =>
+                s.EnrollmentId == x.EnrollmentId &&
+                s.TeacherId == teacherId &&
+                s.IsActive) &&
+            x.BalanceAmount > 0)
+        .OrderBy(x => x.DueDate)
+        .ToListAsync();
+
+    return invoices.Select(MapToResponse).ToList();
+}
 }

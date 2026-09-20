@@ -9,21 +9,21 @@ public class TimeSlotService : ITimeSlotService
 {
     private readonly ApplicationDbContext _context;
 
-    public TimeSlotService(
-        ApplicationDbContext context)
+    public TimeSlotService(ApplicationDbContext context)
     {
         _context = context;
     }
 
-    public async Task<List<TimeSlotResponse>>
-        GetAllAsync()
+    public async Task<List<TimeSlotResponse>> GetAllAsync()
     {
         return await _context.TimeSlots
             .Where(x => x.IsActive)
             .Select(x => new TimeSlotResponse
             {
                 Id = x.Id,
-                Name = x.Name
+                Name = x.Name,
+                StartTime = x.StartTime,
+                EndTime = x.EndTime
             })
             .ToListAsync();
     }

@@ -40,12 +40,13 @@ public class ClassReportResponse
 
     public string? TeacherRemarks { get; set; }
 
-
+    
     public int ActualDurationMinutes { get; set; }
 
 
     public DateTime SubmittedAt { get; set; }
 
+public string AttendanceStatusText { get; set; } = "Not Marked";
 
     public bool IsLocked { get; set; }
 }

@@ -3,6 +3,7 @@
 @using Microsoft.AspNetCore.Authorization
 
 @using AcademyERP.Admin.Models
+@using AcademyERP.Domain.Enums
 @using AcademyERP.Admin.Services
 @inject TeacherApiService TeacherApi
 @using AcademyERP.Admin.Components.Pages.Teachers
@@ -17,26 +18,77 @@
 
 <MudPaper Class="pa-4 mb-4">
 
-    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+    <MudStack Row="true"
+          Spacing="2"
+          AlignItems="AlignItems.Center"
+          Class="teacher-filter-stack">
 
-        <MudTextField T="string" @bind-Value="_search" Placeholder="Search Teachers..." Adornment="Adornment.Start"
-                      AdornmentIcon="@Icons.Material.Filled.Search" Style="width:300px" />
-        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="SearchTeachers">
+    <MudTextField T="string"
+                  @bind-Value="_search"
+                  Placeholder="Search Teachers..."
+                  Adornment="Adornment.Start"
+                  AdornmentIcon="@Icons.Material.Filled.Search"
+                  Variant="Variant.Outlined"
+                  Class="teacher-search-field" />
 
-            Search
+   <MudSelect T="Gender?"
+           Label="Gender"
+           Variant="Variant.Outlined"
+           @bind-Value="_gender">
 
-        </MudButton>
+    <MudSelectItem T="Gender?" Value="@((Gender?)null)">
+        All
+    </MudSelectItem>
+
+    <MudSelectItem T="Gender?" Value="@Gender.Male">
+        Male
+    </MudSelectItem>
+
+    <MudSelectItem T="Gender?" Value="@Gender.Female">
+        Female
+    </MudSelectItem>
+
+    <MudSelectItem T="Gender?" Value="@Gender.Other">
+        Other
+    </MudSelectItem>
+
+</MudSelect>
+
+
+
+    <MudSelect T="string" Label="Department" @bind-Value="_department">
+    <MudSelectItem Value="@string.Empty">All</MudSelectItem>
+
+    @foreach (var department in _departments)
+    {
+        <MudSelectItem Value="@department">
+            @department
+        </MudSelectItem>
+    }
+</MudSelect>
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               OnClick="SearchTeachers">
+        Search
+    </MudButton>
+
+    <MudButton Variant="Variant.Outlined"
+               Color="Color.Default"
+               OnClick="ClearFilters">
+        Clear
+    </MudButton>
+
+    <MudButton Color="Color.Primary"
+               Variant="Variant.Filled"
+               StartIcon="@Icons.Material.Filled.Add"
+               OnClick="OpenAddTeacherDialog">
+        Add Teacher
+    </MudButton>
+
+</MudStack>
 
         
 
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add"
-                   OnClick="OpenAddTeacherDialog">
-
-            Add Teacher
-
-        </MudButton>
-
-    </MudStack>
 
 </MudPaper>
 
@@ -53,25 +105,37 @@
     </HeaderContent>-->
     <HeaderContent>
         <MudTh>Employee Code</MudTh>
-        <MudTh>Full Name</MudTh>
-
-        <MudTh>Country</MudTh>
-        <MudTh>Status</MudTh>
-        <MudTh>Actions</MudTh>
+<MudTh>Full Name</MudTh>
+<MudTh>Gender</MudTh>
+<MudTh>Department</MudTh>
+<MudTh>Country</MudTh>
+<MudTh>Status</MudTh>
 
     </HeaderContent>
 
     <RowTemplate>
 
         <MudTd>@context.EmployeeCode</MudTd>
-        <MudTd>@context.FullName</MudTd>
+<MudTd>@context.FullName</MudTd>
 
-        <MudTd>@context.Country</MudTd>
+<MudTd>
+   @Enum.GetName(typeof(AcademyERP.Domain.Enums.Gender), context.Gender)
+</MudTd>
+
+<MudTd>
+    @context.Department
+</MudTd>
+
+<MudTd>
+    @context.Country
+</MudTd>
         <MudTd>
             @(context.IsActive ? "Active" : "Inactive")
         </MudTd>
 
         <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" Size="Size.Small"
+                           Title="View teacher details" OnClick="@(() => ViewTeacher(context))" />
             <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small"
                            OnClick="@(() => EditTeacher(context))" />
 
@@ -117,9 +181,12 @@
 {
     private List<TeacherResponse> _Teachers = new();
     private TeacherData _page = new();
+    private List<string> _departments = new();
 
     private bool _loading = true;
     private string _search = string.Empty;
+   private Gender? _gender;
+private string? _department;
 
     private readonly TeacherQueryRequest _request = new()
     {
@@ -130,10 +197,16 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadTeachersAsync();
+        await LoadDepartmentsAsync();
+
     }
     private async Task LoadTeachersAsync()
     {
         _loading = true;
+_request.Search = _search;
+_request.Gender = _gender.HasValue ? (int)_gender.Value : null;
+_request.Department = _department;
+
 
         var response = await TeacherApi.GetTeachersAsync(_request);
 
@@ -141,6 +214,7 @@
         {
             _page = response.Data;
             _Teachers = _page.Items;
+            
         }
 
         _loading = false;
@@ -166,14 +240,14 @@
     }
 
     private async Task SearchTeachers()
-    {
-        Console.WriteLine("Search button clicked");
+{
+    _request.Page = 1;
+    _request.Search = _search;
+    _request.Gender = _gender.HasValue ? (int)_gender.Value : null;
+    _request.Department = _department;
 
-        _request.Page = 1;
-        _request.Search = _search;
-
-        await LoadTeachersAsync();
-    }
+    await LoadTeachersAsync();
+}
     private async Task OnSearchChanged(string value)
     {
         Console.WriteLine($"Searching for: {value}");
@@ -225,6 +299,12 @@
             await LoadTeachersAsync();
         }
     }
+    private async Task ViewTeacher(TeacherResponse teacher)
+    {
+        await DialogService.ShowAsync<TeacherDetailsDialog>(
+            "Teacher Details",
+            new DialogParameters { [nameof(TeacherDetailsDialog.Teacher)] = teacher });
+    }
     private async Task DeleteTeacher(TeacherResponse Teacher)
     {
 
@@ -260,5 +340,35 @@
             Snackbar.Add("Password reset successfully.", Severity.Success);
         }
     }
+
+    private async Task ClearFilters()
+{
+    _search = string.Empty;
+    _gender = null;
+    _department = string.Empty;
+
+    _request.Page = 1;
+    _request.Search = null;
+    _request.Gender = null;
+    _request.Department = null;
+
+    await LoadTeachersAsync();
+}
+
+private async Task LoadDepartmentsAsync()
+{
+    var result = await TeacherApi.GetTeachersAsync(new TeacherQueryRequest
+    {
+        Page = 1,
+        PageSize = 1000
+    });
+
+   _departments = result.Data.Items
+        .Select(x => x.Department)
+        .Where(x => !string.IsNullOrWhiteSpace(x))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .OrderBy(x => x)
+        .ToList();
+}
 
 }

@@ -6,10 +6,14 @@
 @using MudBlazor
 @using AcademyERP.Admin.Models.Enrollments
 @using AcademyERP.Admin.Services
+@using AcademyERP.Admin.Models
+@using AcademyERP.Admin.Models.Courses
 
 @inject EnrollmentApiService EnrollmentApi
+@inject FeeInvoiceApiService FeeInvoiceApi
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject CourseApiService CourseApi
 
 <PageTitle>Enrollments</PageTitle>
 
@@ -21,7 +25,124 @@
            OnClick="OpenCreateDialog">
     Create Enrollment
 </MudButton>
+<MudPaper Class="pa-4 mt-4">
 
+    <MudGrid Spacing="2">
+
+        <!-- Student -->
+        <MudItem xs="12" sm="6" md="3">
+            <MudTextField T="string"
+                          Label="Search Student"
+                          Placeholder="Student name..."
+                          Variant="Variant.Outlined"
+                          @bind-Value="_studentName"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search" />
+        </MudItem>
+
+        <!-- Course -->
+        <MudItem xs="12" sm="6" md="3">
+            <MudSelect T="string"
+                       Label="Course"
+                       Variant="Variant.Outlined"
+                       @bind-Value="_courseName">
+
+                <MudSelectItem T="string" Value="@string.Empty">
+                    All
+                </MudSelectItem>
+
+                @foreach (var course in _courses)
+                {
+                    <MudSelectItem T="string" Value="@course.CourseName">
+                        @course.CourseName
+                    </MudSelectItem>
+                }
+
+            </MudSelect>
+        </MudItem>
+
+        <!-- Gender -->
+        <MudItem xs="12" sm="6" md="2">
+            <MudSelect T="string"
+                       Label="Gender"
+                       Variant="Variant.Outlined"
+                       @bind-Value="_gender">
+
+                <MudSelectItem T="string" Value="@string.Empty">
+                    All
+                </MudSelectItem>
+
+                <MudSelectItem T="string" Value="@("Male")">
+                    Male
+                </MudSelectItem>
+
+                <MudSelectItem T="string" Value="@("Female")">
+                    Female
+                </MudSelectItem>
+
+                <MudSelectItem T="string" Value="@("Other")">
+                    Other
+                </MudSelectItem>
+
+            </MudSelect>
+        </MudItem>
+
+        <!-- Status -->
+        <MudItem xs="12" sm="6" md="2">
+            <MudSelect T="string"
+                       Label="Status"
+                       Variant="Variant.Outlined"
+                       @bind-Value="_status">
+
+                <MudSelectItem T="string" Value="@string.Empty">
+                    All
+                </MudSelectItem>
+
+                <MudSelectItem T="string" Value="@("Active")">
+                    Active
+                </MudSelectItem>
+
+                <MudSelectItem T="string" Value="@("Completed")">
+                    Completed
+                </MudSelectItem>
+
+                <MudSelectItem T="string" Value="@("Cancelled")">
+                    Cancelled
+                </MudSelectItem>
+
+                <MudSelectItem T="string" Value="@("Paused")">
+                    Paused
+                </MudSelectItem>
+
+            </MudSelect>
+        </MudItem>
+
+        <!-- Buttons -->
+        <MudItem xs="12" sm="12" md="4">
+            <MudStack Row="true"
+                      AlignItems="AlignItems.Center"
+                      Spacing="1"
+                      Style="height:100%;">
+
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Search"
+                           OnClick="ApplyFilters">
+                    Search
+                </MudButton>
+
+                <MudButton Variant="Variant.Outlined"
+                           StartIcon="@Icons.Material.Filled.Clear"
+                           OnClick="ClearFilters">
+                    Clear
+                </MudButton>
+
+            </MudStack>
+        </MudItem>
+
+    </MudGrid>
+
+</MudPaper>
 <MudPaper Class="pa-4 mt-4">
 
     @if (_loading)
@@ -93,6 +214,12 @@
 
                 <MudTd DataLabel="Status">
                     @context.Status
+                    @if (context.IsFeePaused)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Warning" Class="ml-1">
+                            Fee paused
+                        </MudChip>
+                    }
                 </MudTd>
 
                 <MudTd DataLabel="Actions">
@@ -103,6 +230,23 @@
                     <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
                                    OnClick="@(() => DeleteEnrollment(context))" />
 
+                    @if (context.IsFeePaused)
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.PlayCircle"
+                                   OnClick="@(() => OpenFeeResumeDialog(context))">
+                            Resume Fee
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Warning" Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.PauseCircle"
+                                   OnClick="@(() => OpenFeePauseDialog(context))">
+                            Pause Fee
+                        </MudButton>
+                    }
+
                 </MudTd>
 
             </RowTemplate>
@@ -112,36 +256,88 @@
 
 </MudPaper>
 
+@if (_feePauseEnrollment != null)
+{
+    <MudDialog @bind-Visible="_showFeePauseDialog">
+        <DialogContent>
+            <MudText Typo="Typo.h6">Pause Fee Generation</MudText>
+            <MudText Class="mb-3">@_feePauseEnrollment.StudentName — @_feePauseEnrollment.CourseName</MudText>
+            <MudDatePicker @bind-Date="_feePauseStartDate" Label="Leave starts" MinDate="@_feePauseEnrollment.StartDate" Required="true" />
+            <MudTextField @bind-Value="_feePauseReason" Label="Reason" Lines="2" Class="mt-3" />
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="CloseFeePauseDialog">Cancel</MudButton>
+            <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="ConfirmFeePause">Pause Fee</MudButton>
+        </DialogActions>
+    </MudDialog>
+}
+
+@if (_feeResumeEnrollment != null)
+{
+    <MudDialog @bind-Visible="_showFeeResumeDialog">
+        <DialogContent>
+            <MudText Typo="Typo.h6">Resume Fee Generation</MudText>
+            <MudText Class="mb-3">@_feeResumeEnrollment.StudentName — @_feeResumeEnrollment.CourseName</MudText>
+            <MudDatePicker @bind-Date="_feeResumeDate" Label="Student resumes" MinDate="@_feeResumeEnrollment.FeePauseStartDate?.AddDays(1)" Required="true" />
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="CloseFeeResumeDialog">Cancel</MudButton>
+            <MudButton Color="Color.Success" Variant="Variant.Filled" OnClick="ConfirmFeeResume">Resume Fee</MudButton>
+        </DialogActions>
+    </MudDialog>
+}
+
 @code {
 
-    private List<EnrollmentResponse> _enrollments = new();
+private List<CourseResponse> _courses = new();
+    private string _studentName = string.Empty;
+private string _courseName = string.Empty;
+private string _gender = string.Empty;
+private string _status = string.Empty;
 
+private List<EnrollmentResponse> _allEnrollments = new();
+private List<EnrollmentResponse> _enrollments = new();
+
+   
     private bool _loading = true;
+    private EnrollmentResponse? _feePauseEnrollment;
+    private EnrollmentResponse? _feeResumeEnrollment;
+    private bool _showFeePauseDialog;
+    private bool _showFeeResumeDialog;
+    private DateTime? _feePauseStartDate;
+    private DateTime? _feeResumeDate;
+    private string? _feePauseReason;
 
     protected override async Task OnInitializedAsync()
-    {
-        await LoadEnrollments();
-    }
+{
+    await LoadCoursesAsync();
+    await LoadEnrollments();
+}
 
     private async Task LoadEnrollments()
+{
+    try
     {
-        try
-        {
-            _loading = true;
+        _loading = true;
 
-            _enrollments = await EnrollmentApi.GetAllAsync();
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add(
-                $"Unable to load enrollments: {ex.Message}",
-                Severity.Error);
-        }
-        finally
-        {
-            _loading = false;
-        }
+        var result = await EnrollmentApi.GetAllAsync();
+
+        _allEnrollments = result?.ToList()
+            ?? new List<EnrollmentResponse>();
+
+        _enrollments = _allEnrollments.ToList();
     }
+    catch (Exception ex)
+    {
+        Snackbar.Add(
+            $"Unable to load enrollments: {ex.Message}",
+            Severity.Error);
+    }
+    finally
+    {
+        _loading = false;
+    }
+}
 
     private async Task OpenCreateDialog()
     {
@@ -222,4 +418,121 @@
                 Severity.Error);
         }
     }
+
+    private void OpenFeePauseDialog(EnrollmentResponse enrollment)
+    {
+        _feePauseEnrollment = enrollment;
+        _feePauseStartDate = DateTime.Today < enrollment.StartDate.Date
+            ? enrollment.StartDate.Date
+            : DateTime.Today;
+        _feePauseReason = null;
+        _showFeePauseDialog = true;
+    }
+
+    private void CloseFeePauseDialog()
+    {
+        _showFeePauseDialog = false;
+        _feePauseEnrollment = null;
+    }
+
+    private async Task ConfirmFeePause()
+    {
+        if (_feePauseEnrollment == null || !_feePauseStartDate.HasValue)
+            return;
+
+        try
+        {
+            await FeeInvoiceApi.PauseEnrollmentAsync(
+                _feePauseEnrollment.Id,
+                _feePauseStartDate.Value,
+                _feePauseReason);
+            Snackbar.Add("Fee generation paused.", Severity.Success);
+            CloseFeePauseDialog();
+            await LoadEnrollments();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Unable to pause fee generation: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void OpenFeeResumeDialog(EnrollmentResponse enrollment)
+    {
+        _feeResumeEnrollment = enrollment;
+        _feeResumeDate = enrollment.FeePauseStartDate?.Date.AddDays(1) ?? DateTime.Today;
+        _showFeeResumeDialog = true;
+    }
+
+    private void CloseFeeResumeDialog()
+    {
+        _showFeeResumeDialog = false;
+        _feeResumeEnrollment = null;
+    }
+
+    private async Task ConfirmFeeResume()
+    {
+        if (_feeResumeEnrollment == null || !_feeResumeDate.HasValue)
+            return;
+
+        try
+        {
+            await FeeInvoiceApi.ResumeEnrollmentAsync(
+                _feeResumeEnrollment.Id,
+                _feeResumeDate.Value);
+            Snackbar.Add("Fee generation resumed and the next billing date was extended.", Severity.Success);
+            CloseFeeResumeDialog();
+            await LoadEnrollments();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Unable to resume fee generation: {ex.Message}", Severity.Error);
+        }
+    }
+ private void ApplyFilters()
+{
+    _enrollments = _allEnrollments
+        .Where(x =>
+            string.IsNullOrWhiteSpace(_studentName) ||
+            x.StudentName.Contains(
+                _studentName,
+                StringComparison.OrdinalIgnoreCase))
+        .Where(x =>
+            string.IsNullOrWhiteSpace(_courseName) ||
+            x.CourseName == _courseName)
+        .Where(x =>
+            string.IsNullOrWhiteSpace(_gender) ||
+            x.Gender == _gender)
+        .Where(x =>
+            string.IsNullOrWhiteSpace(_status) ||
+            x.Status.ToString() == _status)
+        .ToList();
+}
+private void ClearFilters()
+{
+    _studentName = string.Empty;
+    _courseName = string.Empty;
+    _gender = string.Empty;
+    _status = string.Empty;
+
+    _enrollments = _allEnrollments.ToList();
+}
+
+private async Task LoadCoursesAsync()
+{
+    try
+    {
+        _courses = await CourseApi.GetAllAsync();
+
+        _courses = _courses
+            .Where(x => x.IsActive)
+            .OrderBy(x => x.CourseName)
+            .ToList();
+    }
+    catch (Exception ex)
+    {
+        Snackbar.Add(
+            $"Unable to load courses: {ex.Message}",
+            Severity.Error);
+    }
+}
 }

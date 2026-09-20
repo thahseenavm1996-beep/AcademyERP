@@ -8,6 +8,8 @@ using AcademyERP.Application.Common;
 using AcademyERP.Application.Interfaces;
 using AcademyERP.Domain.Entities.Identity;
 using Microsoft.AspNetCore.Identity;
+using AcademyERP.Domain.Entities.TeacherAvailabilities;
+using AcademyERP.Domain.Enums;
 
 
 namespace AcademyERP.Infrastructure.Services;
@@ -70,14 +72,18 @@ public class TeacherService : ITeacherService
 
             await _userManager.AddToRoleAsync(user, "Teacher");
 
-            var teacher = _mapper.Map<Teacher>(request);
+           var teacher = _mapper.Map<Teacher>(request);
 
-            teacher.ApplicationUserId = user.Id;
-            teacher.EmployeeCode = generatedNumber;
+teacher.ApplicationUserId = user.Id;
+teacher.EmployeeCode = generatedNumber;
 
-            _context.Teachers.Add(teacher);
+_context.Teachers.Add(teacher);
 
-            await _context.SaveChangesAsync();
+await _context.SaveChangesAsync();
+
+await ReplaceAvailabilityAsync(
+    teacher.Id,
+    request.Availability);
 
             await transaction.CommitAsync();
 
@@ -114,14 +120,35 @@ public class TeacherService : ITeacherService
                 s.EmployeeCode.Contains(request.Search));
         }
 
+     
+if (request.Gender.HasValue)
+{
+    var genderName = request.Gender.Value switch
+    {
+        1 => "Male",
+        2 => "Female",
+        3 => "Other",
+        _ => null
+    };
 
+    if (genderName != null)
+    {
+        query = query.Where(x => x.Gender.ToString() == genderName);
+    }
+}
+if (!string.IsNullOrWhiteSpace(request.Department))
+{
+    query = query.Where(x =>
+        x.Department.Contains(request.Department));
+}
         var totalCount = await query.CountAsync();
 
         var teachers = await query
-            .Skip((request.Page - 1) * request.PageSize)
-            .Take(request.PageSize)
-            .ToListAsync();
-
+    .Include(x => x.TeacherAvailabilities)
+        .ThenInclude(x => x.TimeSlot)
+    .Skip((request.Page - 1) * request.PageSize)
+    .Take(request.PageSize)
+    .ToListAsync();
         return new PagedResponse<TeacherResponse>
         {
             Items = _mapper.Map<List<TeacherResponse>>(teachers),
@@ -133,7 +160,10 @@ public class TeacherService : ITeacherService
     }
     public async Task<TeacherResponse?> GetByIdAsync(Guid id)
     {
-        var teacher = await _context.Teachers.FindAsync(id);
+       var teacher = await _context.Teachers
+    .Include(x => x.TeacherAvailabilities)
+        .ThenInclude(x => x.TimeSlot)
+    .FirstOrDefaultAsync(x => x.Id == id);
 
         if (teacher == null)
             return null;
@@ -162,6 +192,9 @@ public class TeacherService : ITeacherService
         teacher.Country = request.Country;
         teacher.TimeZone = request.TimeZone;
         teacher.Remarks = request.Remarks;
+        await ReplaceAvailabilityAsync(
+    teacher.Id,
+    request.Availability);
 
         var user = await _userManager.FindByIdAsync(teacher.ApplicationUserId.ToString());
 
@@ -241,5 +274,60 @@ public class TeacherService : ITeacherService
 
         return true;
     }
+
+    private async Task ReplaceAvailabilityAsync(
+    Guid teacherId,
+    IEnumerable<TeacherAvailabilityRequest>? availability)
+{
+    var selected = (availability ?? Enumerable.Empty<TeacherAvailabilityRequest>())
+        .GroupBy(x => new { x.DayOfWeek, x.TimeSlotId })
+        .Select(x => x.First())
+        .ToList();
+
+    var slotIds = selected
+        .Select(x => x.TimeSlotId)
+        .Distinct()
+        .ToList();
+
+    if (slotIds.Count > 0)
+    {
+        var activeSlotIds = await _context.TimeSlots
+            .Where(x =>
+                slotIds.Contains(x.Id) &&
+                x.IsActive)
+            .Select(x => x.Id)
+            .ToListAsync();
+
+        var invalidSlot = selected.FirstOrDefault(x =>
+            !activeSlotIds.Contains(x.TimeSlotId));
+
+        if (invalidSlot != null)
+        {
+            throw new InvalidOperationException(
+                "One or more selected time slots are inactive or invalid.");
+        }
+    }
+
+    var existing = await _context.TeacherAvailabilities
+        .Where(x => x.TeacherId == teacherId)
+        .ToListAsync();
+
+    if (existing.Count > 0)
+        _context.TeacherAvailabilities.RemoveRange(existing);
+
+    foreach (var item in selected)
+    {
+        _context.TeacherAvailabilities.Add(
+            new TeacherAvailability
+            {
+                TeacherId = teacherId,
+                DayOfWeek = item.DayOfWeek,
+                TimeSlotId = item.TimeSlotId,
+                IsAvailable = true
+            });
+    }
+
+    await _context.SaveChangesAsync();
+}
 
 }

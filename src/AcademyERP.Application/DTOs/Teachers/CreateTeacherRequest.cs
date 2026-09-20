@@ -33,8 +33,12 @@ public class CreateTeacherRequest : IValidatableObject
     [Required]
     public string Country { get; set; } = string.Empty;
 
-    [Required]
+    
     public string TimeZone { get; set; } = string.Empty;
+
+    [Required]
+    public List<TeacherAvailabilityRequest> Availability { get; set; } = new();
+    
     [Required]
     [MinLength(8)]
     public string Password { get; set; } = string.Empty;

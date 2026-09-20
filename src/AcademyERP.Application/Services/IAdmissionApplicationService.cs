@@ -10,6 +10,7 @@ public interface IAdmissionApplicationService
     Task<List<AdmissionApplicationResponse>> GetAllAsync();
 
     Task<AdmissionApplicationResponse?> GetByIdAsync(Guid id);
+    Task<bool> MarkAsViewedAsync(Guid id);
     Task<AdmissionApplicationResponse?> UpdateStatusAsync(
     Guid id,
     AdmissionStatus status);

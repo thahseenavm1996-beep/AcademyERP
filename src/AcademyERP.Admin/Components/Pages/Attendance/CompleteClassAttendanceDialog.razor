@@ -3,6 +3,7 @@
 @using MudBlazor
 @using AcademyERP.Admin.Models.Attendance
 @using AcademyERP.Admin.Models.ClassProgress
+@using AcademyERP.Admin.Models.ClassReports
 
 <MudDialog>
 
@@ -115,7 +116,101 @@
     Lines="3"
     @bind-Value="_remarks" />
 
+<MudDivider Class="my-4" />
 
+<MudText Typo="Typo.h6">
+    Class Report
+</MudText>
+
+<MudSelect T="PerformanceRating"
+           Label="Performance"
+           Variant="Variant.Outlined"
+           Class="mt-3"
+           @bind-Value="_performanceRating">
+
+    @foreach (PerformanceRating item in Enum.GetValues<PerformanceRating>())
+    {
+        <MudSelectItem T="PerformanceRating" Value="@item">
+            @item
+        </MudSelectItem>
+    }
+
+</MudSelect>
+
+<MudSelect T="HomeworkStatus"
+           Label="Homework Status"
+           Variant="Variant.Outlined"
+           Class="mt-3"
+           @bind-Value="_homeworkStatus">
+
+    @foreach (HomeworkStatus item in Enum.GetValues<HomeworkStatus>())
+    {
+        <MudSelectItem T="HomeworkStatus" Value="@item">
+            @item
+        </MudSelectItem>
+    }
+
+</MudSelect>
+
+<MudSelect T="BehaviourRating"
+           Label="Behaviour"
+           Variant="Variant.Outlined"
+           Class="mt-3"
+           @bind-Value="_behaviourRating">
+
+    @foreach (BehaviourRating item in Enum.GetValues<BehaviourRating>())
+    {
+        <MudSelectItem T="BehaviourRating" Value="@item">
+            @item
+        </MudSelectItem>
+    }
+
+</MudSelect>
+
+<MudSelect T="ClassOutcome"
+           Label="Class Outcome"
+           Variant="Variant.Outlined"
+           Class="mt-3"
+           @bind-Value="_classOutcome">
+
+    @foreach (ClassOutcome item in Enum.GetValues<ClassOutcome>())
+    {
+        <MudSelectItem T="ClassOutcome" Value="@item">
+            @item
+        </MudSelectItem>
+    }
+
+</MudSelect>
+
+<MudTextField T="string"
+              Label="Lesson Taken"
+              Variant="Variant.Outlined"
+              Lines="3"
+              Class="mt-3"
+              Required="true"
+              @bind-Value="_lessonTaken" />
+
+<MudTextField T="string"
+              Label="Next Homework"
+              Variant="Variant.Outlined"
+              Lines="3"
+              Class="mt-3"
+              @bind-Value="_nextHomework" />
+
+<MudTextField T="string"
+              Label="Teacher Remarks"
+              Variant="Variant.Outlined"
+              Lines="3"
+              Class="mt-3"
+              @bind-Value="_reportTeacherRemarks" />
+
+<MudNumericField T="int"
+                 Label="Actual Duration (Minutes)"
+                 Variant="Variant.Outlined"
+                 Min="1"
+                 Max="300"
+                 Class="mt-3"
+                 @bind-Value="_actualDurationMinutes" />
 </DialogContent>
 
 
@@ -168,7 +263,22 @@ private bool _homeworkCompleted;
 private bool _isLessonCompleted;
 private string? _teacherNotes;
 private string? _remarks;
+private PerformanceRating _performanceRating =
+    PerformanceRating.Good;
 
+private HomeworkStatus _homeworkStatus;
+
+private BehaviourRating _behaviourRating;
+
+private ClassOutcome _classOutcome;
+
+private string _lessonTaken = string.Empty;
+
+private string _nextHomework = string.Empty;
+
+private string? _reportTeacherRemarks;
+
+private int _actualDurationMinutes = 30;
 
 private void Cancel()
 {
@@ -193,31 +303,61 @@ private void Save()
 
 
             Progress = new CreateClassProgressRequest
-            {
-                ScheduledClassId =
-                    Class.ScheduledClassId,
+{
+    ScheduledClassId =
+        Class.ScheduledClassId,
 
-                LessonTitle = _lessonTitle,
+    LessonTitle = _lessonTitle,
 
-                ChapterName = _chapterName,
+    ChapterName = _chapterName,
 
-                PagesCovered = _pagesCovered,
+    PagesCovered = _pagesCovered,
 
-                IsLessonCompleted =
-                    _isLessonCompleted,
+    IsLessonCompleted =
+        _isLessonCompleted,
 
-                HomeworkGiven =
-                    _homeworkGiven,
+    HomeworkGiven =
+        _homeworkGiven,
 
-                Homework =
-                    _homework,
+    Homework =
+        _homework,
 
-                HomeworkCompleted =
-                    _homeworkCompleted,
+    HomeworkCompleted =
+        _homeworkCompleted,
 
-                TeacherNotes =
-                    _teacherNotes
-            }
+    TeacherNotes =
+        _teacherNotes
+},
+
+Report = new CreateClassReportRequest
+{
+    ScheduledClassId =
+        Class.ScheduledClassId,
+
+    PerformanceRating =
+        _performanceRating,
+
+    HomeworkStatus =
+        _homeworkStatus,
+
+    BehaviourRating =
+        _behaviourRating,
+
+    ClassOutcome =
+        _classOutcome,
+
+    LessonTaken =
+        _lessonTaken,
+
+    NextHomework =
+        _nextHomework,
+
+    TeacherRemarks =
+        _reportTeacherRemarks,
+
+    ActualDurationMinutes =
+        _actualDurationMinutes
+}
         }));
 }
 

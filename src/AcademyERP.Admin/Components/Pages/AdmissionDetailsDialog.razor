@@ -58,6 +58,34 @@
                     <MudText>@(Application.PreferredTiming ?? "-")</MudText>
                 </MudItem>
 
+                <MudItem xs="12">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.PersonSearch"
+                               Disabled="@string.IsNullOrWhiteSpace(Application.PreferredTiming)"
+                               OnClick="LoadAvailableTeachers">
+                        Find available teachers for this time
+                    </MudButton>
+                </MudItem>
+
+                @if (_teachersLoaded)
+                {
+                    <MudItem xs="12">
+                        @if (_availableTeachers.Count == 0)
+                        {
+                            <MudAlert Severity="Severity.Info">No teacher availability is recorded for this preferred time.</MudAlert>
+                        }
+                        else
+                        {
+                            <MudSelect T="Guid?" Label="Available teachers" @bind-Value="_selectedTeacherId">
+                                @foreach (var teacher in _availableTeachers)
+                                {
+                                    <MudSelectItem T="Guid?" Value="@((Guid?)teacher.Id)">@teacher.FullName (@teacher.EmployeeCode) — @teacher.Department</MudSelectItem>
+                                }
+                            </MudSelect>
+                        }
+                    </MudItem>
+                }
+
             </MudGrid>
 
             <MudDivider />
@@ -117,7 +145,9 @@
                 <MudSelectItem T="int" Value="3">
                     Demo Scheduled
                 </MudSelectItem>
-
+<MudSelectItem T="int" Value="8">
+    Demo Started
+</MudSelectItem>
                 <MudSelectItem T="int" Value="4">
                     Demo Completed
                 </MudSelectItem>
@@ -169,10 +199,14 @@
     private int _selectedStatus;
 
     private bool _saving;
+    private bool _teachersLoaded;
+    private Guid? _selectedTeacherId;
+    private List<AvailableTeacherResponse> _availableTeachers = new();
 
     protected override void OnInitialized()
     {
         _selectedStatus = Application.Status;
+        _selectedTeacherId = Application.AssignedTeacherId;
     }
 
     private async Task SaveStatus()
@@ -180,6 +214,13 @@
         try
         {
             _saving = true;
+
+            if (_selectedTeacherId.HasValue)
+            {
+                await AdmissionApi.AssignTeacherAsync(
+                    Application.Id,
+                    _selectedTeacherId.Value);
+            }
 
             await AdmissionApi.UpdateStatusAsync(
                 Application.Id,
@@ -200,6 +241,19 @@
         finally
         {
             _saving = false;
+        }
+    }
+
+    private async Task LoadAvailableTeachers()
+    {
+        try
+        {
+            _availableTeachers = await AdmissionApi.GetAvailableTeachersAsync(Application.Id);
+            _teachersLoaded = true;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Unable to load available teachers: {ex.Message}", Severity.Error);
         }
     }
 

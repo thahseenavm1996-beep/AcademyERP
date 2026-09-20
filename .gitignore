@@ -62,3 +62,20 @@ publish/
 
 *.tmp
 *.tempsrc.zip
+
+##############################
+# AcademyERP local storage
+##############################
+
+# Uploaded payment proofs / runtime files
+src/AcademyERP.API/Storage/
+
+# Temporary backups
+*.backup
+*backup.razor
+
+# Local patch and setup scripts
+*.patch
+merge_academy_fix.sh
+setup-best-performing-faculty.sh
+setup-best-reports.sh

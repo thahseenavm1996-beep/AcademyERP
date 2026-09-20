@@ -41,10 +41,15 @@
 
             @if (!IsEdit)
             {
-                <MudTextField T="string" Label="Password" @bind-Value="_model.Password" InputType="InputType.Password"
-                              Required="true" RequiredError="Password is required."
-                              Validation="@(new Func<string, IEnumerable<string>>(ValidatePassword))" Immediate="true"
-                              HelperText="Minimum 6 characters" />
+                <MudTextField T="string"
+              Label="Password"
+              @bind-Value="_model.Password"
+              InputType="InputType.Password"
+              Required="true"
+              RequiredError="Password is required."
+              Validation="@(new Func<string, IEnumerable<string>>(ValidatePassword))"
+              Immediate="true"
+              HelperText="Minimum 6 characters • 1 uppercase • 1 lowercase • 1 number • 1 special character" />
             }
 
             <MudTextField T="string" Label="Remarks" Lines="3" @bind-Value="_model.Remarks" />
@@ -174,6 +179,8 @@ _model.Email = Student.Email;
 
         if (!password.Any(char.IsUpper))
             yield return "Password must contain at least one uppercase letter.";
+            if (!password.Any(char.IsLower))
+    yield return "Password must contain at least one lowercase letter.";
 
         if (!password.Any(char.IsDigit))
             yield return "Password must contain at least one number.";

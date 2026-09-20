@@ -1,0 +1,104 @@
+@page "/teacher/attendance"
+@layout TeacherLayout
+
+@using AcademyERP.Admin.Models.Attendance
+@using AcademyERP.Admin.Models.TeacherPortal
+@using AcademyERP.Admin.Services
+@using AcademyERP.Domain.Enums
+
+@inject TeacherPortalApiService TeacherApi
+
+
+<MudStack Spacing="3">
+
+    <MudText Typo="Typo.h4">
+        My Attendance
+    </MudText>
+
+    @if (_loading)
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+    else
+    {
+        
+
+        <!-- Attendance History -->
+        @if (_attendance == null || !_attendance.Any())
+        {
+            <MudAlert Severity="Severity.Info">
+                No attendance records found.
+            </MudAlert>
+        }
+        else
+        {
+            <MudText Typo="Typo.h6" Class="mt-3">
+                Attendance History
+            </MudText>
+
+            <MudTable Items="_attendance"
+                      Class="mt-2"
+                      Elevation="2"
+                      Hover="true">
+
+                <HeaderContent>
+                    <MudTh>Date</MudTh>
+                    <MudTh>Student</MudTh>
+                    <MudTh>Status</MudTh>
+                </HeaderContent>
+
+                <RowTemplate>
+                    <MudTd>
+                        @context.Date.ToString("dd MMM yyyy")
+                    </MudTd>
+
+                    <MudTd>
+                        @context.StudentName
+                    </MudTd>
+
+                    <MudTd>
+                        <MudChip T="string"
+                                 Color="@GetColor(context.Status)">
+                            @context.Status
+                        </MudChip>
+                    </MudTd>
+                </RowTemplate>
+
+            </MudTable>
+        }
+    }
+
+</MudStack>
+
+@code {
+
+    private List<TeacherAttendanceDto>? _attendance;
+    
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+           
+
+            _attendance = await TeacherApi.GetAttendanceAsync();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static Color GetColor(string status)
+    {
+        return status switch
+        {
+            "Present" => Color.Success,
+            "Late" => Color.Warning,
+            "Absent" => Color.Error,
+            "Leave" => Color.Info,
+            _ => Color.Default
+        };
+    }
+}

@@ -1,0 +1,178 @@
+@inherits LayoutComponentBase
+@using AcademyERP.Admin.Models.Branding
+@using AcademyERP.Admin.Authentication
+@using AcademyERP.Admin.Services
+
+@inject TokenService TokenService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<MudThemeProvider Theme="@AcademyTheme.Theme" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+
+<MudLayout>
+
+    <MudDrawer @bind-Open="_drawerOpen"
+               Variant="DrawerVariant.Responsive"
+               Elevation="1">
+
+        <MudDrawerHeader>
+
+            <div class="academy-brand academy-brand-sidebar">
+    <img src="/images/Clogo.png"
+     alt="MS Academy International"
+     class="academy-logo" />
+    
+</div>
+
+        </MudDrawerHeader>
+
+
+        <MudNavMenu>
+
+
+            <MudNavLink Href="/Teachers/TeacherDashboard"
+                        Icon="@Icons.Material.Filled.Dashboard">
+
+                Dashboard
+
+            </MudNavLink>
+
+
+            <MudNavLink Href="/teacher/classes"
+                        Icon="@Icons.Material.Filled.Class">
+
+                My Classes
+
+            </MudNavLink>
+
+
+            <MudNavLink Href="/teacher/students"
+                        Icon="@Icons.Material.Filled.People">
+
+                My Students
+
+            </MudNavLink>
+
+
+            <MudNavLink Href="/teacher/attendance"
+                        Icon="@Icons.Material.Filled.CheckCircle">
+
+                Attendance
+
+            </MudNavLink>
+
+
+            <MudNavLink Href="/teacher/reports"
+                        Icon="@Icons.Material.Filled.MenuBook">
+
+                Class Reports
+
+            </MudNavLink>
+
+
+            <MudNavLink Href="/teacher/schedule"
+                        Icon="@Icons.Material.Filled.CalendarMonth">
+
+                Schedule
+
+            </MudNavLink>
+             <MudNavLink Href="/teacher/fee-payment"
+                        Icon="@Icons.Material.Filled.Payments">
+
+                Fee Payment
+
+            </MudNavLink>
+
+
+            <MudNavLink Href="/teacher/messages"
+                        Icon="@Icons.Material.Filled.Message">
+
+                Messages
+
+            </MudNavLink>
+
+
+            <MudNavLink Href="/teacher/profile"
+                        Icon="@Icons.Material.Filled.Person">
+
+                Profile
+
+            </MudNavLink>
+
+
+        </MudNavMenu>
+
+    </MudDrawer>
+
+
+
+    <MudMainContent>
+
+
+        <MudAppBar Color="Color.Primary">
+
+            <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                           Color="Color.Inherit"
+                           OnClick="ToggleDrawer" />
+
+
+            <MudText Typo="Typo.h6" Class="academy-portal-title">
+    Teacher Portal
+</MudText>
+
+            <MudSpacer />
+
+
+            <MudButton Color="Color.Error"
+                       Variant="Variant.Filled"
+                       OnClick="Logout">
+
+                Logout
+
+            </MudButton>
+
+
+        </MudAppBar>
+
+
+        <MudContainer MaxWidth="MaxWidth.False"
+                      Class="pa-6">
+
+            @Body
+
+        </MudContainer>
+
+
+    </MudMainContent>
+
+
+</MudLayout>
+
+
+
+@code {
+
+    private bool _drawerOpen = true;
+
+
+    private void ToggleDrawer()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+
+ private async Task Logout()
+{
+    await TokenService.RemoveTokenAsync();
+
+    ((JwtAuthenticationStateProvider)AuthenticationStateProvider)
+        .NotifyUserLogout();
+
+    Navigation.NavigateTo("/login", forceLoad: true);
+}
+
+}

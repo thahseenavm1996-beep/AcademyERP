@@ -1,0 +1,687 @@
+@page "/report-unlock-requests"
+
+@using AcademyERP.Admin.Models.ReportUnlockRequests
+@using AcademyERP.Domain.Enums
+@using AcademyERP.Admin.Services
+
+@inject ReportUnlockRequestApiService ReportUnlockApi
+@inject ISnackbar Snackbar
+
+<PageTitle>Report Unlock Requests</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="pa-4">
+
+    <!-- HEADER -->
+    <MudPaper Elevation="1" Class="pa-5 mb-4">
+
+       <MudStack Row="true"
+          AlignItems="AlignItems.Center"
+          Justify="Justify.SpaceBetween"
+          Spacing="2"
+          Style="flex-wrap:wrap;">
+
+            <MudStack Row="true"
+                      AlignItems="AlignItems.Center"
+                      Spacing="2">
+
+                <MudIcon Icon="@Icons.Material.Filled.LockOpen"
+                         Color="Color.Primary"
+                         Size="Size.Large" />
+
+                <MudStack Spacing="0">
+
+                    <MudText Typo="Typo.h5"
+                             Color="Color.Primary"
+                             Style="font-weight:700;">
+                        Report Unlock Requests
+                    </MudText>
+
+                    <MudText Typo="Typo.body2"
+                             Color="Color.Secondary">
+                        Review teacher requests to unlock class reports
+                    </MudText>
+
+                </MudStack>
+
+            </MudStack>
+
+            <MudButton Variant="Variant.Outlined"
+           Color="Color.Primary"
+           StartIcon="@Icons.Material.Filled.Refresh"
+           OnClick="LoadRequestsAsync"
+           Disabled="_loading"
+           Style="white-space:nowrap;">
+    Refresh
+</MudButton>
+
+        </MudStack>
+
+    </MudPaper>
+
+
+    <!-- SUMMARY CARDS -->
+    <MudGrid Class="mb-4">
+
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudPaper Elevation="1" Class="pa-4">
+
+                <MudText Typo="Typo.body2"
+                         Color="Color.Secondary">
+                    Total Requests
+                </MudText>
+
+                <MudText Typo="Typo.h4"
+                         Color="Color.Primary"
+                         Style="font-weight:700;">
+                    @_requests.Count
+                </MudText>
+
+            </MudPaper>
+
+        </MudItem>
+
+
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudPaper Elevation="1" Class="pa-4">
+
+                <MudText Typo="Typo.body2"
+                         Color="Color.Warning">
+                    Pending
+                </MudText>
+
+                <MudText Typo="Typo.h4"
+                         Color="Color.Warning"
+                         Style="font-weight:700;">
+                    @PendingCount
+                </MudText>
+
+            </MudPaper>
+
+        </MudItem>
+
+
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudPaper Elevation="1" Class="pa-4">
+
+                <MudText Typo="Typo.body2"
+                         Color="Color.Success">
+                    Approved
+                </MudText>
+
+                <MudText Typo="Typo.h4"
+                         Color="Color.Success"
+                         Style="font-weight:700;">
+                    @ApprovedCount
+                </MudText>
+
+            </MudPaper>
+
+        </MudItem>
+
+
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudPaper Elevation="1" Class="pa-4">
+
+                <MudText Typo="Typo.body2"
+                         Color="Color.Error">
+                    Rejected
+                </MudText>
+
+                <MudText Typo="Typo.h4"
+                         Color="Color.Error"
+                         Style="font-weight:700;">
+                    @RejectedCount
+                </MudText>
+
+            </MudPaper>
+
+        </MudItem>
+
+    </MudGrid>
+
+
+    <!-- FILTER -->
+    <MudPaper Elevation="1" Class="pa-4 mb-4">
+
+        <MudGrid>
+
+            <MudItem xs="12" sm="6" md="4">
+
+                <MudSelect T="ReportUnlockRequestStatus?"
+                           Label="Status"
+                           Variant="Variant.Outlined"
+                           @bind-Value="_statusFilter">
+
+                    <MudSelectItem T="ReportUnlockRequestStatus?"
+                                   Value="@((ReportUnlockRequestStatus?)null)">
+                        All
+                    </MudSelectItem>
+
+                    <MudSelectItem T="ReportUnlockRequestStatus?"
+                                   Value="@ReportUnlockRequestStatus.Pending">
+                        Pending
+                    </MudSelectItem>
+
+                    <MudSelectItem T="ReportUnlockRequestStatus?"
+                                   Value="@ReportUnlockRequestStatus.Approved">
+                        Approved
+                    </MudSelectItem>
+
+                    <MudSelectItem T="ReportUnlockRequestStatus?"
+                                   Value="@ReportUnlockRequestStatus.Rejected">
+                        Rejected
+                    </MudSelectItem>
+
+                </MudSelect>
+
+            </MudItem>
+
+        </MudGrid>
+
+    </MudPaper>
+<!-- REJECTION PANEL -->
+@if (_rejectingRequest != null)
+{
+    <MudPaper Elevation="8"
+              Class="pa-5 mb-4">
+
+        <MudText Typo="Typo.h6"
+                 Color="Color.Error"
+                 Style="font-weight:700;">
+            Reject Unlock Request
+        </MudText>
+
+        <MudText Typo="Typo.body2"
+                 Class="mb-3">
+
+            Teacher:
+            <strong>@_rejectingRequest.TeacherName</strong>
+
+            <br />
+
+            Students:
+            <strong>@_rejectingRequest.StudentCount</strong>
+
+            <br />
+
+            Courses:
+            <strong>@_rejectingRequest.CourseCount</strong>
+
+            <br />
+
+            Report Date:
+            <strong>
+                @_rejectingRequest.ReportDate.ToString("dd MMM yyyy")
+            </strong>
+
+        </MudText>
+
+        <MudTextField T="string"
+                      Label="Rejection Reason"
+                      Placeholder="Enter reason for rejection"
+                      Variant="Variant.Outlined"
+                      Lines="3"
+                      @bind-Value="_rejectionReason" />
+
+        <MudStack Row="true"
+                  Justify="Justify.FlexEnd"
+                  Class="mt-4"
+                  Spacing="2">
+
+            <MudButton Variant="Variant.Text"
+                       OnClick="CancelReject">
+                Cancel
+            </MudButton>
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Error"
+                       StartIcon="@Icons.Material.Filled.Close"
+                       OnClick="RejectAsync"
+                       Disabled="_reviewing">
+                Reject Request
+            </MudButton>
+
+        </MudStack>
+
+    </MudPaper>
+}
+
+   <!-- REQUESTS -->
+<MudPaper Elevation="1"
+          Class="unlock-requests-container">
+
+    @if (_loading)
+    {
+        <MudProgressLinear Indeterminate="true"
+                           Color="Color.Primary" />
+    }
+    else if (!FilteredRequests.Any())
+    {
+        <MudStack AlignItems="AlignItems.Center"
+                  Class="pa-8">
+
+            <MudIcon Icon="@Icons.Material.Filled.Inbox"
+                     Size="Size.Large"
+                     Color="Color.Secondary" />
+
+            <MudText Color="Color.Secondary"
+                     Class="mt-2">
+                No report unlock requests found.
+            </MudText>
+
+        </MudStack>
+    }
+    else
+    {
+        <MudGrid Spacing="2"
+                 Class="unlock-request-list">
+
+            @foreach (var request in FilteredRequests)
+            {
+                <MudItem xs="12">
+
+                    <MudPaper Class="unlock-request-card"
+                              Outlined="true"
+                              Elevation="0">
+
+                        <!-- HEADER -->
+                        <MudStack Row="true"
+                                  Justify="Justify.SpaceBetween"
+                                  AlignItems="AlignItems.Center"
+                                  Spacing="2"
+                                  Class="mb-2">
+
+                            <MudStack Spacing="0">
+
+                                <MudText Typo="Typo.subtitle1"
+                                         Class="unlock-teacher-name">
+                                    @request.TeacherName
+                                </MudText>
+
+                                <MudText Typo="Typo.caption"
+                                         Color="Color.Secondary">
+                                    Report: @request.ReportDate.ToString("dd MMM yyyy")
+                                </MudText>
+
+                            </MudStack>
+
+                            @if (request.Status ==
+                                 ReportUnlockRequestStatus.Pending)
+                            {
+                                <MudChip T="string"
+                                         Color="Color.Warning"
+                                         Size="Size.Small">
+                                    Pending
+                                </MudChip>
+                            }
+                            else if (request.Status ==
+                                     ReportUnlockRequestStatus.Approved)
+                            {
+                                <MudChip T="string"
+                                         Color="Color.Success"
+                                         Size="Size.Small">
+                                    Approved
+                                </MudChip>
+                            }
+                            else
+                            {
+                                <MudChip T="string"
+                                         Color="Color.Error"
+                                         Size="Size.Small">
+                                    Rejected
+                                </MudChip>
+                            }
+
+                        </MudStack>
+
+                        <MudDivider Class="mb-3" />
+
+                        <!-- SUMMARY -->
+                        <MudGrid Spacing="1">
+
+                            <MudItem xs="6" sm="3">
+                                <MudText Typo="Typo.caption"
+                                         Color="Color.Secondary">
+                                    Students
+                                </MudText>
+
+                                <MudText Typo="Typo.body2"
+                                         Class="unlock-value">
+                                    @request.StudentCount
+                                </MudText>
+                            </MudItem>
+
+                            <MudItem xs="6" sm="3">
+                                <MudText Typo="Typo.caption"
+                                         Color="Color.Secondary">
+                                    Courses
+                                </MudText>
+
+                                <MudText Typo="Typo.body2"
+                                         Class="unlock-value">
+                                    @request.CourseCount
+                                </MudText>
+                            </MudItem>
+
+                            <MudItem xs="12" sm="6">
+    <MudText Typo="Typo.caption"
+             Color="Color.Secondary">
+        Requested
+    </MudText>
+
+    <MudText Typo="Typo.body2">
+        @(request.RequestedAt
+            .ToLocalTime()
+            .ToString("dd MMM yyyy, hh:mm tt"))
+    </MudText>
+</MudItem>
+
+                        </MudGrid>
+
+                        <!-- REASON -->
+                        <MudPaper Class="unlock-reason mt-3"
+                                  Outlined="true">
+
+                            <MudText Typo="Typo.caption"
+                                     Color="Color.Secondary">
+                                Reason
+                            </MudText>
+
+                            <MudText Typo="Typo.body2">
+                                @(string.IsNullOrWhiteSpace(request.Reason)
+                                    ? "-"
+                                    : request.Reason)
+                            </MudText>
+
+                        </MudPaper>
+
+                        <!-- ACTIONS / REVIEW -->
+                        @if (request.Status ==
+                             ReportUnlockRequestStatus.Pending)
+                        {
+                            <MudStack Row="true"
+                                      Justify="Justify.FlexEnd"
+                                      Spacing="1"
+                                      Class="mt-3">
+
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Success"
+                                           Size="Size.Small"
+                                           StartIcon="@Icons.Material.Filled.Check"
+                                           OnClick="@(() => ApproveAsync(request))">
+                                    Approve
+                                </MudButton>
+
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Error"
+                                           Size="Size.Small"
+                                           StartIcon="@Icons.Material.Filled.Close"
+                                           OnClick="@(() => StartReject(request))">
+                                    Reject
+                                </MudButton>
+
+                            </MudStack>
+                        }
+                        else if (request.ReviewedAt.HasValue)
+                        {
+                            <MudStack Row="true"
+                                      Justify="Justify.FlexEnd"
+                                      Class="mt-3">
+
+                                <MudText Typo="Typo.caption"
+         Color="Color.Secondary">
+    Reviewed
+    @(request.ReviewedAt.Value
+        .ToLocalTime()
+        .ToString("dd MMM yyyy, hh:mm tt"))
+</MudText>
+
+                            </MudStack>
+                        }
+
+                    </MudPaper>
+
+                </MudItem>
+            }
+
+        </MudGrid>
+    }
+
+</MudPaper>
+
+   
+
+
+   
+
+</MudContainer>
+<style>
+    .unlock-requests-container {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .unlock-request-list {
+        padding: 16px;
+        margin-top: 0;
+    }
+
+    .unlock-request-card {
+        border-radius: 10px;
+        padding: 16px;
+        transition: box-shadow 0.15s ease,
+                    background-color 0.15s ease;
+    }
+
+    .unlock-request-card:hover {
+        background-color: #fafafa;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .unlock-teacher-name {
+        font-weight: 600;
+    }
+
+    .unlock-value {
+        font-weight: 600;
+    }
+
+    .unlock-reason {
+        padding: 10px 12px;
+        background-color: #fafafa;
+        border-radius: 8px;
+    }
+
+    @@media (max-width: 600px) {
+        .unlock-request-list {
+            padding: 8px;
+        }
+
+        .unlock-request-card {
+            padding: 12px;
+        }
+    }
+</style>
+
+@code {
+
+    private List<ReportUnlockRequestResponse> _requests = new();
+
+    private ReportUnlockRequestStatus? _statusFilter;
+
+    private ReportUnlockRequestResponse? _rejectingRequest;
+
+    private string _rejectionReason = string.Empty;
+
+    private bool _loading;
+
+    private bool _reviewing;
+
+
+    private IEnumerable<ReportUnlockRequestResponse> FilteredRequests =>
+        _statusFilter.HasValue
+            ? _requests.Where(x =>
+                x.Status == _statusFilter.Value)
+            : _requests;
+
+
+    private int PendingCount =>
+        _requests.Count(x =>
+            x.Status == ReportUnlockRequestStatus.Pending);
+
+
+    private int ApprovedCount =>
+        _requests.Count(x =>
+            x.Status == ReportUnlockRequestStatus.Approved);
+
+
+    private int RejectedCount =>
+        _requests.Count(x =>
+            x.Status == ReportUnlockRequestStatus.Rejected);
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRequestsAsync();
+    }
+
+
+    private async Task LoadRequestsAsync()
+    {
+        try
+        {
+            _loading = true;
+
+            _requests =
+                await ReportUnlockApi.GetAllAsync();
+
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to load unlock requests: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+
+    private async Task ApproveAsync(
+        ReportUnlockRequestResponse request)
+    {
+        try
+        {
+            _reviewing = true;
+
+            var success =
+                await ReportUnlockApi.ReviewAsync(
+                    request.Id,
+                    ReportUnlockRequestStatus.Approved);
+
+            if (!success)
+            {
+                Snackbar.Add(
+                    "Unable to approve the request.",
+                    Severity.Error);
+
+                return;
+            }
+
+            Snackbar.Add(
+                $"Unlock request for {request.TeacherName} approved.",
+                Severity.Success);
+
+            await LoadRequestsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Approval failed: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _reviewing = false;
+        }
+    }
+
+
+    private void StartReject(
+        ReportUnlockRequestResponse request)
+    {
+        _rejectingRequest = request;
+        _rejectionReason = string.Empty;
+    }
+
+
+    private void CancelReject()
+    {
+        _rejectingRequest = null;
+        _rejectionReason = string.Empty;
+    }
+
+
+    private async Task RejectAsync()
+    {
+        if (_rejectingRequest == null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(_rejectionReason))
+        {
+            Snackbar.Add(
+                "Please enter a rejection reason.",
+                Severity.Warning);
+
+            return;
+        }
+
+        try
+        {
+            _reviewing = true;
+
+            var request =
+                _rejectingRequest;
+
+            var success =
+                await ReportUnlockApi.ReviewAsync(
+                    request.Id,
+                    ReportUnlockRequestStatus.Rejected,
+                    _rejectionReason);
+
+            if (!success)
+            {
+                Snackbar.Add(
+                    "Unable to reject the request.",
+                    Severity.Error);
+
+                return;
+            }
+
+            Snackbar.Add(
+                $"Unlock request for {request.TeacherName} rejected.",
+                Severity.Success);
+
+            _rejectingRequest = null;
+            _rejectionReason = string.Empty;
+
+            await LoadRequestsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Rejection failed: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _reviewing = false;
+        }
+    }
+}

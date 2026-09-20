@@ -8,6 +8,7 @@ using AcademyERP.Application.DTOs.Enrollments;
 using AcademyERP.Application.DTOs.EnrollmentSchedules;
 using AcademyERP.Domain.Entities.TeachingSchedules;
 using AcademyERP.Application.DTOs.TeachingSchedules;
+using AcademyERP.Domain.Entities.TeacherAvailabilities;
 
 namespace AcademyERP.Infrastructure.Services;
 
@@ -49,7 +50,7 @@ private readonly ITeachingScheduleService _teachingScheduleService;
 
             StartDate = x.StartDate,
             EndDate = x.EndDate,
-
+Gender = x.Student.Gender.ToString(),
             MonthlyFee = x.MonthlyFee,
 
             ScholarshipAmount = x.ScholarshipAmount,
@@ -61,6 +62,18 @@ private readonly ITeachingScheduleService _teachingScheduleService;
             FinalMonthlyFee = x.FinalMonthlyFee,
 
             NextBillingDate = x.NextBillingDate,
+
+            IsFeePaused = x.FeePauses.Any(p => !p.ResumeDate.HasValue),
+            FeePauseStartDate = x.FeePauses
+                .Where(p => !p.ResumeDate.HasValue)
+                .OrderByDescending(p => p.PauseStartDate)
+                .Select(p => (DateTime?)p.PauseStartDate)
+                .FirstOrDefault(),
+            FeePauseReason = x.FeePauses
+                .Where(p => !p.ResumeDate.HasValue)
+                .OrderByDescending(p => p.PauseStartDate)
+                .Select(p => p.Reason)
+                .FirstOrDefault(),
 
             Status = x.Status,
 
@@ -127,6 +140,18 @@ ClassDurationName = x.EnrollmentSchedules
 
             NextBillingDate = x.NextBillingDate,
 
+            IsFeePaused = x.FeePauses.Any(p => !p.ResumeDate.HasValue),
+            FeePauseStartDate = x.FeePauses
+                .Where(p => !p.ResumeDate.HasValue)
+                .OrderByDescending(p => p.PauseStartDate)
+                .Select(p => (DateTime?)p.PauseStartDate)
+                .FirstOrDefault(),
+            FeePauseReason = x.FeePauses
+                .Where(p => !p.ResumeDate.HasValue)
+                .OrderByDescending(p => p.PauseStartDate)
+                .Select(p => p.Reason)
+                .FirstOrDefault(),
+
             Status = x.Status,
 
             Remarks = x.Remarks,
@@ -174,6 +199,16 @@ ClassDurationName = x.EnrollmentSchedules
             "At least one class schedule is required.");
     }
 
+    if (!request.TeacherId.HasValue)
+    {
+        throw new ArgumentException(
+            "A teacher must be assigned before an enrollment can be created.");
+    }
+await ValidateEnrollmentSchedulesAsync(
+    request.TeacherId.Value,
+    request.Schedules,
+    request.StartDate,
+    request.EndDate);
 
     var enrollment = new Enrollment
     {
@@ -389,4 +424,197 @@ foreach (var schedule in request.Schedules)
                 "Scholarship and discount total cannot exceed the monthly fee.");
         }
     }
+
+
+    private async Task ValidateEnrollmentSchedulesAsync(
+    Guid teacherId,
+    IEnumerable<CreateEnrollmentScheduleRequest> schedules,
+    DateTime startDate,
+    DateTime? endDate)
+{
+    var scheduleList = schedules.ToList();
+
+    if (scheduleList.Count == 0)
+        throw new ArgumentException(
+            "At least one class schedule is required.");
+
+    var teacherExists = await _context.Teachers
+        .AsNoTracking()
+        .AnyAsync(x => x.Id == teacherId);
+
+    if (!teacherExists)
+        throw new ArgumentException(
+            "Selected teacher was not found.");
+
+    var slotIds = scheduleList
+        .Select(x => x.TimeSlotId)
+        .Distinct()
+        .ToList();
+
+    var durationIds = scheduleList
+        .Select(x => x.ClassDurationId)
+        .Distinct()
+        .ToList();
+
+    var timeSlots = await _context.TimeSlots
+        .AsNoTracking()
+        .Where(x => slotIds.Contains(x.Id) && x.IsActive)
+        .ToListAsync();
+
+    var durations = await _context.ClassDurations
+        .AsNoTracking()
+        .Where(x => durationIds.Contains(x.Id))
+        .ToListAsync();
+
+    if (timeSlots.Count != slotIds.Count)
+        throw new InvalidOperationException(
+            "One or more selected time slots are inactive or invalid.");
+
+    if (durations.Count != durationIds.Count)
+        throw new InvalidOperationException(
+            "One or more selected class durations are invalid.");
+
+    var availabilities = await _context.TeacherAvailabilities
+        .AsNoTracking()
+        .Include(x => x.TimeSlot)
+        .Where(x =>
+            x.TeacherId == teacherId &&
+            x.IsAvailable)
+        .ToListAsync();
+
+    // If availability has been configured for the teacher,
+    // every enrollment schedule must respect it.
+    if (availabilities.Count == 0)
+    {
+        throw new InvalidOperationException(
+            "This teacher has no availability configured.");
+    }
+
+    var existingTeachingSchedules = await _context.TeachingSchedules
+        .AsNoTracking()
+        .Include(x => x.ClassDuration)
+        .Where(x =>
+            x.TeacherId == teacherId &&
+            x.IsActive)
+        .ToListAsync();
+
+    var requestedRanges = new List<(DayOfWeek Day, int Start, int End)>();
+
+    foreach (var schedule in scheduleList)
+    {
+        var slot = timeSlots.First(x => x.Id == schedule.TimeSlotId);
+        var duration = durations.First(x => x.Id == schedule.ClassDurationId);
+
+        var requestedStart = ToMinutes(slot.StartTime);
+        var requestedEnd = requestedStart + duration.Minutes;
+
+        if (requestedEnd > 24 * 60)
+        {
+            throw new InvalidOperationException(
+                $"The class on {schedule.DayOfWeek} would continue past midnight.");
+        }
+
+        // Check teacher's configured availability.
+        var dayAvailability = availabilities
+            .Where(x =>
+                x.DayOfWeek == schedule.DayOfWeek &&
+                x.IsAvailable)
+            .Select(x => new
+            {
+                Start = ToMinutes(x.TimeSlot.StartTime),
+                End = ToMinutes(x.TimeSlot.EndTime)
+            })
+            .OrderBy(x => x.Start)
+            .ToList();
+
+        if (dayAvailability.Count == 0)
+        {
+            throw new InvalidOperationException(
+                $"Teacher is not available on {schedule.DayOfWeek}.");
+        }
+
+        var coveredUntil = requestedStart;
+
+        foreach (var available in dayAvailability)
+        {
+            var availableStart = available.Start;
+            var availableEnd = available.End;
+
+            // Handle 11 PM - 12 AM.
+            if (availableEnd <= availableStart)
+                availableEnd = 24 * 60;
+
+            if (availableStart > coveredUntil)
+                break;
+
+            if (availableEnd > coveredUntil)
+                coveredUntil = availableEnd;
+
+            if (coveredUntil >= requestedEnd)
+                break;
+        }
+
+        if (coveredUntil < requestedEnd)
+        {
+            throw new InvalidOperationException(
+                $"Teacher is not available on {schedule.DayOfWeek} " +
+                $"for the selected time and duration.");
+        }
+
+        // Check for overlapping schedules inside this same enrollment.
+        var overlapsRequest = requestedRanges.Any(existing =>
+            existing.Day == schedule.DayOfWeek &&
+            requestedStart < existing.End &&
+            requestedEnd > existing.Start);
+
+        if (overlapsRequest)
+        {
+            throw new InvalidOperationException(
+                $"The enrollment contains overlapping classes on " +
+                $"{schedule.DayOfWeek}.");
+        }
+
+        requestedRanges.Add(
+            (schedule.DayOfWeek, requestedStart, requestedEnd));
+
+        // Check existing recurring teaching schedules.
+        var hasConflict = existingTeachingSchedules.Any(existing =>
+        {
+            if (existing.DayOfWeek != schedule.DayOfWeek)
+                return false;
+
+            var existingStart = ToMinutes(existing.StartTime);
+            var existingEnd =
+                existingStart + existing.ClassDuration.Minutes;
+
+            if (existingEnd > 24 * 60)
+                existingEnd = 24 * 60;
+
+            var datesOverlap =
+                existing.EffectiveFrom.Date <=
+                    (endDate ?? DateTime.MaxValue).Date
+                &&
+                (!existing.EffectiveTo.HasValue ||
+                 existing.EffectiveTo.Value.Date >= startDate.Date);
+
+            if (!datesOverlap)
+                return false;
+
+            return requestedStart < existingEnd &&
+                   requestedEnd > existingStart;
+        });
+
+        if (hasConflict)
+        {
+            throw new InvalidOperationException(
+                $"The selected teacher already has a class " +
+                $"overlapping this time on {schedule.DayOfWeek}.");
+        }
+    }
+}
+
+private static int ToMinutes(TimeOnly time)
+{
+    return (time.Hour * 60) + time.Minute;
+}
 }

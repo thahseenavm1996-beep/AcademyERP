@@ -162,61 +162,114 @@ var attendancePercentage = completedClasses == 0
         return $"{prefix}{lastNumber + 1}";
     }
     public async Task<PagedResponse<StudentResponse>> GetAllAsync(StudentQueryRequest request)
+{
+    var query = _context.Students.AsQueryable();
+
+    if (!string.IsNullOrWhiteSpace(request.Search))
     {
-        var query = _context.Students.AsQueryable();
-
-        if (!string.IsNullOrWhiteSpace(request.Search))
-        {
-            query = query.Where(s =>
-                s.FullName.Contains(request.Search) ||
-                s.AdmissionNumber.Contains(request.Search));
-        }
-
-        query = request.SortBy?.ToLower() switch
-        {
-            "fullname" => query.OrderBy(s => s.FullName),
-            "admissionnumber" => query.OrderBy(s => s.AdmissionNumber),
-            "admissiondate" => query.OrderBy(s => s.AdmissionDate),
-            _ => query.OrderBy(s => s.FullName)
-        };
-
-        var totalCount = await query.CountAsync();
-
-        var students = await query
-            .Skip((request.Page - 1) * request.PageSize)
-            .Take(request.PageSize)
-            .ToListAsync();
-
-        return new PagedResponse<StudentResponse>
-        {
-            Items = _mapper.Map<List<StudentResponse>>(students),
-            Page = request.Page,
-            PageSize = request.PageSize,
-            TotalCount = totalCount,
-            TotalPages = (int)Math.Ceiling((double)totalCount / request.PageSize)
-        };
+        query = query.Where(s =>
+            s.FullName.Contains(request.Search) ||
+            s.AdmissionNumber.Contains(request.Search));
     }
+
+    if (request.CourseId.HasValue)
+    {
+        query = query.Where(s =>
+            s.Enrollments.Any(e => e.CourseId == request.CourseId.Value));
+    }
+
+    if (!string.IsNullOrWhiteSpace(request.Gender) &&
+        Enum.TryParse<Gender>(request.Gender, true, out var gender))
+    {
+        query = query.Where(s => s.Gender == gender);
+    }
+
+    query = request.SortBy?.ToLower() switch
+    {
+        "fullname" => query.OrderBy(s => s.FullName),
+        "admissionnumber" => query.OrderBy(s => s.AdmissionNumber),
+        "admissiondate" => query.OrderBy(s => s.AdmissionDate),
+        _ => query.OrderBy(s => s.FullName)
+    };
+
+    var totalCount = await query.CountAsync();
+
+    var students = await query
+        .Skip((request.Page - 1) * request.PageSize)
+        .Take(request.PageSize)
+        .ToListAsync();
+
+    return new PagedResponse<StudentResponse>
+    {
+        Items = _mapper.Map<List<StudentResponse>>(students),
+        Page = request.Page,
+        PageSize = request.PageSize,
+        TotalCount = totalCount,
+        TotalPages = (int)Math.Ceiling(
+            (double)totalCount / request.PageSize)
+    };
+}
     public async Task<StudentResponse?> GetByIdAsync(Guid id)
+{
+    var student = await _context.Students
+        .Include(x => x.StudentParents)
+            .ThenInclude(x => x.Parent)
+        .FirstOrDefaultAsync(x => x.Id == id);
+
+    if (student == null)
+        return null;
+
+    var response = _mapper.Map<StudentResponse>(student);
+
+    var user = await GetStudentUserAsync(student);
+
+    if (user != null)
     {
-        var student = await _context.Students
-            .FirstOrDefaultAsync(x => x.Id == id);
-
-        if (student == null)
-            return null;
-
-        var response = _mapper.Map<StudentResponse>(student);
-
-       var user = await GetStudentUserAsync(student);
-        if (user != null)
-        {
-            response.Email = user.Email ?? string.Empty;
-            response.PhoneNumber = user.PhoneNumber ?? string.Empty;
-        }
-
-        response.Status = student.Status.ToString();
-
-        return response;
+        response.Email = user.Email ?? string.Empty;
+        response.PhoneNumber = user.PhoneNumber ?? string.Empty;
     }
+
+    response.Status = student.Status.ToString();
+
+    response.Parents = student.StudentParents
+        .Where(x => x.Parent != null)
+        .Select(x => new StudentParentResponse
+        {
+            ParentId = x.ParentId,
+            FullName = x.Parent!.FullName,
+            PhoneNumber = x.Parent.PhoneNumber,
+            Email = x.Parent.Email,
+            IsPrimaryContact = x.IsPrimaryContact
+        })
+        .ToList();
+
+    var parentIds = student.StudentParents
+        .Select(x => x.ParentId)
+        .ToList();
+
+    if (parentIds.Any())
+    {
+        response.Siblings = await _context.StudentParents
+            .AsNoTracking()
+            .Include(x => x.Student)
+            .Where(x =>
+                parentIds.Contains(x.ParentId) &&
+                x.StudentId != student.Id &&
+                x.Student != null)
+            .Select(x => new StudentSiblingResponse
+            {
+                StudentId = x.StudentId,
+                AdmissionNumber = x.Student!.AdmissionNumber,
+                FullName = x.Student.FullName,
+                Gender = x.Student.Gender.ToString(),
+                Status = x.Student.Status.ToString()
+            })
+            .Distinct()
+            .ToListAsync();
+    }
+
+    return response;
+}
 
     public async Task<StudentResponse> UpdateAsync(Guid id, UpdateStudentRequest request)
     {

@@ -1,0 +1,1340 @@
+@page "/teacher/reports"
+@layout TeacherLayout
+
+@using AcademyERP.Admin.Models.TeacherPortal
+@using AcademyERP.Admin.Services
+@using AcademyERP.Domain.Enums
+@using CreateTeacherBulkReportsRequest = AcademyERP.Application.DTOs.TeacherPortal.CreateTeacherBulkReportsRequest
+@using CreateClassReportRequest = AcademyERP.Application.DTOs.ClassReports.CreateClassReportRequest
+@using Microsoft.JSInterop
+@using AcademyERP.Admin.Models.ReportUnlockRequests
+
+@inject TeacherPortalApiService TeacherApi
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+
+<MudStack Spacing="3">
+
+    <MudStack Row="true"
+              Justify="Justify.SpaceBetween"
+              AlignItems="AlignItems.Center">
+
+        <MudText Typo="Typo.h4">
+            Class Reports 📝
+        </MudText>
+
+       
+
+    </MudStack>
+
+    
+        <MudPaper Class="pa-4" Elevation="3">
+
+            <MudStack Row="true"
+                      Justify="Justify.SpaceBetween"
+                      AlignItems="AlignItems.Center">
+
+                <MudText Typo="Typo.h5">
+                    Class Reports
+                </MudText>
+
+                <MudText Typo="Typo.body2">
+                    @DateTime.Today.ToString("dddd, dd MMMM yyyy")
+                </MudText>
+
+            </MudStack>
+
+            <MudDivider Class="my-4" />
+
+            @if (_loadingToday)
+            {
+                <MudProgressLinear Indeterminate="true" />
+            }
+            else if (!_todayClasses.Any())
+            {
+                <MudAlert Severity="Severity.Info">
+                    No classes are scheduled for you today.
+                </MudAlert>
+            }
+            else
+            {
+                <MudPaper Class="pa-4 mb-4" Outlined="true">
+
+    <MudStack Row="true"
+              AlignItems="AlignItems.Center"
+              Spacing="2">
+
+        <MudDatePicker @bind-Date="_selectedReportDate"
+                       Label="Class Date"
+                       Variant="Variant.Outlined"
+                       DateFormat="dd MMM yyyy"
+                       MaxDate="@DateTime.Today"
+                       Clearable="false" />
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   OnClick="OpenTodayReports">
+            Load Classes
+        </MudButton>
+
+    </MudStack>
+
+</MudPaper>
+                <MudTable Items="_todayReports"
+          Hover="true"
+          Dense="true"
+          Bordered="true"
+          Striped="true"
+          Breakpoint="Breakpoint.None">
+
+    <HeaderContent>
+
+        
+        <MudTh>Student</MudTh>
+        <MudTh>Course</MudTh>
+        <MudTh>Time</MudTh>
+        <MudTh>Attendance</MudTh>
+        <MudTh>Performance</MudTh>
+        <MudTh>Homework</MudTh>
+        <MudTh>Lesson Taken</MudTh>
+        <MudTh>Duration</MudTh>
+        <MudTh>Status</MudTh>
+
+    </HeaderContent>
+
+    <RowTemplate>
+
+        
+
+        <MudTd DataLabel="Student">
+            <strong>@context.Class.StudentName</strong>
+        </MudTd>
+
+        <MudTd DataLabel="Course">
+            @context.Class.CourseName
+        </MudTd>
+
+        <MudTd DataLabel="Time">
+            @context.Class.StartTime.ToString("hh:mm tt")
+            -
+            @context.Class.EndTime.ToString("hh:mm tt")
+        </MudTd>
+
+        <MudTd DataLabel="Attendance">
+
+            @if (!context.IsLocked &&
+                 !context.HasExistingReport)
+            {
+                <MudSelect T="AttendanceStatus"
+                           @bind-Value="context.Request.AttendanceStatus"
+                           Dense="true"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense">
+
+                    <MudSelectItem Value="AttendanceStatus.Present">
+                        Present
+                    </MudSelectItem>
+
+                    <MudSelectItem Value="AttendanceStatus.Absent">
+                        Absent
+                    </MudSelectItem>
+
+                </MudSelect>
+            }
+            else
+            {
+                @context.Request.AttendanceStatus
+            }
+
+        </MudTd>
+
+        <MudTd DataLabel="Performance">
+
+            @if (!context.IsLocked &&
+                 !context.HasExistingReport)
+            {
+                <MudSelect T="PerformanceRating"
+                           @bind-Value="context.Request.PerformanceRating"
+                           Dense="true"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense">
+
+                    @foreach (
+                        var rating in
+                        Enum.GetValues<PerformanceRating>())
+                    {
+                        <MudSelectItem Value="rating">
+                            @rating
+                        </MudSelectItem>
+                    }
+
+                </MudSelect>
+            }
+            else
+            {
+                @context.Request.PerformanceRating
+            }
+
+        </MudTd>
+
+        <MudTd DataLabel="Homework">
+
+            @if (!context.IsLocked &&
+                 !context.HasExistingReport)
+            {
+                <MudSelect T="HomeworkStatus"
+                           @bind-Value="context.Request.HomeworkStatus"
+                           Dense="true"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense">
+
+                    @foreach (
+                        var status in
+                        Enum.GetValues<HomeworkStatus>())
+                    {
+                        <MudSelectItem Value="status">
+                            @status
+                        </MudSelectItem>
+                    }
+
+                </MudSelect>
+            }
+            else
+            {
+                @context.Request.HomeworkStatus
+            }
+
+        </MudTd>
+
+        <MudTd DataLabel="Lesson Taken">
+
+            @if (!context.IsLocked &&
+                 !context.HasExistingReport)
+            {
+                <MudTextField
+                    @bind-Value="context.Request.LessonTaken"
+                    Dense="true"
+                    Variant="Variant.Outlined"
+                    Margin="Margin.Dense"
+                    Lines="2" />
+            }
+            else
+            {
+                @context.Request.LessonTaken
+            }
+
+        </MudTd>
+
+        <MudTd DataLabel="Duration">
+
+            @if (!context.IsLocked &&
+                 !context.HasExistingReport)
+            {
+                <MudNumericField T="int"
+                                 @bind-Value="context.Request.ActualDurationMinutes"
+                                 Min="1"
+                                 Max="300"
+                                 Dense="true"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense" />
+            }
+            else
+            {
+                @context.Request.ActualDurationMinutes
+            }
+
+        </MudTd>
+
+        <MudTd DataLabel="Status">
+
+            @if (context.HasExistingReport)
+            {
+                <MudChip T="string"
+                         Size="Size.Small"
+                         Color="Color.Success">
+                    Completed
+                </MudChip>
+            }
+            else if (context.IsLocked)
+            {
+                @if (context.UnlockPending)
+                {
+                    <MudChip T="string"
+                             Size="Size.Small"
+                             Color="Color.Warning">
+                        Unlock Pending
+                    </MudChip>
+                }
+                else
+                {
+                    <MudChip T="string"
+                             Size="Size.Small"
+                             Color="Color.Error">
+                        Locked
+                    </MudChip>
+                }
+            }
+            else if (context.UnlockApproved)
+            {
+                <MudChip T="string"
+                         Size="Size.Small"
+                         Color="Color.Info">
+                    Unlocked
+                </MudChip>
+            }
+            else
+            {
+                <MudChip T="string"
+                         Size="Size.Small"
+                         Color="Color.Primary">
+                    Pending
+                </MudChip>
+            }
+
+        </MudTd>
+
+    </RowTemplate>
+
+</MudTable>
+
+<MudStack Row="true"
+          Justify="Justify.FlexEnd"
+          AlignItems="AlignItems.Center"
+          Spacing="2"
+          Class="mt-4">
+
+    <MudButton Variant="Variant.Outlined"
+               Color="Color.Default"
+               Disabled="_saving || _requestingUnlock"
+               OnClick="() => _showTodayReports = false">
+        Cancel
+    </MudButton>
+
+    @if (_todayReports.Any(x =>
+        x.IsLocked &&
+        !x.UnlockPending))
+    {
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Warning"
+                   StartIcon="@Icons.Material.Filled.LockOpen"
+                   Disabled="_saving || _requestingUnlock"
+                   OnClick="OpenFirstUnlockDialog">
+            Request Unlock
+        </MudButton>
+    }
+
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.Save"
+               Disabled="_saving ||
+                         !_todayReports.Any(x =>
+                             !x.HasExistingReport &&
+                             !x.IsLocked)"
+               OnClick="CreateAllReports">
+
+        @if (_saving)
+        {
+            <MudProgressCircular Size="Size.Small"
+                                 Indeterminate="true"
+                                 Class="mr-2" />
+        }
+
+        Create Reports
+
+    </MudButton>
+
+</MudStack>
+            }
+
+        </MudPaper>
+    
+
+    <MudDivider Class="my-2" />
+<MudPaper Class="pa-4 mb-4" Outlined="true">
+
+    <MudStack Spacing="2">
+
+        <MudStack Row="true"
+          Justify="Justify.SpaceBetween"
+          AlignItems="AlignItems.Center"
+          Class="reports-download-header">
+
+    <MudText Typo="Typo.h6"
+             Class="reports-download-title">
+        Download Class Reports
+    </MudText>
+
+    <MudStack Row="true"
+              Spacing="1"
+              AlignItems="AlignItems.Center"
+              Class="reports-download-actions">
+
+        <MudButton Variant="Variant.Outlined"
+                   StartIcon="@Icons.Material.Filled.PictureAsPdf"
+                   Disabled="_downloadingPdf"
+                   OnClick="DownloadReportsPdf">
+            Download PDF
+        </MudButton>
+
+        <MudButton Variant="Variant.Outlined"
+                   StartIcon="@Icons.Material.Filled.Image"
+                   Disabled="_downloadingPdf"
+                   OnClick="DownloadReportsImage">
+            Download Image
+        </MudButton>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Success"
+                   StartIcon="@Icons.Material.Filled.Share"
+                   Disabled="_downloadingPdf"
+                   OnClick="ShareReportsImage">
+            Share via WhatsApp
+        </MudButton>
+
+    </MudStack>
+
+</MudStack>
+        <MudGrid>
+
+            <MudItem xs="12" md="3">
+                <MudDatePicker Label="From Date"
+                               @bind-Date="_fromDate"
+                               Variant="Variant.Outlined" />
+            </MudItem>
+
+            <MudItem xs="12" md="3">
+                <MudDatePicker Label="To Date"
+                               @bind-Date="_toDate"
+                               Variant="Variant.Outlined" />
+            </MudItem>
+
+            <MudItem xs="12" md="3">
+                <MudSelect T="string"
+                           Label="Course"
+                           @bind-Value="_selectedCourse"
+                           Variant="Variant.Outlined"
+                           Clearable="true">
+
+                    @foreach (var course in _courses)
+                    {
+                        <MudSelectItem Value="@course">
+                            @course
+                        </MudSelectItem>
+                    }
+
+                </MudSelect>
+            </MudItem>
+
+            <MudItem xs="12" md="3">
+                <MudSelect T="Gender?"
+                           Label="Gender"
+                           @bind-Value="_selectedGender"
+                           Variant="Variant.Outlined"
+                           Clearable="true">
+
+                    <MudSelectItem Value="@((Gender?)Gender.Male)">
+                        Male
+                    </MudSelectItem>
+
+                    <MudSelectItem Value="@((Gender?)Gender.Female)">
+                        Female
+                    </MudSelectItem>
+
+                </MudSelect>
+            </MudItem>
+
+        </MudGrid>
+
+        <MudText Typo="Typo.caption">
+            Leave filters empty to download all of your submitted class reports.
+        </MudText>
+
+    </MudStack>
+
+</MudPaper>
+
+<MudStack AlignItems="AlignItems.Center"
+          Class="my-5">
+
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               Size="Size.Large"
+               StartIcon="@Icons.Material.Filled.History"
+               OnClick="ToggleUnlockHistory">
+
+        @(_showUnlockHistory
+            ? "HIDE UNLOCK REQUEST HISTORY"
+            : "VIEW UNLOCK REQUEST HISTORY")
+
+    </MudButton>
+
+</MudStack>
+
+@if (_showUnlockHistory)
+{
+    <MudPaper Class="pa-4 mb-5"
+              Outlined="true">
+
+        <MudText Typo="Typo.h5"
+                 Class="mb-4">
+            Report Unlock Request History
+        </MudText>
+
+        @if (!_unlockRequests.Any())
+        {
+            <MudAlert Severity="Severity.Info">
+                You have not submitted any report unlock requests.
+            </MudAlert>
+        }
+        else
+        {
+            <MudTable Items="_unlockRequests"
+                      Hover="true"
+                      Dense="true"
+                      Bordered="true"
+                      Striped="true"
+                      Breakpoint="Breakpoint.None">
+
+                <HeaderContent>
+
+                    <MudTh>Report Date</MudTh>
+                    <MudTh>Course</MudTh>
+                    <MudTh>Reason</MudTh>
+                    <MudTh>Requested</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh>Reviewed</MudTh>
+                    <MudTh>Admin Remarks</MudTh>
+
+                </HeaderContent>
+
+                <RowTemplate>
+
+                    <MudTd DataLabel="Report Date">
+                        @context.ReportDate.ToString("dd MMM yyyy")
+                    </MudTd>
+
+                    <MudTd DataLabel="Course">
+                        @context.CourseName
+                    </MudTd>
+
+                    <MudTd DataLabel="Reason">
+                        @context.Reason
+                    </MudTd>
+
+                    <MudTd DataLabel="Requested">
+    @(context.RequestedAt
+        .ToLocalTime()
+        .ToString("dd MMM yyyy hh:mm tt"))
+</MudTd>
+
+                    <MudTd DataLabel="Status">
+
+                        @if (context.Status ==
+                             ReportUnlockRequestStatus.Pending)
+                        {
+                            <MudChip T="string"
+                                     Color="Color.Warning"
+                                     Size="Size.Small">
+                                Pending
+                            </MudChip>
+                        }
+                        else if (context.Status ==
+                                 ReportUnlockRequestStatus.Approved)
+                        {
+                            <MudChip T="string"
+                                     Color="Color.Success"
+                                     Size="Size.Small">
+                                Approved
+                            </MudChip>
+                        }
+                        else if (context.Status ==
+                                 ReportUnlockRequestStatus.Rejected)
+                        {
+                            <MudChip T="string"
+                                     Color="Color.Error"
+                                     Size="Size.Small">
+                                Rejected
+                            </MudChip>
+                        }
+
+                    </MudTd>
+
+                    <MudTd DataLabel="Reviewed">
+    @(context.ReviewedAt.HasValue
+        ? context.ReviewedAt.Value
+            .ToLocalTime()
+            .ToString("dd MMM yyyy hh:mm tt")
+        : "—")
+</MudTd>
+
+                    <MudTd DataLabel="Admin Remarks">
+                        @(string.IsNullOrWhiteSpace(context.AdminRemarks)
+                            ? "—"
+                            : context.AdminRemarks)
+                    </MudTd>
+
+                </RowTemplate>
+
+            </MudTable>
+        }
+
+    </MudPaper>
+}
+
+
+<MudStack AlignItems="AlignItems.Center"
+          Class="my-5">
+
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               Size="Size.Large"
+               StartIcon="@Icons.Material.Filled.History"
+               OnClick="ToggleSubmittedReports">
+
+        @( _showSubmittedReports
+            ? "HIDE EARLIER SUBMITTED REPORTS"
+            : "VIEW EARLIER SUBMITTED REPORTS" )
+
+    </MudButton>
+
+</MudStack>
+
+@if (_showSubmittedReports)
+{
+    <MudText Typo="Typo.h5"
+             Class="mb-3">
+        Submitted Reports
+    </MudText>
+    
+
+    @if (_reports == null)
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+    else if (!_reports.Any())
+    {
+        <MudAlert Severity="Severity.Info">
+            No reports available.
+        </MudAlert>
+    }
+    else
+    {
+        <MudGrid>
+
+            @foreach (var report in _reports)
+            {
+                <MudItem xs="12" md="6">
+
+                    <MudCard Elevation="3">
+
+                        <MudCardContent>
+
+                            <MudText Typo="Typo.h5">
+                                @report.StudentName
+                            </MudText>
+
+                            <MudDivider Class="my-3" />
+
+                            <MudText>
+                                📅 Date:
+                                @report.ClassDate.ToString("dd MMM yyyy")
+                            </MudText>
+
+                            <MudText>
+                                📖 Lesson:
+                                @report.LessonTaken
+                            </MudText>
+
+                            <MudText>
+                                📚 Next Homework:
+                                @report.NextHomework
+                            </MudText>
+
+                            <MudText>
+                                ⭐ Performance:
+                                @report.PerformanceRating
+                            </MudText>
+
+                            <MudText>
+                                🏠 Homework Status:
+                                @report.HomeworkStatus
+                            </MudText>
+
+                            <MudText>
+                                ⏱️ Duration:
+                                @report.ActualDurationMinutes minutes
+                            </MudText>
+
+                            <MudText>
+                                📝 Teacher Remarks:
+                                @report.TeacherRemarks
+                            </MudText>
+
+                        </MudCardContent>
+
+                    </MudCard>
+
+                </MudItem>
+            }
+
+        </MudGrid>
+    }
+}
+
+</MudStack>
+@if (_showUnlockDialog && _unlockEntry != null)
+{
+    <div class="academy-unlock-overlay">
+
+        <MudPaper Class="academy-unlock-dialog"
+                  Elevation="8">
+
+            <MudText Typo="Typo.h6"
+                     Class="mb-4">
+                Request Report Unlock
+            </MudText>
+
+            <MudStack Spacing="2">
+
+               <MudText>
+    <strong>Report Date:</strong>
+    @(_unlockEntry.Class.ClassDate.ToString("dd MMM yyyy"))
+</MudText>
+
+<MudText>
+    <strong>Classes:</strong>
+    @_todayReports.Count(x =>
+        x.Class.ClassDate == _unlockEntry.Class.ClassDate &&
+        x.IsLocked)
+</MudText>
+
+<MudText>
+    <strong>Students:</strong>
+    @(_todayReports
+        .Where(x =>
+            x.Class.ClassDate == _unlockEntry.Class.ClassDate &&
+            x.IsLocked)
+        .Select(x => x.Class.StudentName)
+        .Distinct()
+        .Count())
+</MudText>
+
+<MudText>
+    <strong>Courses:</strong>
+    @(_todayReports
+        .Where(x =>
+            x.Class.ClassDate == _unlockEntry.Class.ClassDate &&
+            x.IsLocked)
+        .Select(x => x.Class.CourseName)
+        .Distinct()
+        .Count())
+</MudText>
+
+<MudText Typo="Typo.body2" Color="Color.Secondary">
+    This request will unlock all locked class reports for this date after Admin approval.
+</MudText>
+
+                <MudTextField
+                    @bind-Value="_unlockReason"
+                    Label="Reason"
+                    Variant="Variant.Outlined"
+                    Lines="4"
+                    Required="true"
+                    Placeholder="Explain why the report was not submitted on time..." />
+
+            </MudStack>
+
+            <MudStack Row="true"
+                      Justify="Justify.FlexEnd"
+                      Spacing="2"
+                      Class="mt-5">
+
+                <MudButton
+                    Variant="Variant.Text"
+                    Disabled="_requestingUnlock"
+                    OnClick="CloseUnlockDialog">
+                    Cancel
+                </MudButton>
+
+                <MudButton
+                    Variant="Variant.Filled"
+                    Color="Color.Primary"
+                    Disabled="_requestingUnlock"
+                    OnClick="SubmitUnlockRequest">
+
+                    @if (_requestingUnlock)
+                    {
+                        <MudProgressCircular
+                            Size="Size.Small"
+                            Indeterminate="true"
+                            Class="mr-2" />
+                    }
+
+                    Request Unlock
+                </MudButton>
+
+            </MudStack>
+
+        </MudPaper>
+
+    </div>
+}
+
+@code {
+
+    private List<string> _courses = new();
+
+private string? _selectedCourse;
+
+private Gender? _selectedGender;
+
+private DateTime? _fromDate;
+
+private DateTime? _toDate;
+
+private DateTime? _selectedReportDate = DateTime.Today;
+
+private bool _downloadingPdf;
+
+    private List<TeacherReportDto>? _reports;
+
+    private List<TeacherClassDto> _todayClasses = new();
+
+    private List<TodayReportEntry> _todayReports = new();
+
+   private bool _showTodayReports = true;
+
+private bool _showSubmittedReports;
+
+    private bool _loadingToday;
+
+    private bool _saving;
+    private List<ReportUnlockRequestResponse> _unlockRequests = new();
+
+private bool _showUnlockDialog;
+
+private TodayReportEntry? _unlockEntry;
+
+private string _unlockReason = string.Empty;
+
+private bool _requestingUnlock;
+private bool _showUnlockHistory;
+
+
+protected override async Task OnInitializedAsync()
+{
+    _reports = await TeacherApi.GetReportsAsync();
+
+    var classes = await TeacherApi.GetClassesAsync();
+
+    _courses = classes
+        .Select(x => x.CourseName)
+        .Where(x => !string.IsNullOrWhiteSpace(x))
+        .Distinct()
+        .OrderBy(x => x)
+        .ToList();
+
+    _unlockRequests =
+        await TeacherApi.GetMyReportUnlockRequestsAsync();
+
+    // Automatically load today's classes
+    await OpenTodayReports();
+}
+
+    private async Task OpenTodayReports()
+{
+    _showTodayReports = true;
+    _loadingToday = true;
+
+    try
+    {
+        var classes = await TeacherApi.GetClassesAsync();
+        var reports = await TeacherApi.GetReportsAsync();
+
+       var selectedDate =
+    DateOnly.FromDateTime(_selectedReportDate ?? DateTime.Today);
+
+        _unlockRequests =
+            await TeacherApi.GetMyReportUnlockRequestsAsync();
+
+        _todayClasses = classes
+            .Where(x =>
+                x.ClassDate == selectedDate &&
+                !string.Equals(
+                    x.Status,
+                    "Cancelled",
+                    StringComparison.OrdinalIgnoreCase))
+            .OrderBy(x => x.StartTime)
+            .ToList();
+
+        var existingReports = reports
+            .Where(x => x.ClassDate == selectedDate)
+            .GroupBy(x => x.ScheduledClassId)
+            .ToDictionary(
+                x => x.Key,
+                x => x.First());
+
+        _todayReports = _todayClasses
+            .Select(x =>
+            {
+                existingReports.TryGetValue(
+                    x.Id,
+                    out var existingReport);
+
+              var unlock =
+    _unlockRequests
+        .Where(u => u.ReportDate == x.ClassDate)
+        .OrderByDescending(u => u.RequestedAt)
+        .FirstOrDefault();
+
+return new TodayReportEntry
+{
+    Class = x,
+
+    HasExistingReport =
+        existingReport is not null,
+
+    UnlockPending =
+        unlock?.Status ==
+        ReportUnlockRequestStatus.Pending,
+
+    UnlockApproved =
+        unlock?.Status ==
+        ReportUnlockRequestStatus.Approved,
+
+                    Request =
+                        new CreateClassReportRequest
+                        {
+                            ScheduledClassId = x.Id,
+
+                            PerformanceRating =
+                                existingReport?.PerformanceRating
+                                ?? default,
+
+                            HomeworkStatus =
+                                existingReport?.HomeworkStatus
+                                ?? default,
+
+                            LessonTaken =
+                                existingReport?.LessonTaken
+                                ?? string.Empty,
+
+                            ActualDurationMinutes =
+                                existingReport?.ActualDurationMinutes
+                                ?? CalculateDuration(x),
+
+                            AttendanceStatus =
+                                existingReport?.AttendanceStatus
+                                ?? AttendanceStatus.Present
+                        }
+                };
+            })
+            .ToList();
+    }
+    catch (Exception ex)
+    {
+        _showTodayReports = false;
+
+        Snackbar.Add(
+            $"Unable to load class reports: {ex.Message}",
+            Severity.Error);
+    }
+    finally
+    {
+        _loadingToday = false;
+    }
+}
+
+    private async Task CreateAllReports()
+    {
+       var reportsToSubmit = _todayReports
+    .Where(x => !x.HasExistingReport && !x.IsLocked)
+    .ToList();
+
+if (!reportsToSubmit.Any())
+{
+    Snackbar.Add(
+        "There are no classes to submit.",
+        Severity.Info);
+
+    return;
+}
+
+var newReports = reportsToSubmit
+    .Where(x => !x.HasExistingReport)
+    .ToList();
+
+        if (newReports.Any(x =>
+            string.IsNullOrWhiteSpace(x.Request.LessonTaken)))
+        {
+            Snackbar.Add(
+                "Please enter the lesson taken for every pending report.",
+                Severity.Warning);
+
+            return;
+        }
+
+        _saving = true;
+
+        try
+        {
+            var request = new CreateTeacherBulkReportsRequest
+{
+    Reports = reportsToSubmit
+        .Select(x => x.Request)
+        .ToList()
+};
+
+            var result =
+                await TeacherApi.CreateBulkReportsAsync(request);
+
+            Snackbar.Add(
+                $"{result.CreatedCount} new report(s) created.",
+                result.CreatedCount > 0
+                    ? Severity.Success
+                    : Severity.Info);
+
+            _showTodayReports = false;
+
+            _reports = await TeacherApi.GetReportsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to create reports: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+private async Task DownloadReportsPdf()
+{
+    if (_fromDate.HasValue &&
+        _toDate.HasValue &&
+        _fromDate.Value.Date > _toDate.Value.Date)
+    {
+        Snackbar.Add(
+            "From Date cannot be later than To Date.",
+            Severity.Warning);
+
+        return;
+    }
+
+    _downloadingPdf = true;
+
+    try
+    {
+        var pdf = await TeacherApi.DownloadReportsPdfAsync(
+            _fromDate,
+            _toDate,
+            _selectedCourse,
+            _selectedGender);
+
+        var fileName =
+            $"teacher-class-reports-{DateTime.Now:yyyyMMddHHmmss}.pdf";
+
+        await JS.InvokeVoidAsync(
+    "downloadFile",
+    fileName,
+    "application/pdf",
+    Convert.ToBase64String(pdf));
+
+        Snackbar.Add(
+            "Class reports PDF downloaded successfully.",
+            Severity.Success);
+    }
+    catch (Exception ex)
+    {
+        Snackbar.Add(
+            $"Unable to download PDF: {ex.Message}",
+            Severity.Error);
+    }
+    finally
+    {
+        _downloadingPdf = false;
+    }
+}
+
+    private static int CalculateDuration(TeacherClassDto item)
+    {
+        var minutes =
+            (int)(item.EndTime - item.StartTime).TotalMinutes;
+
+        return minutes > 0 && minutes <= 300
+            ? minutes
+            : 30;
+    }
+
+    private sealed class TodayReportEntry
+{
+    public TeacherClassDto Class { get; set; } = null!;
+
+    public CreateClassReportRequest Request { get; set; } = null!;
+
+    public bool HasExistingReport { get; set; }
+
+    public bool IsPastClass =>
+        Class.ClassDate < DateOnly.FromDateTime(DateTime.Today);
+
+    public bool UnlockApproved { get; set; }
+
+    public bool UnlockPending { get; set; }
+
+    public bool IsLocked =>
+        IsPastClass &&
+        !UnlockApproved &&
+        !HasExistingReport;
+}
+
+private void OpenUnlockDialog(TodayReportEntry entry)
+{
+    _unlockEntry = entry;
+    _unlockReason = string.Empty;
+    _showUnlockDialog = true;
+}
+
+private void CloseUnlockDialog()
+{
+    if (_requestingUnlock)
+        return;
+
+    _showUnlockDialog = false;
+    _unlockEntry = null;
+    _unlockReason = string.Empty;
+}
+
+private async Task SubmitUnlockRequest()
+{
+    if (_unlockEntry == null)
+        return;
+
+    if (string.IsNullOrWhiteSpace(_unlockReason))
+    {
+        Snackbar.Add(
+            "Please enter a reason.",
+            Severity.Warning);
+
+        return;
+    }
+
+    _requestingUnlock = true;
+
+    try
+    {
+        var success =
+            await TeacherApi.RequestReportUnlockAsync(
+                _unlockEntry.Class.Id,
+                _unlockReason);
+
+        if (!success)
+        {
+            Snackbar.Add(
+                "Unable to submit unlock request.",
+                Severity.Error);
+
+            return;
+        }
+
+        Snackbar.Add(
+            "Unlock request sent to Admin.",
+            Severity.Success);
+
+        _showUnlockDialog = false;
+
+        _unlockRequests =
+    await TeacherApi.GetMyReportUnlockRequestsAsync();
+
+var selectedDate = _unlockEntry.Class.ClassDate;
+
+var unlock =
+    _unlockRequests.FirstOrDefault(
+        u => u.ReportDate == selectedDate);
+
+foreach (var entry in _todayReports.Where(
+    x => x.Class.ClassDate == selectedDate))
+{
+    entry.UnlockPending =
+        unlock?.Status ==
+        ReportUnlockRequestStatus.Pending;
+
+    entry.UnlockApproved =
+        unlock?.Status ==
+        ReportUnlockRequestStatus.Approved;
+}
+    }
+    catch (Exception ex)
+    {
+        Snackbar.Add(
+            $"Unable to submit unlock request: {ex.Message}",
+            Severity.Error);
+    }
+    finally
+    {
+        _requestingUnlock = false;
+    }
+}
+private void OpenFirstUnlockDialog()
+{
+    var entry = _todayReports
+        .FirstOrDefault(x =>
+            x.IsLocked &&
+            !x.UnlockPending);
+
+    if (entry == null)
+    {
+        Snackbar.Add(
+            "There are no locked classes requiring unlock.",
+            Severity.Info);
+
+        return;
+    }
+
+    OpenUnlockDialog(entry);
+}
+private async Task DownloadReportsImage()
+{
+    try
+    {
+        _downloadingPdf = true;
+
+        var image =
+    await TeacherApi.DownloadReportsImageAsync(
+        _fromDate,
+        _toDate,
+        _selectedCourse,
+        _selectedGender);
+
+        var base64 =
+            Convert.ToBase64String(image);
+
+        await JS.InvokeVoidAsync(
+            "downloadFile",
+            $"teacher-class-reports-{DateTime.Now:yyyyMMddHHmmss}.png",
+            "image/png",
+            base64);
+
+        Snackbar.Add(
+            "Report image downloaded.",
+            Severity.Success);
+    }
+    catch (Exception ex)
+    {
+        Snackbar.Add(
+            $"Unable to download image: {ex.Message}",
+            Severity.Error);
+    }
+    finally
+    {
+        _downloadingPdf = false;
+    }
+}
+
+private async Task ShareReportsImage()
+{
+    try
+    {
+        _downloadingPdf = true;
+
+       var image =
+    await TeacherApi.DownloadReportsImageAsync(
+        _fromDate,
+        _toDate,
+        _selectedCourse,
+        _selectedGender);
+
+        var base64 =
+            Convert.ToBase64String(image);
+
+        await JS.InvokeAsync<bool>(
+            "shareReportImage",
+            $"teacher-class-reports-{DateTime.Now:yyyyMMddHHmmss}.png",
+            base64);
+    }
+    catch (JSException)
+    {
+        Snackbar.Add(
+            "Image sharing is not supported here. The image can be downloaded and attached to WhatsApp.",
+            Severity.Info);
+    }
+    catch (Exception ex)
+    {
+        Snackbar.Add(
+            $"Unable to share image: {ex.Message}",
+            Severity.Error);
+    }
+    finally
+    {
+        _downloadingPdf = false;
+    }
+}
+
+private void ToggleSubmittedReports()
+{
+    _showSubmittedReports =
+        !_showSubmittedReports;
+}
+
+private void ToggleUnlockHistory()
+{
+    _showUnlockHistory =
+        !_showUnlockHistory;
+
+    if (_showUnlockHistory)
+    {
+        _ = RefreshUnlockRequests();
+    }
+}
+
+private async Task RefreshUnlockRequests()
+{
+    try
+    {
+        _unlockRequests =
+            await TeacherApi.GetMyReportUnlockRequestsAsync();
+
+        await InvokeAsync(StateHasChanged);
+    }
+    catch (Exception ex)
+    {
+        Snackbar.Add(
+            $"Unable to load unlock request history: {ex.Message}",
+            Severity.Error);
+    }
+}
+
+}
+
+<style>
+    .reports-download-header {
+        width: 100%;
+    }
+
+    .reports-download-actions {
+        flex-wrap: wrap;
+    }
+
+   @@media (max-width: 600px)  {
+        .reports-download-header {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 16px;
+        }
+
+        .reports-download-title {
+            text-align: center;
+        }
+
+        .reports-download-actions {
+            width: 100%;
+            flex-direction: column !important;
+            align-items: stretch !important;
+        }
+
+        .reports-download-actions .mud-button-root {
+            width: 100%;
+        }
+    }
+</style>
