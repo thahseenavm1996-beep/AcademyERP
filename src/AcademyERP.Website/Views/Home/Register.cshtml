@@ -163,8 +163,8 @@ async function loadCatalog() {
 
     const response =
         await fetch(
-            "http://localhost:5235/api/public/catalog"
-        );
+    `${window.academyApiBaseUrl}/api/public/catalog`
+);
 
     catalog = await response.json();
 }
@@ -380,7 +380,7 @@ async function submitRegistration(e) {
     try {
 
         const response = await fetch(
-            "http://localhost:5235/api/RegistrationRequests",
+           `${window.academyApiBaseUrl}/api/RegistrationRequests`,
             {
                 method: "POST",
                 headers: {

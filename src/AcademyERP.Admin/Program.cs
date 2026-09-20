@@ -21,13 +21,13 @@ builder.Services.AddScoped(sp =>
 
     return new HttpClient(handler)
     {
-        BaseAddress = new Uri("http://localhost:5235/")
+         BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"]!)
     };
 });
 
 builder.Services.AddHttpClient("AcademyERPAuthApi", client =>
 {
-    client.BaseAddress = new Uri("http://localhost:5235/");
+     client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"]!);
 });
 builder.Services.AddScoped<StudentApiService>();
 builder.Services.AddScoped<TeacherApiService>();

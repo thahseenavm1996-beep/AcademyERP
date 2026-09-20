@@ -12,6 +12,7 @@
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
 
 <MudPaper Width="400px" Class="pa-6 mx-auto mt-12">
 
@@ -46,6 +47,16 @@
         Login
 
     </MudButton>
+   <MudButton FullWidth="true"
+           Variant="Variant.Outlined"
+           Color="Color.Primary"
+           OnClick="InstallApp"
+           Class="mt-3"
+           id="installAppBtn">
+
+    📱 Install MS Academy App
+
+</MudButton>
 
 </MudPaper>
 
@@ -89,4 +100,9 @@ else
     Navigation.NavigateTo("/");
 }
     }
+
+    private async Task InstallApp()
+{
+    await JS.InvokeVoidAsync("installAcademyApp");
+}
 }

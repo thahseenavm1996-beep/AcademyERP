@@ -72,3 +72,50 @@ window.shareReportImage = async (fileName, base64Data) => {
 
     return false;
 };
+
+/* =========================================
+   MS ACADEMY PWA INSTALL
+   ========================================= */
+
+let deferredInstallPrompt = null;
+
+window.addEventListener("beforeinstallprompt", event => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+
+    const installButton = document.getElementById("installAppBtn");
+
+    if (installButton) {
+        installButton.style.display = "block";
+    }
+});
+
+window.installAcademyApp = async function () {
+    if (!deferredInstallPrompt) {
+        return;
+    }
+
+    deferredInstallPrompt.prompt();
+
+    const { outcome } = await deferredInstallPrompt.userChoice;
+
+    console.log("PWA install result:", outcome);
+
+    deferredInstallPrompt = null;
+
+    const installButton = document.getElementById("installAppBtn");
+
+    if (installButton) {
+        installButton.style.display = "none";
+    }
+};
+
+window.addEventListener("appinstalled", () => {
+    const installButton = document.getElementById("installAppBtn");
+
+    if (installButton) {
+        installButton.style.display = "none";
+    }
+
+    deferredInstallPrompt = null;
+});

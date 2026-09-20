@@ -389,7 +389,8 @@
         try {
 
             const response = await fetch(
-                "http://localhost:5235/api/public/catalog"
+    `${window.academyApiBaseUrl}/api/public/catalog`
+);
             );
 
             if (!response.ok) {
@@ -517,9 +518,9 @@
 
             try {
 
-                const response = await fetch(
-                    "http://localhost:5235/api/AdmissionApplications",
-                    {
+              const response = await fetch(
+    `${window.academyApiBaseUrl}/api/AdmissionApplications`,
+    {
                         method: "POST",
 
                         headers: {

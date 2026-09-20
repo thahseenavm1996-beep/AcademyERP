@@ -66,3 +66,47 @@ document.addEventListener("DOMContentLoaded", function () {
     updateButtons();
 
 });
+
+// =========================================
+// MS ACADEMY PWA INSTALL
+// =========================================
+
+let deferredInstallPrompt = null;
+
+window.addEventListener("beforeinstallprompt", event => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+
+    const installButton = document.getElementById("installAppBtn");
+
+    if (installButton) {
+        installButton.classList.remove("d-none");
+    }
+});
+
+document.addEventListener("click", async event => {
+    const installButton = event.target.closest("#installAppBtn");
+
+    if (!installButton || !deferredInstallPrompt) {
+        return;
+    }
+
+    deferredInstallPrompt.prompt();
+
+    const { outcome } = await deferredInstallPrompt.userChoice;
+
+    console.log("PWA install result:", outcome);
+
+    deferredInstallPrompt = null;
+    installButton.classList.add("d-none");
+});
+
+window.addEventListener("appinstalled", () => {
+    const installButton = document.getElementById("installAppBtn");
+
+    if (installButton) {
+        installButton.classList.add("d-none");
+    }
+
+    deferredInstallPrompt = null;
+});

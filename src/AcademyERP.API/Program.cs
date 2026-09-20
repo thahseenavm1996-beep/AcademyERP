@@ -53,7 +53,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("WebsitePolicy", policy =>
     {
         policy
-            .WithOrigins("http://localhost:5007")
+            .WithOrigins(builder.Configuration["WebsiteBaseUrl"]!)
             .AllowAnyHeader()
             .AllowAnyMethod();
     });

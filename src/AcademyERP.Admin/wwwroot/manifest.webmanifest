@@ -1,0 +1,24 @@
+{
+    "name": "MS International Academy",
+    "short_name": "MS Academy",
+    "description": "MS International Academy management portal",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#0d6efd",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "/images/pwa/pwa-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/images/pwa/pwa-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
