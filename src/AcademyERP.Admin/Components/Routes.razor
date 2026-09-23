@@ -22,23 +22,8 @@
                     </Authorized>
 
                     <NotAuthorized>
-                        <LayoutView Layout="typeof(Layout.MainLayout)">
-                            <div class="d-flex justify-center align-center"
-                                 style="min-height:60vh;">
-                                <div class="text-center">
-                                    <h2>You are not authorized.</h2>
-
-                                    <p class="mt-2">
-                                        You do not have permission to access this page.
-                                    </p>
-
-                                    <a href="/" class="mud-button-root mud-button mud-button-filled mud-button-filled-primary mt-4">
-                                        Go to Dashboard
-                                    </a>
-                                </div>
-                            </div>
-                        </LayoutView>
-                    </NotAuthorized>
+    <RedirectToLogin />
+</NotAuthorized>
                 </AuthorizeView>
             }
 

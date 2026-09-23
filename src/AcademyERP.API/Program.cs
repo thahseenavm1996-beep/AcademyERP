@@ -221,6 +221,13 @@ app.UseCors("WebsitePolicy");
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapGet("/", () => Results.Ok(new
+{
+    name = "MS International Academy API",
+    status = "running"
+}));
+app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
+
 app.MapControllers();
 Console.WriteLine("Before app.Run()");
 Console.WriteLine("Environment: " + app.Environment.EnvironmentName);

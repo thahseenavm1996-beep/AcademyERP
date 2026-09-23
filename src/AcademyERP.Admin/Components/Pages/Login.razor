@@ -58,6 +58,14 @@
 
 </MudButton>
 
+<div id="iosInstallInstructions" style="display:none;" class="mt-3">
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+        <b>Install MS Academy on iPhone/iPad</b><br />
+        Tap the <b>Share</b> button in Safari, then select
+        <b>Add to Home Screen</b>.
+    </MudAlert>
+</div>
+
 </MudPaper>
 
 @code
@@ -103,6 +111,27 @@ else
 
     private async Task InstallApp()
 {
+    var isIOS = await JS.InvokeAsync<bool>("isIOSDevice");
+
+    if (isIOS)
+    {
+        await JS.InvokeVoidAsync("showIOSInstallInstructions");
+        return;
+    }
+
     await JS.InvokeVoidAsync("installAcademyApp");
+}
+
+protected override async Task OnAfterRenderAsync(bool firstRender)
+{
+    if (!firstRender)
+        return;
+
+    var isInstalled = await JS.InvokeAsync<bool>("isPWAInstalled");
+
+    if (isInstalled)
+    {
+        await JS.InvokeVoidAsync("hideInstallButton");
+    }
 }
 }

@@ -119,3 +119,27 @@ window.addEventListener("appinstalled", () => {
 
     deferredInstallPrompt = null;
 });
+
+window.isIOSDevice = function () {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+};
+
+window.isPWAInstalled = function () {
+    return window.matchMedia("(display-mode: standalone)").matches ||
+        window.navigator.standalone === true;
+};
+window.showIOSInstallInstructions = function () {
+    const instructions = document.getElementById("iosInstallInstructions");
+
+    if (instructions) {
+        instructions.style.display = "block";
+    }
+};
+window.hideInstallButton = function () {
+    const installButton = document.getElementById("installAppBtn");
+
+    if (installButton) {
+        installButton.style.display = "none";
+    }
+};
