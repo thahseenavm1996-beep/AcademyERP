@@ -31,4 +31,9 @@ public class HomeController : Controller
 {
     return View();
 }
+[Route("teacher-registration")]
+public IActionResult TeacherRegistration()
+{
+    return View();
+}
 }

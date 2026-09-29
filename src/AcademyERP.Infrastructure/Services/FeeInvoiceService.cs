@@ -27,25 +27,7 @@ public class FeeInvoiceService : IFeeInvoiceService
     public async Task<PagedResponse<FeeInvoiceResponse>> GetAllAsync(
         FeeInvoiceQueryRequest request)
     {
-        var query = _context.FeeInvoices
-            .Include(x => x.Enrollment)
-                .ThenInclude(x => x.Student)
-                    .ThenInclude(x => x.StudentParents)
-                        .ThenInclude(x => x.Parent)
-            .Include(x => x.Enrollment)
-                .ThenInclude(x => x.Course)
-            .AsQueryable();
-
-        if (request.Status.HasValue)
-        {
-            query = query.Where(x => x.Status == request.Status.Value);
-        }
-
-        if (request.StudentId.HasValue)
-        {
-            query = query.Where(x =>
-                x.Enrollment.StudentId == request.StudentId.Value);
-        }
+        var query = BuildFilteredQuery(request);
 
         var totalCount = await query.CountAsync();
 
@@ -64,6 +46,110 @@ public class FeeInvoiceService : IFeeInvoiceService
             TotalPages = (int)Math.Ceiling(
                 (double)totalCount / request.PageSize)
         };
+    }
+
+    public async Task<List<FeeInvoiceResponse>> GetAllForExportAsync(
+        FeeInvoiceQueryRequest request)
+    {
+        var query = BuildFilteredQuery(request);
+
+        var invoices = await query
+            .OrderByDescending(x => x.InvoiceDate)
+            .ToListAsync();
+
+        return invoices
+            .Select(MapToResponse)
+            .ToList();
+    }
+
+    private IQueryable<FeeInvoice> BuildFilteredQuery(
+        FeeInvoiceQueryRequest request)
+    {
+        var query = _context.FeeInvoices
+            .Where(x => !x.IsDeleted)
+            .Include(x => x.Enrollment)
+                .ThenInclude(x => x.Student)
+                    .ThenInclude(x => x.StudentParents)
+                        .ThenInclude(x => x.Parent)
+            .Include(x => x.Enrollment)
+                .ThenInclude(x => x.Course)
+            .Include(x => x.Enrollment)
+                .ThenInclude(x => x.Teacher)
+            .AsQueryable();
+
+        if (request.Status.HasValue)
+        {
+            var today = DateTime.Today;
+
+            query = request.Status.Value switch
+            {
+                FeeStatus.Pending =>
+                    query.Where(x =>
+                        x.BalanceAmount > 0),
+
+                FeeStatus.PartiallyPaid =>
+                    query.Where(x =>
+                        x.PaidAmount > 0 &&
+                        x.BalanceAmount > 0),
+
+                FeeStatus.Paid =>
+                    query.Where(x =>
+                        x.BalanceAmount <= 0 ||
+                        x.Status == FeeStatus.Paid),
+
+                FeeStatus.Overdue =>
+                    query.Where(x =>
+                        x.BalanceAmount > 0 &&
+                        x.DueDate < today),
+
+                _ => query
+            };
+        }
+
+        if (request.StudentId.HasValue)
+        {
+            query = query.Where(x =>
+                x.Enrollment.StudentId == request.StudentId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.StudentName))
+        {
+            var studentName = request.StudentName.Trim();
+
+            query = query.Where(x =>
+                x.Enrollment.Student.FullName.Contains(studentName));
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.TeacherName))
+        {
+            var teacherName = request.TeacherName.Trim();
+
+            query = query.Where(x =>
+                x.Enrollment.Teacher != null &&
+                x.Enrollment.Teacher.FullName.Contains(teacherName));
+        }
+
+        if (request.TeacherId.HasValue)
+        {
+            query = query.Where(x =>
+                x.Enrollment.TeacherId == request.TeacherId.Value);
+        }
+
+        if (request.CourseId.HasValue)
+        {
+            query = query.Where(x =>
+                x.Enrollment.CourseId == request.CourseId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Gender) &&
+            !request.Gender.Equals("All", StringComparison.OrdinalIgnoreCase))
+        {
+            query = query.Where(x =>
+                x.Enrollment.Student.Gender.ToString() ==
+                request.Gender);
+        }
+
+        return query;
     }
 
     public async Task<FeeInvoiceResponse?> GetByIdAsync(Guid id)
@@ -158,8 +244,7 @@ invoice.DueDate = request.DueDate;
 
 invoice.Remarks = request.Remarks;
         await _context.SaveChangesAsync();
-Console.WriteLine($"REQUEST DUE DATE: {request.DueDate}");
-Console.WriteLine($"ENTITY DUE DATE : {invoice.DueDate}");
+
         return MapToResponse(invoice);
     }
 
@@ -178,71 +263,90 @@ Console.WriteLine($"ENTITY DUE DATE : {invoice.DueDate}");
         return true;
     }
 
-    public async Task<int> GeneratePendingCyclesAsync(DateTime asOfDate)
+   public async Task<int> GeneratePendingCyclesAsync(DateTime asOfDate)
+{
+    var today = asOfDate.Date;
+
+    var enrollments = await _context.Enrollments
+        .Include(x => x.FeePauses)
+        .Where(x => x.Status == EnrollmentStatus.Active &&
+                    x.NextBillingDate.Date <= today)
+        .ToListAsync();
+
+    var generated = 0;
+
+    foreach (var enrollment in enrollments)
     {
-        var today = asOfDate.Date;
-        var enrollments = await _context.Enrollments
-            .Include(x => x.FeePauses)
-            .Where(x => x.Status == EnrollmentStatus.Active &&
-                        x.NextBillingDate.Date <= today)
-            .ToListAsync();
-
-        var generated = 0;
-
-        foreach (var enrollment in enrollments)
+        while (enrollment.NextBillingDate.Date <= today)
         {
-            while (enrollment.NextBillingDate.Date <= today)
+            var billingDate = enrollment.NextBillingDate.Date;
+
+            if (enrollment.EndDate.HasValue &&
+                enrollment.EndDate.Value.Date < billingDate)
             {
-                var billingDate = enrollment.NextBillingDate.Date;
+                break;
+            }
 
-                if (enrollment.EndDate.HasValue &&
-                    enrollment.EndDate.Value.Date < billingDate)
-                {
-                    break;
-                }
+            if (enrollment.FeePauses.Any(x =>
+                    !x.ResumeDate.HasValue &&
+                    x.PauseStartDate.Date <= billingDate))
+            {
+                break;
+            }
 
-                // The final due date cannot be known until an open leave ends.
-                if (enrollment.FeePauses.Any(x =>
-                        !x.ResumeDate.HasValue &&
-                        x.PauseStartDate.Date <= billingDate))
-                {
-                    break;
-                }
-
-                var alreadyGenerated = await _context.FeeInvoices.AnyAsync(x =>
+            var alreadyGenerated = await _context.FeeInvoices
+                .AnyAsync(x =>
                     x.EnrollmentId == enrollment.Id &&
-                    x.InvoiceDate.Date == billingDate);
+                    x.InvoiceDate >= billingDate &&
+                    x.InvoiceDate < billingDate.AddDays(1) &&
+                    !x.IsDeleted);
 
-                if (!alreadyGenerated)
+            if (!alreadyGenerated)
+            {
+                var invoice = new FeeInvoice
                 {
-                    _context.FeeInvoices.Add(new FeeInvoice
-                    {
-                        EnrollmentId = enrollment.Id,
-                        InvoiceNumber =
-                            $"INV-{billingDate:yyyyMMdd}-{enrollment.Id.ToString()[..8]}",
-                        Amount = enrollment.FinalMonthlyFee,
-                        DiscountAmount = enrollment.DiscountAmount +
-                            enrollment.ScholarshipAmount,
-                        PaidAmount = 0,
-                        BalanceAmount = enrollment.FinalMonthlyFee,
-                        InvoiceDate = billingDate,
-                        DueDate = billingDate,
-                        Status = FeeStatus.Pending,
-                        Remarks = "Generated from the enrollment billing cycle."
-                    });
+                    EnrollmentId = enrollment.Id,
+                    InvoiceNumber =
+                        $"INV-{billingDate:yyyyMMdd}-{enrollment.Id.ToString()[..8]}",
+                    Amount = enrollment.FinalMonthlyFee,
+                    DiscountAmount =
+                        enrollment.DiscountAmount +
+                        enrollment.ScholarshipAmount,
+                    PaidAmount = 0,
+                    BalanceAmount = enrollment.FinalMonthlyFee,
+                    InvoiceDate = billingDate,
+                    DueDate = billingDate,
+                    Status = FeeStatus.Pending,
+                    Remarks = "Generated from the enrollment billing cycle."
+                };
+
+                _context.FeeInvoices.Add(invoice);
+
+                try
+                {
+                    await _context.SaveChangesAsync();
 
                     generated++;
                 }
-
-                enrollment.NextBillingDate = billingDate.AddMonths(1);
+                catch (DbUpdateException ex) when (
+                    ex.InnerException?.Message.Contains(
+                        "IX_FeeInvoices_EnrollmentId_InvoiceDate",
+                        StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    // Another request generated this invoice first.
+                    // The database unique index prevented the duplicate.
+                    _context.Entry(invoice).State = EntityState.Detached;
+                }
             }
-        }
 
-        if (generated > 0 || enrollments.Any())
+            enrollment.NextBillingDate = billingDate.AddMonths(1);
+
             await _context.SaveChangesAsync();
-
-        return generated;
+        }
     }
+
+    return generated;
+}
 
     public async Task<EnrollmentResponse?> PauseEnrollmentAsync(
         Guid enrollmentId,
@@ -339,6 +443,14 @@ Console.WriteLine($"ENTITY DUE DATE : {invoice.DueDate}");
             StudentName =
                 invoice.Enrollment.Student.FullName,
 
+            AdmissionNumber =
+                invoice.Enrollment.Student.AdmissionNumber,
+
+            TeacherName =
+                invoice.Enrollment.Teacher != null
+                    ? invoice.Enrollment.Teacher.FullName
+                    : null,
+
             CourseName =
                 invoice.Enrollment.Course.CourseName,
 
@@ -349,10 +461,7 @@ Console.WriteLine($"ENTITY DUE DATE : {invoice.DueDate}");
                 .Select(x => x.Parent.FullName)
                 .FirstOrDefault(),
 
-            ParentPhoneNumber = invoice.Enrollment.Student.StudentParents
-                .OrderByDescending(x => x.IsPrimaryContact)
-                .Select(x => x.Parent.PhoneNumber)
-                .FirstOrDefault(),
+          ParentPhoneNumber = invoice.Enrollment.Student.PhoneNumber,
 
             Amount = invoice.Amount,
             DiscountAmount = invoice.DiscountAmount,

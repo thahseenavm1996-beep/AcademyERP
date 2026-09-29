@@ -88,7 +88,13 @@ public class RegistrationRequestApiService
                                 x.ClassDurationId,
 
                             DaysOfWeek =
-                                x.DaysOfWeek
+    x.DaysOfWeek,
+
+FinalStudentFee =
+    x.FinalStudentFee,
+
+TeacherPaymentAmount =
+    x.TeacherPaymentAmount
                         })
             };
 

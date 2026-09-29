@@ -1,0 +1,337 @@
+@using AcademyERP.Admin.Models.TeacherRegistrations
+@using AcademyERP.Admin.Services
+@using MudBlazor
+
+@inject TeacherRegistrationApiService Api
+@inject ISnackbar Snackbar
+
+<MudDialog>
+
+    <DialogContent>
+
+        @if (Request is null)
+        {
+            <MudText>Loading...</MudText>
+        }
+        else
+        {
+            <MudGrid>
+
+                <MudItem xs="12" md="6">
+                    <MudText Typo="Typo.h6" Class="mb-3">
+                        Personal Information
+                    </MudText>
+
+                    <MudText><strong>Name:</strong> @Request.FullName</MudText>
+                    <MudText><strong>Date of Birth:</strong> @Request.DateOfBirth.ToString("dd MMM yyyy")</MudText>
+                    <MudText><strong>Gender:</strong> @GetGender(Request.Gender)</MudText>
+                    <MudText><strong>Mobile:</strong> @Request.MobileNumber</MudText>
+                    <MudText><strong>Email:</strong> @Request.Email</MudText>
+                    <MudText><strong>Country:</strong> @Request.Country</MudText>
+                    <MudText><strong>Address:</strong> @(Request.Address ?? "-")</MudText>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudText Typo="Typo.h6" Class="mb-3">
+                        Professional Information
+                    </MudText>
+
+                    <MudText><strong>Qualification:</strong> @Request.Qualification</MudText>
+                    <MudText><strong>Department:</strong> @Request.Department</MudText>
+                    <MudText><strong>Joining Date:</strong> @Request.JoiningDate.ToString("dd MMM yyyy")</MudText>
+                    <MudText><strong>Experience:</strong> @(Request.TeachingExperience ?? "-")</MudText>
+                    <MudText><strong>Submitted:</strong> @Request.SubmittedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</MudText>
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudDivider Class="my-4" />
+
+                    <MudText Typo="Typo.h6" Class="mb-3">
+                        Availability
+                    </MudText>
+
+                    @if (Request.Availability.Any())
+                    {
+                        <MudTable Items="Request.Availability"
+                                  Dense="true"
+                                  Hover="true"
+                                  Striped="true">
+
+                            <HeaderContent>
+                                <MudTh>Day</MudTh>
+                                <MudTh>Time Slot</MudTh>
+                            </HeaderContent>
+
+                            <RowTemplate>
+                                <MudTd DataLabel="Day">
+                                    @GetDayName(context.DayOfWeek)
+                                </MudTd>
+                                <MudTd DataLabel="Time Slot">
+                                    @context.TimeSlotName
+                                </MudTd>
+                            </RowTemplate>
+
+                        </MudTable>
+                    }
+                    else
+                    {
+                        <MudText>No availability submitted.</MudText>
+                    }
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudDivider Class="my-4" />
+
+                    <MudText Typo="Typo.h6" Class="mb-3">
+                        Current Classes
+                    </MudText>
+
+                    @if (Request.CurrentClasses.Any())
+                    {
+                        <MudTable Items="Request.CurrentClasses"
+                                  Dense="true"
+                                  Hover="true"
+                                  Striped="true">
+
+                            <HeaderContent>
+                                <MudTh>Student</MudTh>
+                                <MudTh>Course</MudTh>
+                                <MudTh>Day</MudTh>
+                                <MudTh>Time</MudTh>
+                                <MudTh>Duration</MudTh>
+                                <MudTh>Class Type</MudTh>
+                            </HeaderContent>
+
+                            <RowTemplate>
+                                <MudTd DataLabel="Student">
+                                    @context.StudentName
+                                    @if (!string.IsNullOrWhiteSpace(context.AdmissionNumber))
+                                    {
+                                        <br />
+                                        <small>@context.AdmissionNumber</small>
+                                    }
+                                </MudTd>
+
+                                <MudTd DataLabel="Course">
+                                    @context.CourseName
+                                </MudTd>
+
+                                <MudTd DataLabel="Day">
+                                    @GetDayName(context.DayOfWeek)
+                                </MudTd>
+
+                                <MudTd DataLabel="Time">
+                                    @context.TimeSlotName
+                                </MudTd>
+
+                                <MudTd DataLabel="Duration">
+                                    @context.ClassDurationName
+                                </MudTd>
+
+                                <MudTd DataLabel="Class Type">
+                                    @(string.IsNullOrWhiteSpace(context.ClassType)
+                                        ? "-"
+                                        : context.ClassType)
+                                </MudTd>
+                            </RowTemplate>
+
+                        </MudTable>
+                    }
+                    else
+                    {
+                        <MudText>No current classes submitted.</MudText>
+                    }
+                </MudItem>
+
+                @if (!string.IsNullOrWhiteSpace(Request.Remarks))
+                {
+                    <MudItem xs="12">
+                        <MudDivider Class="my-4" />
+
+                        <MudText Typo="Typo.h6">
+                            Remarks
+                        </MudText>
+
+                        <MudText Class="mt-2">
+                            @Request.Remarks
+                        </MudText>
+                    </MudItem>
+                }
+
+                @if (Request.Status == 1)
+                {
+                    <MudItem xs="12">
+                        <MudDivider Class="my-4" />
+
+                        <MudText Typo="Typo.h6" Class="mb-3">
+                            Approve Teacher
+                        </MudText>
+
+                        <MudTextField @bind-Value="_password"
+                                      Label="Temporary Password"
+                                      Variant="Variant.Outlined"
+                                      InputType="InputType.Password"
+                                      HelperText="Minimum 8 characters"
+                                      Class="mb-3" />
+
+                        <MudTextField @bind-Value="_reviewRemarks"
+                                      Label="Review Remarks"
+                                      Variant="Variant.Outlined"
+                                      Lines="3" />
+                    </MudItem>
+                }
+
+            </MudGrid>
+        }
+
+    </DialogContent>
+
+    <DialogActions>
+
+        <MudButton Variant="Variant.Text"
+                   OnClick="Cancel">
+            Close
+        </MudButton>
+
+        @if (Request?.Status == 1)
+        {
+            <MudButton Color="Color.Error"
+                       Variant="Variant.Outlined"
+                       Disabled="@_processing"
+                       OnClick="Reject">
+                Reject
+            </MudButton>
+
+            <MudButton Color="Color.Success"
+                       Variant="Variant.Filled"
+                       Disabled="@_processing"
+                       OnClick="Approve">
+                Approve
+            </MudButton>
+        }
+
+    </DialogActions>
+
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public TeacherRegistrationResponse Request { get; set; } = new();
+
+    private string _password = string.Empty;
+    private string? _reviewRemarks;
+    private bool _processing;
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private string GetDayName(int day)
+    {
+        return Enum.IsDefined(typeof(DayOfWeek), day)
+            ? ((DayOfWeek)day).ToString()
+            : "-";
+    }
+
+    private string GetGender(int gender)
+    {
+        return gender switch
+        {
+            1 => "Male",
+            2 => "Female",
+            _ => "Other"
+        };
+    }
+
+    private async Task Approve()
+    {
+        if (string.IsNullOrWhiteSpace(_password) || _password.Length < 8)
+        {
+            Snackbar.Add(
+                "Password must contain at least 8 characters.",
+                Severity.Warning);
+
+            return;
+        }
+
+        try
+        {
+            _processing = true;
+
+            var success = await Api.ApproveAsync(
+                Request.Id,
+                new ApproveTeacherRegistrationRequest
+                {
+                    Password = _password,
+                    ReviewRemarks = _reviewRemarks
+                });
+
+            if (success)
+            {
+                Snackbar.Add(
+                    "Teacher registration approved successfully.",
+                    Severity.Success);
+
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                Snackbar.Add(
+                    "Unable to approve the registration.",
+                    Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Approval failed: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _processing = false;
+        }
+    }
+
+    private async Task Reject()
+    {
+        try
+        {
+            _processing = true;
+
+            var success = await Api.RejectAsync(
+                Request.Id,
+                _reviewRemarks);
+
+            if (success)
+            {
+                Snackbar.Add(
+                    "Teacher registration rejected.",
+                    Severity.Success);
+
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                Snackbar.Add(
+                    "Unable to reject the registration.",
+                    Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Rejection failed: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _processing = false;
+        }
+    }
+}

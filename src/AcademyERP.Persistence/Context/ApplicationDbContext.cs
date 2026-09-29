@@ -24,6 +24,9 @@ using AcademyERP.Domain.Entities.AcademicProgress;
 using AcademyERP.Domain.Entities.Communication;
 using AcademyERP.Domain.Entities.TeacherPayments;
 using AcademyERP.Domain.Entities.ReportUnlockRequests;
+using AcademyERP.Domain.Entities.TeacherRegistrations;
+using AcademyERP.Domain.Entities.TeacherStudentRequests;
+
 
 
 namespace AcademyERP.Persistence.Context;
@@ -66,6 +69,23 @@ public DbSet<TeacherPaymentConfiguration> TeacherPaymentConfigurations
 
 public DbSet<Message> Messages => Set<Message>();
     public DbSet<TeacherAvailability> TeacherAvailabilities => Set<TeacherAvailability>();
+    public DbSet<TeacherRegistrationRequest>
+    TeacherRegistrationRequests =>
+        Set<TeacherRegistrationRequest>();
+
+public DbSet<TeacherRegistrationAvailability>
+    TeacherRegistrationAvailabilities =>
+        Set<TeacherRegistrationAvailability>();
+
+public DbSet<TeacherRegistrationClass>
+    TeacherRegistrationClasses =>
+        Set<TeacherRegistrationClass>();
+
+public DbSet<TeacherStudentRequest> TeacherStudentRequests
+    => Set<TeacherStudentRequest>();
+
+public DbSet<TeacherStudentRequestSchedule> TeacherStudentRequestSchedules
+    => Set<TeacherStudentRequestSchedule>();
     public DbSet<RegistrationRequest>
     RegistrationRequests => Set<RegistrationRequest>();
    public DbSet<AttendanceEntity> Attendances => Set<AttendanceEntity>();

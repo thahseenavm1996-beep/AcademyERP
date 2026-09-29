@@ -22,9 +22,8 @@ public class CreateStudentRequest : IValidatableObject
     [Required]
     public string MobileNumber { get; set; } = string.Empty;
 
-    [Required]
-    [EmailAddress]
-    public string Email { get; set; } = string.Empty;
+   [EmailAddress]
+public string? Email { get; set; }
 
     [Required]
     public string Country { get; set; } = string.Empty;
@@ -32,9 +31,8 @@ public class CreateStudentRequest : IValidatableObject
     
     public string TimeZone { get; set; } = string.Empty;
 
-    [Required]
     [MinLength(6)]
-    public string Password { get; set; } = string.Empty;
+public string? Password { get; set; }
 
     public string? Remarks { get; set; }
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

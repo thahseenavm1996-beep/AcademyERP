@@ -1,0 +1,314 @@
+@page "/teacher-student-requests"
+
+@using AcademyERP.Admin.Models.TeacherStudentRequests
+@using AcademyERP.Admin.Services
+@using AcademyERP.Domain.Enums
+@using MudBlazor
+
+@inject TeacherStudentRequestApiService RequestApi
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>Teacher Student Requests</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="pa-4">
+
+    <MudText Typo="Typo.h5" Class="mb-4">
+        Teacher Student Requests
+    </MudText>
+
+    <MudGrid Class="mb-4">
+
+        <MudItem xs="12" sm="4">
+            <MudCard>
+                <MudCardContent>
+                    <MudText Typo="Typo.body2">Total Requests</MudText>
+                    <MudText Typo="Typo.h4">@_requests.Count</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" sm="4">
+            <MudCard>
+                <MudCardContent>
+                    <MudText Typo="Typo.body2">Pending</MudText>
+                    <MudText Typo="Typo.h4">@PendingCount</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" sm="4">
+            <MudCard>
+                <MudCardContent>
+                    <MudText Typo="Typo.body2">Approved</MudText>
+                    <MudText Typo="Typo.h4">@ApprovedCount</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+    </MudGrid>
+
+    <MudPaper Class="pa-4">
+
+        <div class="d-flex justify-space-between align-center mb-4">
+
+            <MudText Typo="Typo.h6">
+                Student Requests
+            </MudText>
+
+            <MudButton Variant="Variant.Outlined"
+                       StartIcon="@Icons.Material.Filled.Refresh"
+                       OnClick="LoadRequestsAsync">
+                Refresh
+            </MudButton>
+
+        </div>
+
+        <MudGrid Class="mb-4">
+
+            <MudItem xs="12" md="8">
+                <MudTextField @bind-Value="_searchTerm"
+                              Label="Search"
+                              Placeholder="Search teacher, student, mobile or course..."
+                              Variant="Variant.Outlined"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Immediate="true"
+                              Clearable="true"
+                              FullWidth="true" />
+            </MudItem>
+
+            <MudItem xs="12" md="4">
+                <MudSelect T="TeacherStudentRequestStatus"
+                           @bind-Value="_statusFilter"
+                           Label="Status"
+                           Variant="Variant.Outlined"
+                           FullWidth="true">
+
+                    <MudSelectItem Value="@(TeacherStudentRequestStatus.Pending)">
+                        Pending
+                    </MudSelectItem>
+
+                    <MudSelectItem Value="@(TeacherStudentRequestStatus.Approved)">
+                        Approved
+                    </MudSelectItem>
+
+                    <MudSelectItem Value="@(TeacherStudentRequestStatus.Rejected)">
+                        Rejected
+                    </MudSelectItem>
+
+                </MudSelect>
+            </MudItem>
+
+        </MudGrid>
+
+        <MudTable Items="@FilteredRequests"
+                  Hover="true"
+                  Striped="true"
+                  Dense="true"
+                  Breakpoint="Breakpoint.Sm"
+                  Loading="@_loading">
+
+            <HeaderContent>
+
+                <MudTh>Teacher</MudTh>
+                <MudTh>Student</MudTh>
+                <MudTh>Mobile</MudTh>
+                <MudTh>Course</MudTh>
+                <MudTh>Start Date</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>Action</MudTh>
+
+            </HeaderContent>
+
+            <RowTemplate>
+
+                <MudTd DataLabel="Teacher">
+                    @context.TeacherName
+                </MudTd>
+
+                <MudTd DataLabel="Student">
+
+                    <MudText Typo="Typo.body2">
+                        @context.StudentName
+                    </MudText>
+
+                    @if (!string.IsNullOrWhiteSpace(context.StudentAdmissionNumber))
+                    {
+                        <MudText Typo="Typo.caption"
+                                 Color="Color.Secondary">
+                            @context.StudentAdmissionNumber
+                        </MudText>
+                    }
+                    else
+                    {
+                        <MudChip T="string"
+                                 Size="Size.Small"
+                                 Color="Color.Warning">
+                            New / Unverified
+                        </MudChip>
+                    }
+
+                </MudTd>
+
+                <MudTd DataLabel="Mobile">
+                    @context.StudentPhoneNumber
+                </MudTd>
+
+                <MudTd DataLabel="Course">
+                    @context.CourseName
+                </MudTd>
+
+                <MudTd DataLabel="Start Date">
+                    @context.StartDate.ToLocalTime().ToString("dd MMM yyyy")
+                </MudTd>
+
+                <MudTd DataLabel="Status">
+
+                    @if (context.Status == TeacherStudentRequestStatus.Pending)
+                    {
+                        <MudChip T="string"
+                                 Size="Size.Small"
+                                 Color="Color.Warning">
+                            Pending
+                        </MudChip>
+                    }
+                    else if (context.Status == TeacherStudentRequestStatus.Approved)
+                    {
+                        <MudChip T="string"
+                                 Size="Size.Small"
+                                 Color="Color.Success">
+                            Approved
+                        </MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string"
+                                 Size="Size.Small"
+                                 Color="Color.Error">
+                            Rejected
+                        </MudChip>
+                    }
+
+                </MudTd>
+
+                <MudTd DataLabel="Action">
+
+                    <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                   Color="Color.Primary"
+                                   Title="View Request"
+                                   OnClick="@(() => ViewRequestAsync(context))" />
+
+                </MudTd>
+
+            </RowTemplate>
+
+            <NoRecordsContent>
+
+                <MudText Class="pa-4"
+                         Color="Color.Secondary">
+                    No student requests found.
+                </MudText>
+
+            </NoRecordsContent>
+
+        </MudTable>
+
+    </MudPaper>
+
+</MudContainer>
+
+@code {
+
+    private List<TeacherStudentRequestDto> _requests = new();
+
+    private bool _loading;
+
+    private string _searchTerm = string.Empty;
+
+    private TeacherStudentRequestStatus _statusFilter =
+        TeacherStudentRequestStatus.Pending;
+
+    private IEnumerable<TeacherStudentRequestDto> FilteredRequests =>
+        _requests.Where(x =>
+            x.Status == _statusFilter &&
+            (
+                string.IsNullOrWhiteSpace(_searchTerm) ||
+                x.TeacherName.Contains(
+                    _searchTerm,
+                    StringComparison.OrdinalIgnoreCase) ||
+                x.StudentName.Contains(
+                    _searchTerm,
+                    StringComparison.OrdinalIgnoreCase) ||
+                x.StudentPhoneNumber.Contains(
+                    _searchTerm,
+                    StringComparison.OrdinalIgnoreCase) ||
+                x.CourseName.Contains(
+                    _searchTerm,
+                    StringComparison.OrdinalIgnoreCase)
+            ));
+
+    private int PendingCount =>
+        _requests.Count(x =>
+            x.Status == TeacherStudentRequestStatus.Pending);
+
+    private int ApprovedCount =>
+        _requests.Count(x =>
+            x.Status == TeacherStudentRequestStatus.Approved);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRequestsAsync();
+    }
+
+    private async Task LoadRequestsAsync()
+    {
+        try
+        {
+            _loading = true;
+
+            _requests =
+                await RequestApi.GetPendingAsync()
+                ?? new List<TeacherStudentRequestDto>();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Failed to load student requests: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task ViewRequestAsync(
+        TeacherStudentRequestDto request)
+    {
+        var parameters = new DialogParameters
+        {
+            ["RequestId"] = request.Id
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Large,
+            FullWidth = true,
+            CloseButton = true
+        };
+
+        var dialog =
+            await DialogService.ShowAsync<TeacherStudentRequestDetailsDialog>(
+                $"Student Request - {request.StudentName}",
+                parameters,
+                options);
+
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadRequestsAsync();
+        }
+    }
+}

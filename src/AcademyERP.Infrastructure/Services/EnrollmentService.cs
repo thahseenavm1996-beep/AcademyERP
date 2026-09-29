@@ -9,6 +9,9 @@ using AcademyERP.Application.DTOs.EnrollmentSchedules;
 using AcademyERP.Domain.Entities.TeachingSchedules;
 using AcademyERP.Application.DTOs.TeachingSchedules;
 using AcademyERP.Domain.Entities.TeacherAvailabilities;
+using AcademyERP.Application.DTOs.TeacherPayments;
+using AcademyERP.Domain.Entities.Finance;
+using AcademyERP.Domain.Enums;
 
 namespace AcademyERP.Infrastructure.Services;
 
@@ -16,12 +19,15 @@ public class EnrollmentService : IEnrollmentService
 {
     private readonly ApplicationDbContext _context;
 private readonly ITeachingScheduleService _teachingScheduleService;
+private readonly ITeacherPaymentService _teacherPaymentService;
     public EnrollmentService(
     ApplicationDbContext context,
-    ITeachingScheduleService teachingScheduleService)
+    ITeachingScheduleService teachingScheduleService,
+    ITeacherPaymentService teacherPaymentService)
 {
     _context = context;
     _teachingScheduleService = teachingScheduleService;
+    _teacherPaymentService = teacherPaymentService;
 }
 
    public async Task<List<EnrollmentResponse>> GetAllAsync()
@@ -204,112 +210,320 @@ ClassDurationName = x.EnrollmentSchedules
         throw new ArgumentException(
             "A teacher must be assigned before an enrollment can be created.");
     }
-await ValidateEnrollmentSchedulesAsync(
-    request.TeacherId.Value,
-    request.Schedules,
-    request.StartDate,
-    request.EndDate);
 
-    var enrollment = new Enrollment
+    if (request.TeacherPaymentAmount < 0)
     {
-        StudentId = request.StudentId,
-
-        CourseId = request.CourseId,
-
-        TeacherId = request.TeacherId,
-
-        StartDate = request.StartDate,
-
-        EndDate = request.EndDate,
-
-
-        MonthlyFee = request.MonthlyFee,
-
-        ScholarshipAmount = request.ScholarshipAmount,
-
-        ScholarshipReason = request.ScholarshipReason,
-
-
-        DiscountAmount = request.DiscountAmount,
-
-        DiscountReason = request.DiscountReason,
-
-
-        FinalMonthlyFee =
-            request.MonthlyFee
-            - request.ScholarshipAmount
-            - request.DiscountAmount,
-
-
-        // Billing follows enrollment start date
-        NextBillingDate =
-            request.StartDate.AddMonths(1),
-
-
-        Remarks = request.Remarks
-    };
-
-
-    foreach (var schedule in request.Schedules)
-    {
-        enrollment.EnrollmentSchedules.Add(
-            new EnrollmentSchedule
-            {
-                DayOfWeek = schedule.DayOfWeek,
-
-                TimeSlotId = schedule.TimeSlotId,
-
-                ClassDurationId = schedule.ClassDurationId,
-
-                IsActive = true
-            });
+        throw new ArgumentException(
+            "Teacher payment amount cannot be negative.");
     }
 
+    await ValidateEnrollmentSchedulesAsync(
+        request.TeacherId.Value,
+        request.Schedules,
+        request.StartDate,
+        request.EndDate);
 
-    _context.Enrollments.Add(enrollment);
+    await using var transaction =
+        await _context.Database.BeginTransactionAsync();
 
+    try
+    {
+        // ==========================================
+        // CALCULATE FINAL STUDENT FEE
+        // ==========================================
 
-    await _context.SaveChangesAsync();
+        var finalMonthlyFee =
+            request.MonthlyFee
+            - request.ScholarshipAmount
+            - request.DiscountAmount;
 
-
-
-await _context.Entry(enrollment)
-    .Collection(x => x.EnrollmentSchedules)
-    .Query()
-    .Include(x => x.TimeSlot)
-    .LoadAsync();
-
-
-// Create TeachingSchedule automatically
-foreach (var schedule in enrollment.EnrollmentSchedules)
-{
-    await _teachingScheduleService.CreateAsync(
-        new CreateTeachingScheduleRequest
+        if (finalMonthlyFee < 0)
         {
-            EnrollmentId = enrollment.Id,
+            throw new ArgumentException(
+                "Final monthly fee cannot be negative.");
+        }
 
-            TeacherId = enrollment.TeacherId!.Value,
+        // ==========================================
+        // CREATE ENROLLMENT
+        // ==========================================
 
-            DayOfWeek = schedule.DayOfWeek,
+        var enrollment = new Enrollment
+        {
+            StudentId =
+                request.StudentId,
 
-            StartTime = schedule.TimeSlot.StartTime,
+            CourseId =
+                request.CourseId,
 
-            ClassDurationId = schedule.ClassDurationId,
+            TeacherId =
+                request.TeacherId,
 
-            EffectiveFrom = enrollment.StartDate,
+            StartDate =
+                request.StartDate,
 
-            EffectiveTo = enrollment.EndDate,
+            EndDate =
+                request.EndDate,
 
-            IsActive = true,
+            MonthlyFee =
+                request.MonthlyFee,
 
-            MaximumStudents = 1
-        });
-}
+            ScholarshipAmount =
+                request.ScholarshipAmount,
 
+            ScholarshipReason =
+                request.ScholarshipReason,
 
-    return await GetByIdAsync(enrollment.Id)
-        ?? throw new InvalidOperationException(
-            "Enrollment was created but could not be retrieved.");
+            DiscountAmount =
+                request.DiscountAmount,
+
+            DiscountReason =
+                request.DiscountReason,
+
+            FinalMonthlyFee =
+                finalMonthlyFee,
+
+            // Billing starts from enrollment date.
+            NextBillingDate =
+                request.StartDate.AddMonths(1),
+
+            Remarks =
+                request.Remarks
+        };
+
+        // ==========================================
+        // CREATE ENROLLMENT SCHEDULES
+        // ==========================================
+
+        foreach (var schedule in request.Schedules)
+        {
+            enrollment.EnrollmentSchedules.Add(
+                new EnrollmentSchedule
+                {
+                    DayOfWeek =
+                        schedule.DayOfWeek,
+
+                    TimeSlotId =
+                        schedule.TimeSlotId,
+
+                    ClassDurationId =
+                        schedule.ClassDurationId,
+
+                    IsActive =
+                        true
+                });
+        }
+
+        _context.Enrollments.Add(enrollment);
+
+        // Save first so EnrollmentId is available.
+        await _context.SaveChangesAsync();
+
+        // ==========================================
+        // LOAD TIME SLOTS
+        // ==========================================
+
+        await _context.Entry(enrollment)
+            .Collection(x => x.EnrollmentSchedules)
+            .Query()
+            .Include(x => x.TimeSlot)
+            .LoadAsync();
+
+        // ==========================================
+        // CREATE TEACHING SCHEDULES
+        // ==========================================
+
+        foreach (var schedule in enrollment.EnrollmentSchedules)
+        {
+            await _teachingScheduleService.CreateAsync(
+                new CreateTeachingScheduleRequest
+                {
+                    EnrollmentId =
+                        enrollment.Id,
+
+                    TeacherId =
+                        enrollment.TeacherId!.Value,
+
+                    DayOfWeek =
+                        schedule.DayOfWeek,
+
+                    StartTime =
+                        schedule.TimeSlot.StartTime,
+
+                    ClassDurationId =
+                        schedule.ClassDurationId,
+
+                    EffectiveFrom =
+                        enrollment.StartDate,
+
+                    EffectiveTo =
+                        enrollment.EndDate,
+
+                    IsActive =
+                        true,
+
+                    MaximumStudents =
+                        1
+                });
+        }
+
+        // ==========================================
+        // CREATE FEE INVOICES
+        // ==========================================
+        //
+        // If the enrollment is entered after its joining date,
+        // completed historical billing cycles are treated as
+        // already settled. Only the current cycle remains pending.
+        //
+        // Example:
+        // Joining Date : 01 Aug
+        // Created      : 29 Sep
+        //
+        // 01 Aug cycle -> Paid
+        // 01 Sep cycle -> Pending
+        // 01 Oct cycle -> Not created yet
+        // ==========================================
+
+        var billingCycleStart =
+            request.StartDate.Date;
+
+        var billingToday =
+            DateTime.UtcNow.Date;
+
+        while (billingCycleStart.AddMonths(1) <= billingToday)
+        {
+            var historicalInvoice =
+                new FeeInvoice
+                {
+                    EnrollmentId =
+                        enrollment.Id,
+
+                    InvoiceNumber =
+                        $"INV-{billingCycleStart:yyyyMMdd}-{enrollment.Id.ToString()[..8]}",
+
+                    Amount =
+                        enrollment.FinalMonthlyFee,
+
+                    DiscountAmount =
+                        enrollment.ScholarshipAmount
+                        + enrollment.DiscountAmount,
+
+                    PaidAmount =
+                        enrollment.FinalMonthlyFee,
+
+                    BalanceAmount =
+                        0,
+
+                    InvoiceDate =
+                        billingCycleStart,
+
+                    DueDate =
+                        billingCycleStart,
+
+                    PaidDate =
+                        billingToday,
+
+                    Status =
+                        FeeStatus.Paid,
+
+                    Remarks =
+                        "Historical billing cycle settled during late enrollment creation."
+                };
+
+            _context.FeeInvoices.Add(historicalInvoice);
+
+            billingCycleStart =
+                billingCycleStart.AddMonths(1);
+        }
+
+        // Current billing cycle remains unpaid.
+        var firstInvoice =
+            new FeeInvoice
+            {
+                EnrollmentId =
+                    enrollment.Id,
+
+                InvoiceNumber =
+                    $"INV-{billingCycleStart:yyyyMMdd}-{enrollment.Id.ToString()[..8]}",
+
+                Amount =
+                    enrollment.FinalMonthlyFee,
+
+                DiscountAmount =
+                    enrollment.ScholarshipAmount
+                    + enrollment.DiscountAmount,
+
+                PaidAmount =
+                    0,
+
+                BalanceAmount =
+                    enrollment.FinalMonthlyFee,
+
+                InvoiceDate =
+                    billingCycleStart,
+
+                DueDate =
+                    billingCycleStart,
+
+                Status =
+                    FeeStatus.Pending,
+
+                Remarks =
+                    "Generated automatically for the current enrollment billing cycle."
+            };
+
+        _context.FeeInvoices.Add(firstInvoice);
+
+        // Next cycle is one month after the current cycle.
+        enrollment.NextBillingDate =
+            billingCycleStart.AddMonths(1);
+
+        await _context.SaveChangesAsync();
+
+        // ==========================================
+        // CREATE TEACHER PAYMENT CONFIGURATION
+        // ==========================================
+
+        await _teacherPaymentService.CreateConfigurationAsync(
+            new CreateTeacherPaymentConfigurationRequest
+            {
+                TeacherId =
+                    enrollment.TeacherId!.Value,
+
+                EnrollmentId =
+                    enrollment.Id,
+
+                PaymentAmount =
+                    request.TeacherPaymentAmount,
+
+                EffectiveFrom =
+                    enrollment.StartDate,
+
+                EffectiveTo =
+                    enrollment.EndDate,
+
+                Remarks =
+                    "Created automatically during enrollment creation."
+            });
+
+        // ==========================================
+        // COMMIT EVERYTHING
+        // ==========================================
+
+        await transaction.CommitAsync();
+
+        // ==========================================
+        // RETURN CREATED ENROLLMENT
+        // ==========================================
+
+        return await GetByIdAsync(enrollment.Id)
+            ?? throw new InvalidOperationException(
+                "Enrollment was created but could not be retrieved.");
+    }
+    catch
+    {
+        await transaction.RollbackAsync();
+        throw;
+    }
 }
 
     public async Task<EnrollmentResponse?> UpdateAsync(
@@ -364,7 +578,10 @@ var oldTeachingSchedules =
     .ToListAsync();
 
 
-_context.TeachingSchedules.RemoveRange(oldTeachingSchedules);
+foreach (var schedule in oldTeachingSchedules)
+{
+    schedule.IsDeleted = true;
+}
 _context.EnrollmentSchedules.RemoveRange(existingSchedules);
 
 

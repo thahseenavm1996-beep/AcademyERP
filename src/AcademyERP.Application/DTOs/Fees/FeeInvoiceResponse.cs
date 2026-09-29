@@ -14,6 +14,10 @@ public class FeeInvoiceResponse
     public string StudentName { get; set; }
         = string.Empty;
 
+    public string? AdmissionNumber { get; set; }
+
+    public string? TeacherName { get; set; }
+
     public string CourseName { get; set; }
         = string.Empty;
 

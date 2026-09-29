@@ -30,5 +30,13 @@ public class FeeInvoiceConfiguration : IEntityTypeConfiguration<FeeInvoice>
     .WithMany(x => x.FeeInvoices)
     .HasForeignKey(x => x.EnrollmentId)
     .OnDelete(DeleteBehavior.Restrict);
+
+    builder.HasIndex(x => new
+{
+    x.EnrollmentId,
+    x.InvoiceDate
+})
+.IsUnique()
+.HasFilter("[IsDeleted] = 0");
     }
 }

@@ -89,7 +89,8 @@
                     <MudSelect T="Guid?"
                                Label="Course"
                                Variant="Variant.Outlined"
-                               @bind-Value="approval.CourseId"
+                               Value="approval.CourseId"
+ValueChanged="@(value => OnCourseChanged(approval, value))"
                                Disabled="@(_request.Status != 1)"
                                Class="mb-3">
 
@@ -103,6 +104,34 @@
                         }
 
                     </MudSelect>
+
+                    <!-- FINANCE -->
+<MudNumericField T="decimal"
+                 Label="Standard Course Fee"
+                 Variant="Variant.Outlined"
+                 Value="@approval.StandardCourseFee"
+                 ReadOnly="true"
+                 Class="mb-3" />
+
+<MudNumericField T="decimal"
+                 Label="Final Student Fee"
+                 Variant="Variant.Outlined"
+                 @bind-Value="approval.FinalStudentFee"
+                 Min="0"
+                 Required="true"
+                 Disabled="@(_request.Status != 1)"
+                 Class="mb-3" />
+
+<MudNumericField T="decimal"
+                 Label="Teacher Payment Amount"
+                 Variant="Variant.Outlined"
+                 @bind-Value="approval.TeacherPaymentAmount"
+                 Min="0"
+                 Required="true"
+                 Disabled="@(_request.Status != 1)"
+                 Class="mb-3" />
+
+
 
                     <!-- TIME SLOT -->
                     <MudSelect T="Guid?"
@@ -277,50 +306,46 @@ for the selected time slot and days.
     private List<TeachingScheduleResponse> _existingTeachingSchedules = new();
 
     protected override async Task OnInitializedAsync()
+{
+    try
     {
-        try
+        _request =
+            await Api.GetByIdAsync(RequestId);
+
+        _courses =
+            await CourseApi.GetAllAsync();
+
+        var teachersResult =
+            await TeacherApi.GetTeachersAsync(
+                new TeacherQueryRequest
+                {
+                    Page = 1,
+                    PageSize = 1000
+                });
+
+        _teachers =
+            teachersResult?.Data?.Items ?? new();
+
+        var schedules =
+            await TeachingScheduleApi.GetAllAsync();
+
+        _existingTeachingSchedules =
+            schedules ?? new();
+
+        _timeSlots =
+            await LookupApi.GetTimeSlotsAsync();
+
+        _classDurations =
+            await LookupApi.GetClassDurationsAsync();
+
+        if (_request != null)
         {
-            _request =
-                await Api.GetByIdAsync(RequestId);
-
-          _courses =
-    await CourseApi.GetAllAsync();
-
-var teachersResult =
-    await TeacherApi.GetTeachersAsync(
-        new TeacherQueryRequest
-        {
-            Page = 1,
-            PageSize = 1000
-        });
-
-_teachers =
-    teachersResult?.Data?.Items ?? new();
-
-var schedules =
-    await TeachingScheduleApi.GetAllAsync();
-
-_existingTeachingSchedules =
-    schedules ?? new();
-
-_timeSlots =
-    await LookupApi.GetTimeSlotsAsync();
-            _teachers =
-                teachersResult?.Data?.Items ?? new();
-
-            _timeSlots =
-                await LookupApi.GetTimeSlotsAsync();
-
-            _classDurations =
-                await LookupApi.GetClassDurationsAsync();
-
-            if (_request != null)
-            {
-                _studentApprovals =
-                    _request.Students
-                        .Select(x =>
-                        {
-                            return new StudentApprovalModel
+            _studentApprovals =
+                _request.Students
+                    .Select(x =>
+                    {
+                        var model =
+                            new StudentApprovalModel
                             {
                                 RegistrationStudentId = x.Id,
 
@@ -336,17 +361,37 @@ _timeSlots =
                                 DaysOfWeek =
                                     new List<DayOfWeek>()
                             };
-                        })
-                        .ToList();
-            }
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add(
-                $"Unable to load registration request: {ex.Message}",
-                Severity.Error);
+
+                        // Load the standard course fee
+                        // and use it as the initial final fee.
+                        if (model.CourseId.HasValue)
+                        {
+                            var course =
+                                _courses.FirstOrDefault(
+                                    c => c.Id == model.CourseId.Value);
+
+                            if (course != null)
+                            {
+                                model.StandardCourseFee =
+                                    course.StandardMonthlyFee;
+
+                                model.FinalStudentFee =
+                                    course.StandardMonthlyFee;
+                            }
+                        }
+
+                        return model;
+                    })
+                    .ToList();
         }
     }
+    catch (Exception ex)
+    {
+        Snackbar.Add(
+            $"Unable to load registration request: {ex.Message}",
+            Severity.Error);
+    }
+}
 
     private void OnDaysChanged(
         StudentApprovalModel approval,
@@ -590,5 +635,30 @@ private bool HasScheduleConflict(
         "Other" => "Other",
         _ => gender?.ToString() ?? "—"
     };
+}
+
+private void OnCourseChanged(
+    StudentApprovalModel approval,
+    Guid? courseId)
+{
+    approval.CourseId = courseId;
+
+    var course = _courses.FirstOrDefault(
+        x => x.Id == courseId);
+
+    if (course == null)
+    {
+        approval.StandardCourseFee = 0;
+        approval.FinalStudentFee = 0;
+        return;
+    }
+
+    approval.StandardCourseFee =
+        course.StandardMonthlyFee;
+
+    // Initially, final fee equals the standard fee.
+    // Admin can reduce it if a discount is given.
+    approval.FinalStudentFee =
+        course.StandardMonthlyFee;
 }
 }

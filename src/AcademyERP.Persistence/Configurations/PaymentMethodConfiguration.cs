@@ -47,7 +47,7 @@ public class PaymentMethodConfiguration
             new PaymentMethod
             {
                 Id = Guid.Parse("44444444-4444-4444-4444-444444444444"),
-                Name = "PayPal",
+                Name = "UPI",
                 IsActive = true,
                 IsDeleted = false,
                 CreatedAt = new DateTime(2025, 1, 1)

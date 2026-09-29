@@ -29,17 +29,22 @@
         {
             <MudForm @ref="_form">
 
-                <MudSelect T="Guid" Label="Student" @bind-Value="_model.StudentId" Required="true" Disabled="@IsEditMode"
-                           Class="mb-3">
-
-                    @foreach (var student in _students)
-                    {
-                        <MudSelectItem T="Guid" Value="@student.Id">
-                            @student.FullName
-                        </MudSelectItem>
-                    }
-
-                </MudSelect>
+                <MudAutocomplete T="StudentResponse"
+                 Label="Student"
+                 Value="_selectedStudent"
+                 ValueChanged="OnStudentChanged"
+                 SearchFunc="SearchStudents"
+                 ToStringFunc="@(student =>
+    student == null
+        ? string.Empty
+        : $"{student.FullName} — Admission No: {student.AdmissionNumber}")"
+                 Required="true"
+                 Disabled="@IsEditMode"
+                 ResetValueOnEmptyText="true"
+                 CoerceText="true"
+                 Clearable="true"
+                 Dense="true"
+                 Class="mb-3" />
 
                 <MudSelect T="Guid" Label="Course" @bind-Value="_model.CourseId" Required="true" Disabled="@IsEditMode"
                            Class="mb-3">
@@ -69,20 +74,39 @@
 </MudText>
 
 
-<MudSelect T="DayOfWeek"
-           Label="Day"
-           @bind-Value="_selectedDay"
-           Class="mb-3">
+<MudText Typo="Typo.h6" Class="mt-4 mb-2">
+    Class Schedule
+</MudText>
 
-    @foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
-    {
-        <MudSelectItem T="DayOfWeek" Value="@day">
-            @day
-        </MudSelectItem>
-    }
+<MudPaper Class="pa-3 mb-3" Outlined="true">
 
-</MudSelect>
+    <MudText Typo="Typo.subtitle2" Class="mb-2">
+        Select Class Days
+    </MudText>
 
+    <MudCheckBox T="bool"
+                 Value="_allDaysSelected"
+                 ValueChanged="OnAllDaysChanged"
+                 Label="All Days (Monday - Saturday)"
+                 Color="Color.Primary"
+                 Disabled="@AreAllDaysAdded"
+                 Class="mb-2" />
+
+    <MudGrid>
+        @foreach (var day in _classDays)
+        {
+            <MudItem xs="6" sm="4">
+                <MudCheckBox T="bool"
+                             Value="@IsDaySelected(day)"
+                             ValueChanged="@(value => ToggleDay(day, value))"
+                             Label="@day.ToString()"
+                             Color="Color.Primary"
+                             Disabled="@IsDayAlreadyAdded(day)" />
+            </MudItem>
+        }
+    </MudGrid>
+
+</MudPaper>
 
 <MudSelect T="Guid"
            Label="Time Slot"
@@ -98,7 +122,6 @@
 
 </MudSelect>
 
-
 <MudSelect T="Guid"
            Label="Duration"
            @bind-Value="_selectedDurationId"
@@ -113,13 +136,13 @@
 
 </MudSelect>
 
-
 <MudButton Color="Color.Primary"
            Variant="Variant.Filled"
            FullWidth="true"
-           OnClick="AddSchedule">
+           OnClick="AddSelectedDays"
+           Disabled="@(!_selectedDays.Any())">
 
-    ADD SCHEDULE
+    ADD SELECTED DAYS
 
 </MudButton>
 @if (_schedules.Count > 0)
@@ -170,6 +193,8 @@
                 <MudDatePicker Label="End Date" @bind-Date="_endDate" Clearable="true" Class="mb-3" />
 
                 <MudNumericField T="decimal" Label="Monthly Fee" @bind-Value="_model.MonthlyFee" Min="0" Class="mb-3" />
+
+                <MudNumericField T="decimal" Label="Teacher Payment Amount" @bind-Value="_model.TeacherPaymentAmount" Min="0" Class="mb-3" />
 
                 <MudNumericField T="decimal" Label="Scholarship Amount" @bind-Value="_model.ScholarshipAmount" Min="0"
                                  Class="mb-3" />
@@ -244,10 +269,8 @@
     public EnrollmentResponse? Enrollment { get; set; }
 
     private MudForm? _form;
-
+private StudentResponse? _selectedStudent;
     private CreateEnrollmentRequest _model = new();
-
-    private List<StudentResponse> _students = new();
 
     private List<TeacherResponse> _teachers = new();
 
@@ -256,8 +279,21 @@
     private List<TimeSlotResponse> _timeSlots = new();
 
     private List<ClassDurationResponse> _classDurations = new();
-    private List<EnrollmentScheduleRequest> _schedules = new();
-    private DayOfWeek _selectedDay = DayOfWeek.Monday;
+   private List<EnrollmentScheduleRequest> _schedules = new();
+
+private readonly List<DayOfWeek> _classDays = new()
+{
+    DayOfWeek.Monday,
+    DayOfWeek.Tuesday,
+    DayOfWeek.Wednesday,
+    DayOfWeek.Thursday,
+    DayOfWeek.Friday,
+    DayOfWeek.Saturday
+};
+
+private HashSet<DayOfWeek> _selectedDays = new();
+
+private bool _allDaysSelected;
 
 private Guid _selectedTimeSlotId;
 
@@ -288,11 +324,7 @@ private Guid _selectedDurationId;
         {
             _loading = true;
 
-            var studentRequest = new StudentQueryRequest
-            {
-                Page = 1,
-                PageSize = 100
-            };
+           
 
             var teacherRequest = new TeacherQueryRequest
             {
@@ -300,8 +332,7 @@ private Guid _selectedDurationId;
                 PageSize = 100
             };
 
-            var studentsResult =
-                await StudentApi.GetStudentsAsync(studentRequest);
+           
 
             var teachersResult =
                 await TeacherApi.GetTeachersAsync(teacherRequest);
@@ -317,9 +348,6 @@ private Guid _selectedDurationId;
                 
 
 
-            if (studentsResult != null)
-                _students = studentsResult.Data.Items ?? new();
-
             if (teachersResult != null)
                 _teachers = teachersResult.Data.Items ?? new();
 
@@ -327,6 +355,7 @@ private Guid _selectedDurationId;
             {
                 _model.StudentId =
                     Enrollment.StudentId;
+                    _selectedStudent = await StudentApi.GetStudentAsync(Enrollment.StudentId);
 
                 _model.CourseId =
                     Enrollment.CourseId;
@@ -376,16 +405,7 @@ private Guid _selectedDurationId;
         ClassDurationId = x.ClassDurationId
     })
     .ToList();
-    var firstSchedule = Enrollment.Schedules.FirstOrDefault();
-
-if (firstSchedule != null)
-{
-    _selectedDay = firstSchedule.DayOfWeek;
-
-    _selectedTimeSlotId = firstSchedule.TimeSlotId;
-
-    _selectedDurationId = firstSchedule.ClassDurationId;
-}
+    
             }
         }
         catch (Exception ex)
@@ -545,8 +565,62 @@ if (firstSchedule != null)
             _saving = false;
         }
     }
- private void AddSchedule()
+ private void OnAllDaysChanged(bool value)
 {
+    _allDaysSelected = value;
+
+    if (value)
+    {
+        _selectedDays = _classDays
+            .Where(day => !IsDayAlreadyAdded(day))
+            .ToHashSet();
+    }
+    else
+    {
+        _selectedDays.Clear();
+    }
+}
+
+private bool IsDaySelected(DayOfWeek day)
+{
+    return _selectedDays.Contains(day);
+}
+
+private void ToggleDay(DayOfWeek day, bool selected)
+{
+    if (IsDayAlreadyAdded(day))
+        return;
+
+    if (selected)
+        _selectedDays.Add(day);
+    else
+        _selectedDays.Remove(day);
+
+    _allDaysSelected =
+        _classDays
+            .Where(day => !IsDayAlreadyAdded(day))
+            .All(day => _selectedDays.Contains(day));
+}
+
+private bool IsDayAlreadyAdded(DayOfWeek day)
+{
+    return _schedules.Any(x => x.DayOfWeek == day);
+}
+
+private bool AreAllDaysAdded =>
+    _classDays.All(IsDayAlreadyAdded);
+
+private void AddSelectedDays()
+{
+    if (!_selectedDays.Any())
+    {
+        Snackbar.Add(
+            "Please select at least one class day.",
+            Severity.Warning);
+
+        return;
+    }
+
     if (_selectedTimeSlotId == Guid.Empty)
     {
         Snackbar.Add(
@@ -565,30 +639,23 @@ if (firstSchedule != null)
         return;
     }
 
-
-    if (_schedules.Any(x =>
-        x.DayOfWeek == _selectedDay &&
-        x.TimeSlotId == _selectedTimeSlotId))
+    foreach (var day in _selectedDays.OrderBy(x => x))
     {
-        Snackbar.Add(
-            "This schedule already exists.",
-            Severity.Warning);
+        if (IsDayAlreadyAdded(day))
+            continue;
 
-        return;
+        _schedules.Add(
+            new EnrollmentScheduleRequest
+            {
+                DayOfWeek = day,
+                TimeSlotId = _selectedTimeSlotId,
+                ClassDurationId = _selectedDurationId
+            });
     }
 
+    _selectedDays.Clear();
+    _allDaysSelected = false;
 
-    _schedules.Add(
-        new EnrollmentScheduleRequest
-        {
-            DayOfWeek = _selectedDay,
-            TimeSlotId = _selectedTimeSlotId,
-            ClassDurationId = _selectedDurationId
-        });
-
-
-    // reset after adding
-    _selectedDay = DayOfWeek.Monday;
     _selectedTimeSlotId = Guid.Empty;
     _selectedDurationId = Guid.Empty;
 }
@@ -597,5 +664,34 @@ private void RemoveSchedule(
     EnrollmentScheduleRequest schedule)
 {
     _schedules.Remove(schedule);
+}
+
+private async Task<IEnumerable<StudentResponse>> SearchStudents(
+    string value,
+    CancellationToken cancellationToken)
+{
+    if (string.IsNullOrWhiteSpace(value))
+        return Enumerable.Empty<StudentResponse>();
+
+    var request = new StudentQueryRequest
+    {
+        Page = 1,
+        PageSize = 20,
+        Search = value.Trim()
+    };
+
+    var result = await StudentApi.GetStudentsAsync(request);
+
+    if (result?.Data?.Items is null)
+        return Enumerable.Empty<StudentResponse>();
+
+    return result.Data.Items;
+}
+
+
+private void OnStudentChanged(StudentResponse? student)
+{
+    _selectedStudent = student;
+    _model.StudentId = student?.Id ?? Guid.Empty;
 }
 }

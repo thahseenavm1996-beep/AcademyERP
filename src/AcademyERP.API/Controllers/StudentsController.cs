@@ -71,6 +71,23 @@ public class StudentsController : ControllerBase
     "Student updated successfully."));
     }
 
+[HttpPatch("{id:guid}/status")]
+public async Task<IActionResult> SetStudentStatus(
+    Guid id,
+    [FromQuery] bool isActive)
+{
+    var updated = await _studentService.SetStatusAsync(id, isActive);
+
+    if (!updated)
+        return NotFound();
+
+    return Ok(ApiResponse<string>.SuccessResponse(
+        isActive ? "Active" : "Inactive",
+        isActive
+            ? "Student activated successfully."
+            : "Student deactivated successfully."));
+}
+
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> DeleteStudent(Guid id)
     {

@@ -817,6 +817,10 @@ public byte[] GenerateFeeInvoiceReport(
                                         .AlignRight()
                                         .Text(
                                             $"Due Date: {invoice.DueDate:dd MMM yyyy}");
+                                            right.Item()
+    .AlignRight()
+    .Text(
+        $"Paid Date: {(invoice.PaidDate.HasValue ? invoice.PaidDate.Value.ToString("dd MMM yyyy") : "—")}");
                                 });
                         });
 
@@ -1361,5 +1365,374 @@ private static string FormatReportDate(DateOnly? date)
     return date.HasValue
         ? date.Value.ToString("dd MMM yyyy")
         : "All Dates";
+}
+
+public byte[] GenerateFeeInvoicesReport(
+    IReadOnlyList<AcademyERP.Application.DTOs.Fees.FeeInvoiceResponse> invoices)
+{
+    var logoBytes = GetLogoBytes();
+
+    var document = Document.Create(container =>
+    {
+        container.Page(page =>
+        {
+            page.Size(PageSizes.A4.Landscape());
+            page.Margin(25);
+
+            page.DefaultTextStyle(x =>
+                x.FontSize(8));
+
+            page.Header()
+                .Column(column =>
+                {
+                    column.Item()
+                        .Row(row =>
+                        {
+                            row.ConstantItem(70)
+                                .Image(logoBytes)
+                                .FitArea();
+
+                            row.RelativeItem()
+                                .PaddingLeft(12)
+                                .Column(text =>
+                                {
+                                    text.Item()
+                                        .Text("MS INTERNATIONAL ACADEMY")
+                                        .Bold()
+                                        .FontSize(16);
+
+                                    text.Item()
+                                        .Text("MUEENU SSALIK")
+                                        .FontSize(9);
+
+                                    text.Item()
+                                        .PaddingTop(4)
+                                        .Text("Fee Invoice Report")
+                                        .Bold()
+                                        .FontSize(12);
+                                });
+
+                            row.ConstantItem(180)
+                                .AlignRight()
+                                .Column(text =>
+                                {
+                                    text.Item()
+                                        .AlignRight()
+                                        .Text(
+                                            $"Generated: {DateTime.Now:dd MMM yyyy HH:mm}");
+
+                                    text.Item()
+                                        .AlignRight()
+                                        .PaddingTop(3)
+                                        .Text(
+                                            $"Total Invoices: {invoices.Count}");
+                                });
+                        });
+
+                    column.Item()
+                        .PaddingTop(8)
+                        .LineHorizontal(1);
+                });
+
+            page.Content()
+                .PaddingTop(15)
+                .Table(table =>
+                {
+                    table.ColumnsDefinition(columns =>
+                    {
+                        columns.ConstantColumn(75);  // Invoice
+                        columns.RelativeColumn(2.1f); // Student
+                        columns.RelativeColumn(1.3f); // Teacher
+                        columns.RelativeColumn(1.7f); // Course
+                        columns.ConstantColumn(65);   // Invoice date
+                        columns.ConstantColumn(65);   // Due date
+                        columns.ConstantColumn(65);   // Amount
+                        columns.ConstantColumn(65);   // Paid
+                        columns.ConstantColumn(65);   // Balance
+                        columns.ConstantColumn(70);   // Status
+                    });
+
+                    table.Header(header =>
+                    {
+                        void HeaderCell(
+                            IContainer container,
+                            string text)
+                        {
+                            container
+                                .Padding(5)
+                                .BorderBottom(1)
+                                .Text(text)
+                                .Bold()
+                                .FontSize(8);
+                        }
+
+                        HeaderCell(header.Cell(), "Invoice No");
+                        HeaderCell(header.Cell(), "Student");
+                        HeaderCell(header.Cell(), "Teacher");
+                        HeaderCell(header.Cell(), "Course");
+                        HeaderCell(header.Cell(), "Invoice Date");
+                        HeaderCell(header.Cell(), "Due Date");
+                        HeaderCell(header.Cell(), "Amount");
+                        HeaderCell(header.Cell(), "Paid");
+                        HeaderCell(header.Cell(), "Balance");
+                        HeaderCell(header.Cell(), "Status");
+                    });
+
+                    foreach (var invoice in invoices)
+                    {
+                        var status =
+                            invoice.BalanceAmount <= 0
+                                ? "Paid"
+                                : invoice.DueDate.Date < DateTime.Today
+                                    ? "Overdue"
+                                    : invoice.PaidAmount > 0
+                                        ? "Partially Paid"
+                                        : "Pending";
+
+                        void Cell(
+                            IContainer container,
+                            string text)
+                        {
+                            container
+                                .Padding(4)
+                                .BorderBottom(0.5f)
+                                .Text(text)
+                                .FontSize(7.5f);
+                        }
+
+                        Cell(
+                            table.Cell(),
+                            invoice.InvoiceNumber);
+
+                        Cell(
+                            table.Cell(),
+                            invoice.StudentName);
+
+                        Cell(
+                            table.Cell(),
+                            invoice.TeacherName ?? "—");
+
+                        Cell(
+                            table.Cell(),
+                            invoice.CourseName);
+
+                        Cell(
+                            table.Cell(),
+                            invoice.InvoiceDate.ToString("dd/MM/yyyy"));
+
+                        Cell(
+                            table.Cell(),
+                            invoice.DueDate.ToString("dd/MM/yyyy"));
+
+                        Cell(
+                            table.Cell(),
+                            $"₹{invoice.Amount:N2}");
+
+                        Cell(
+                            table.Cell(),
+                            $"₹{invoice.PaidAmount:N2}");
+
+                        Cell(
+                            table.Cell(),
+                            $"₹{invoice.BalanceAmount:N2}");
+
+                        Cell(
+                            table.Cell(),
+                            status);
+                    }
+                });
+
+            page.Footer()
+                .AlignCenter()
+                .Text(text =>
+                {
+                    text.Span("MS INTERNATIONAL ACADEMY • Fee Invoice Report • ");
+                    text.CurrentPageNumber();
+                    text.Span(" / ");
+                    text.TotalPages();
+                });
+        });
+    });
+
+    return document.GeneratePdf();
+}
+
+
+public byte[] GenerateTeacherRegistrationReport(
+    IReadOnlyList<
+        AcademyERP.Application.DTOs.TeacherRegistrations.TeacherRegistrationResponse>
+        requests)
+{
+    var logoBytes = GetLogoBytes();
+
+    var document = Document.Create(container =>
+    {
+        container.Page(page =>
+        {
+            page.Size(PageSizes.A4.Landscape());
+            page.Margin(25);
+
+            page.DefaultTextStyle(x => x.FontSize(8));
+
+            page.Header()
+                .Column(column =>
+                {
+                    column.Item()
+                        .Row(row =>
+                        {
+                            row.ConstantItem(70)
+                                .Image(logoBytes)
+                                .FitArea();
+
+                            row.RelativeItem()
+                                .PaddingLeft(12)
+                                .Column(text =>
+                                {
+                                    text.Item()
+                                        .Text("MS INTERNATIONAL ACADEMY")
+                                        .Bold()
+                                        .FontSize(16);
+
+                                    text.Item()
+                                        .Text("MUEENU SSALIK")
+                                        .FontSize(9);
+
+                                    text.Item()
+                                        .PaddingTop(4)
+                                        .Text("Teacher Registration Requests")
+                                        .Bold()
+                                        .FontSize(12);
+                                });
+
+                            row.ConstantItem(180)
+                                .AlignRight()
+                                .Column(text =>
+                                {
+                                    text.Item()
+                                        .AlignRight()
+                                        .Text(
+                                            $"Generated: {DateTime.Now:dd MMM yyyy HH:mm}");
+
+                                    text.Item()
+                                        .AlignRight()
+                                        .PaddingTop(3)
+                                        .Text(
+                                            $"Total Requests: {requests.Count}");
+                                });
+                        });
+
+                    column.Item()
+                        .PaddingTop(8)
+                        .LineHorizontal(1);
+                });
+
+            page.Content()
+                .PaddingTop(15)
+                .Table(table =>
+                {
+                    table.ColumnsDefinition(columns =>
+                    {
+                        columns.RelativeColumn(2.2f);
+                        columns.ConstantColumn(75);
+                        columns.ConstantColumn(90);
+                        columns.RelativeColumn(2.2f);
+                        columns.RelativeColumn(1.8f);
+                        columns.ConstantColumn(85);
+                        columns.ConstantColumn(75);
+                    });
+
+                    table.Header(header =>
+                    {
+                        void HeaderCell(
+                            IContainer container,
+                            string text)
+                        {
+                            container
+                                .Padding(5)
+                                .BorderBottom(1)
+                                .Text(text)
+                                .Bold()
+                                .FontSize(8);
+                        }
+
+                        HeaderCell(header.Cell(), "Name");
+                        HeaderCell(header.Cell(), "Gender");
+                        HeaderCell(header.Cell(), "Mobile");
+                        HeaderCell(header.Cell(), "Email");
+                        HeaderCell(header.Cell(), "Department");
+                        HeaderCell(header.Cell(), "Submitted");
+                        HeaderCell(header.Cell(), "Status");
+                    });
+
+                    foreach (var request in requests)
+                    {
+                        void Cell(
+                            IContainer container,
+                            string text)
+                        {
+                            container
+                                .Padding(4)
+                                .BorderBottom(0.5f)
+                                .Text(text)
+                                .FontSize(7.5f);
+                        }
+
+                        Cell(
+                            table.Cell(),
+                            request.FullName);
+
+                        Cell(
+                            table.Cell(),
+                            ((int)request.Gender) switch
+                            {
+                                1 => "Male",
+                                2 => "Female",
+                                3 => "Other",
+                                _ => "Unknown"
+                            });
+
+                        Cell(
+                            table.Cell(),
+                            request.MobileNumber);
+
+                        Cell(
+                            table.Cell(),
+                            request.Email);
+
+                        Cell(
+                            table.Cell(),
+                            request.Department);
+
+                        Cell(
+                            table.Cell(),
+                            request.SubmittedAt
+                                .ToLocalTime()
+                                .ToString("dd/MM/yyyy"));
+
+                        Cell(
+                            table.Cell(),
+                            ((int)request.Status) switch
+                            {
+                                1 => "Pending",
+                                2 => "Approved",
+                                3 => "Rejected",
+                                _ => "Unknown"
+                            });
+                    }
+                });
+
+            page.Footer()
+                .AlignCenter()
+                .Text(text =>
+                {
+                    text.Span("MS INTERNATIONAL ACADEMY • Teacher Registration Requests • ");
+                    text.CurrentPageNumber();
+                    text.Span(" / ");
+                    text.TotalPages();
+                });
+        });
+    });
+
+    return document.GeneratePdf();
 }
 }

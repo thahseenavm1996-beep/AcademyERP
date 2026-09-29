@@ -1,0 +1,525 @@
+@page "/teacher-registration-requests"
+@using AcademyERP.Admin.Models.TeacherRegistrations
+@using AcademyERP.Admin.Services
+@using MudBlazor
+@using ClosedXML.Excel
+@using System.Text
+@inject TeacherRegistrationApiService Api
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+
+<PageTitle>Teacher Registration Requests</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="pa-4">
+
+    <MudText Typo="Typo.h5" Class="mb-4">
+        Teacher Registration Requests
+    </MudText>
+
+    <MudGrid Class="mb-4">
+
+        <MudItem xs="12" sm="4">
+            <MudCard>
+                <MudCardContent>
+                    <MudText Typo="Typo.body2">Total Requests</MudText>
+                    <MudText Typo="Typo.h4">@_requests.Count</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" sm="4">
+            <MudCard>
+                <MudCardContent>
+                    <MudText Typo="Typo.body2">Pending</MudText>
+                    <MudText Typo="Typo.h4">@PendingCount</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" sm="4">
+            <MudCard>
+                <MudCardContent>
+                    <MudText Typo="Typo.body2">Approved</MudText>
+                    <MudText Typo="Typo.h4">@ApprovedCount</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+    </MudGrid>
+
+    <MudPaper Class="pa-4">
+
+        <div class="teacher-registration-header">
+
+    <MudText Typo="Typo.h6">
+        Applications
+    </MudText>
+
+    <MudStack Row="true"
+              Spacing="1"
+              Wrap="Wrap.Wrap"
+              Class="teacher-registration-actions">
+
+        <MudButton Variant="Variant.Outlined"
+                   StartIcon="@Icons.Material.Filled.Refresh"
+                   OnClick="LoadRequestsAsync">
+            Refresh
+        </MudButton>
+
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Success"
+                   StartIcon="@Icons.Material.Filled.TableView"
+                   OnClick="DownloadExcelAsync"
+                   Disabled="@(!_filteredRequests.Any())">
+            Excel
+        </MudButton>
+
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Error"
+                   StartIcon="@Icons.Material.Filled.PictureAsPdf"
+                   OnClick="DownloadPdfAsync"
+                   Disabled="@(!_filteredRequests.Any())">
+            PDF
+        </MudButton>
+
+    </MudStack>
+
+</div>
+
+        <MudGrid Class="mb-2">
+
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_searchTerm"
+                              Label="Search Teacher"
+                              Placeholder="Search by teacher name..."
+                              Variant="Variant.Outlined"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Immediate="true"
+                              Clearable="true"
+                              FullWidth="true" />
+            </MudItem>
+
+            <MudItem xs="12" md="3">
+                <MudSelect T="int"
+                           @bind-Value="_genderFilter"
+                           Label="Gender"
+                           Variant="Variant.Outlined"
+                           FullWidth="true">
+
+                    <MudSelectItem Value="0">All</MudSelectItem>
+                    <MudSelectItem Value="1">Male</MudSelectItem>
+                    <MudSelectItem Value="2">Female</MudSelectItem>
+                    <MudSelectItem Value="3">Other</MudSelectItem>
+
+                </MudSelect>
+            </MudItem>
+
+            <MudItem xs="12" md="3">
+                <MudSelect T="int"
+                           @bind-Value="_statusFilter"
+                           Label="Status"
+                           Variant="Variant.Outlined"
+                           FullWidth="true">
+
+                    <MudSelectItem Value="0">All</MudSelectItem>
+                    <MudSelectItem Value="1">Pending</MudSelectItem>
+                    <MudSelectItem Value="2">Approved</MudSelectItem>
+                    <MudSelectItem Value="3">Rejected</MudSelectItem>
+
+                </MudSelect>
+            </MudItem>
+
+        </MudGrid>
+
+        <MudTable Items="@FilteredRequests"
+                  Hover="true"
+                  Striped="true"
+                  Dense="true"
+                  Breakpoint="Breakpoint.Sm"
+                  Loading="@_loading">
+
+            <HeaderContent>
+                <MudTh>Name</MudTh>
+                <MudTh>Gender</MudTh>
+                <MudTh>Mobile</MudTh>
+                <MudTh>Email</MudTh>
+                <MudTh>Country</MudTh>
+                <MudTh>Department</MudTh>
+                <MudTh>Submitted</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd DataLabel="Name">
+                    <MudText Typo="Typo.body2">
+                        @context.FullName
+                    </MudText>
+                </MudTd>
+
+                <MudTd DataLabel="Gender">
+                    @GetGenderName(context.Gender)
+                </MudTd>
+
+                <MudTd DataLabel="Mobile">
+                    @context.MobileNumber
+                </MudTd>
+
+                <MudTd DataLabel="Email">
+                    @context.Email
+                </MudTd>
+
+                <MudTd DataLabel="Country">
+                    @context.Country
+                </MudTd>
+
+                <MudTd DataLabel="Department">
+                    @context.Department
+                </MudTd>
+
+                <MudTd DataLabel="Submitted">
+                    @context.SubmittedAt.ToLocalTime().ToString("dd MMM yyyy")
+                </MudTd>
+
+                <MudTd DataLabel="Status">
+                    @if (context.Status == 1)
+                    {
+                        <MudChip T="string"
+                                 Color="Color.Warning"
+                                 Size="Size.Small">
+                            Pending
+                        </MudChip>
+                    }
+                    else if (context.Status == 2)
+                    {
+                        <MudChip T="string"
+                                 Color="Color.Success"
+                                 Size="Size.Small">
+                            Approved
+                        </MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string"
+                                 Color="Color.Error"
+                                 Size="Size.Small">
+                            Rejected
+                        </MudChip>
+                    }
+                </MudTd>
+
+                <MudTd DataLabel="Actions">
+                    <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                   Color="Color.Primary"
+                                   Title="View"
+                                   OnClick="@(() => ViewRequest(context))" />
+                </MudTd>
+
+            </RowTemplate>
+
+            <NoRecordsContent>
+                <MudText Class="pa-4">
+                    No teacher registration requests found.
+                </MudText>
+            </NoRecordsContent>
+
+        </MudTable>
+
+    </MudPaper>
+
+</MudContainer>
+
+@code {
+
+    private List<TeacherRegistrationResponse> _requests = new();
+
+    private bool _loading;
+
+    private string _searchTerm = string.Empty;
+
+    private int _genderFilter = 0;
+
+    private int _statusFilter = 0;
+
+    private IEnumerable<TeacherRegistrationResponse> _filteredRequests =>
+        _requests.Where(x =>
+            (string.IsNullOrWhiteSpace(_searchTerm) ||
+             (!string.IsNullOrWhiteSpace(x.FullName) &&
+              x.FullName.Contains(
+                  _searchTerm,
+                  StringComparison.OrdinalIgnoreCase)))
+            &&
+            (_genderFilter == 0 || x.Gender == _genderFilter)
+            &&
+            (_statusFilter == 0 || x.Status == _statusFilter));
+
+    private IEnumerable<TeacherRegistrationResponse> FilteredRequests =>
+        _filteredRequests;
+
+    private int PendingCount =>
+        _requests.Count(x => x.Status == 1);
+
+    private int ApprovedCount =>
+        _requests.Count(x => x.Status == 2);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRequestsAsync();
+    }
+
+    private async Task LoadRequestsAsync()
+    {
+        try
+        {
+            _loading = true;
+
+            _requests = await Api.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Failed to load teacher registration requests: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task ViewRequest(
+        TeacherRegistrationResponse request)
+    {
+        var parameters = new DialogParameters
+        {
+            ["Request"] = request
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Large,
+            FullWidth = true,
+            CloseButton = true
+        };
+
+        await DialogService.ShowAsync<TeacherRegistrationRequestDetailsDialog>(
+            $"Teacher Registration - {request.FullName}",
+            parameters,
+            options);
+    }
+
+    private static string GetGenderName(int gender)
+    {
+        return gender switch
+        {
+            1 => "Male",
+            2 => "Female",
+            3 => "Other",
+            _ => "Unknown"
+        };
+    }
+
+    private static string GetStatusName(int status)
+    {
+        return status switch
+        {
+            1 => "Pending",
+            2 => "Approved",
+            3 => "Rejected",
+            _ => "Unknown"
+        };
+    }
+
+   private async Task DownloadExcelAsync()
+{
+    try
+    {
+        var data = _filteredRequests.ToList();
+
+        if (data.Count == 0)
+        {
+            Snackbar.Add(
+                "No records available for export.",
+                Severity.Warning);
+
+            return;
+        }
+
+        using var workbook = new XLWorkbook();
+
+        var worksheet = workbook.Worksheets.Add(
+            "Teacher Registration Requests");
+
+        var headers = new[]
+        {
+            "Name",
+            "Mobile",
+            "Email",
+            "Department",
+            "Submitted At"
+        };
+
+        for (var i = 0; i < headers.Length; i++)
+        {
+            worksheet.Cell(1, i + 1).Value = headers[i];
+        }
+
+        var headerRange = worksheet.Range(
+            1,
+            1,
+            1,
+            headers.Length);
+
+        headerRange.Style.Font.Bold = true;
+
+        var row = 2;
+
+        foreach (var request in data)
+        {
+            worksheet.Cell(row, 1).Value =
+                request.FullName;
+
+            worksheet.Cell(row, 2).Value =
+                request.MobileNumber;
+
+            worksheet.Cell(row, 3).Value =
+                request.Email;
+
+            worksheet.Cell(row, 4).Value =
+                request.Department;
+
+            worksheet.Cell(row, 5).Value =
+                request.SubmittedAt.ToLocalTime();
+
+            row++;
+        }
+
+        worksheet.Columns().AdjustToContents();
+
+        using var stream = new MemoryStream();
+
+        workbook.SaveAs(stream);
+
+        var bytes = stream.ToArray();
+
+        var base64 = Convert.ToBase64String(bytes);
+
+        var fileName =
+            $"Teacher-Registration-Requests-{DateTime.Now:yyyyMMdd-HHmmss}.xlsx";
+
+        await JS.InvokeVoidAsync(
+            "downloadFile",
+            fileName,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            base64);
+
+        Snackbar.Add(
+            "Excel file downloaded successfully.",
+            Severity.Success);
+    }
+    catch (Exception ex)
+    {
+        Snackbar.Add(
+            $"Excel export failed: {ex.Message}",
+            Severity.Error);
+    }
+}
+
+   private async Task DownloadPdfAsync()
+{
+    try
+    {
+        var data = _filteredRequests.ToList();
+
+        if (data.Count == 0)
+        {
+            Snackbar.Add(
+                "No records available for export.",
+                Severity.Warning);
+
+            return;
+        }
+
+        Snackbar.Add(
+            "Preparing PDF file...",
+            Severity.Info);
+
+        var bytes = await Api.DownloadPdfAsync(
+            _searchTerm,
+            _genderFilter,
+            _statusFilter);
+
+        var base64 =
+            Convert.ToBase64String(bytes);
+
+        var fileName =
+            $"Teacher-Registration-Requests-{DateTime.Now:yyyyMMdd-HHmmss}.pdf";
+
+        await JS.InvokeVoidAsync(
+            "downloadFile",
+            fileName,
+            "application/pdf",
+            base64);
+
+        Snackbar.Add(
+            "PDF file downloaded successfully.",
+            Severity.Success);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(ex);
+
+        Snackbar.Add(
+            $"PDF export failed: {ex.Message}",
+            Severity.Error);
+    }
+}
+
+    private static string HtmlEncode(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return string.Empty;
+
+        return value
+            .Replace("&", "&amp;")
+            .Replace("<", "&lt;")
+            .Replace(">", "&gt;")
+            .Replace("\"", "&quot;")
+            .Replace("'", "&#39;");
+    }
+}
+<style>
+    .teacher-registration-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+    }
+
+    .teacher-registration-actions {
+        justify-content: flex-end;
+    }
+
+    @@media (max-width: 600px) {
+        .teacher-registration-header {
+            align-items: stretch;
+        }
+
+        .teacher-registration-header > * {
+            width: 100%;
+        }
+
+        .teacher-registration-actions {
+            width: 100%;
+            justify-content: flex-start;
+        }
+
+        .teacher-registration-actions .mud-button {
+            flex: 1 1 auto;
+        }
+    }
+</style>

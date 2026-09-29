@@ -23,5 +23,7 @@ public class DocumentSequenceConfiguration : IEntityTypeConfiguration<DocumentSe
 
         builder.HasIndex(x => x.Code)
             .IsUnique();
+
+        
     }
 }

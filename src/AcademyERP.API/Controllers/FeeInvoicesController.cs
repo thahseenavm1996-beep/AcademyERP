@@ -40,6 +40,39 @@ public class FeeInvoicesController : ControllerBase
     }
 
     [Authorize(Roles = Roles.SuperAdmin + "," + Roles.Administrator)]
+    [HttpGet("export/data")]
+    public async Task<IActionResult> ExportData(
+        [FromQuery] FeeInvoiceQueryRequest request)
+    {
+        var invoices =
+            await _feeInvoiceService.GetAllForExportAsync(request);
+
+        return Ok(
+            ApiResponse<List<FeeInvoiceResponse>>
+                .SuccessResponse(
+                    invoices,
+                    "Fee invoice export data retrieved successfully."));
+    }
+[Authorize(Roles = Roles.SuperAdmin + "," + Roles.Administrator)]
+[HttpGet("export/pdf")]
+public async Task<IActionResult> ExportFilteredPdf(
+    [FromQuery] FeeInvoiceQueryRequest request)
+{
+    var invoices =
+        await _feeInvoiceService.GetAllForExportAsync(request);
+
+    var pdf =
+        _pdfService.GenerateFeeInvoicesReport(invoices);
+
+    var fileName =
+        $"FeeInvoices_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+
+    return File(
+        pdf,
+        "application/pdf",
+        fileName);
+}
+    [Authorize(Roles = Roles.SuperAdmin + "," + Roles.Administrator)]
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {

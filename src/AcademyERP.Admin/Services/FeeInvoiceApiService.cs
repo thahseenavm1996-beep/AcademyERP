@@ -14,15 +14,130 @@ public class FeeInvoiceApiService
         _httpClient = httpClient;
     }
 
-    public async Task<List<FeeInvoiceResponse>> GetAllAsync()
+    public async Task<PagedResponse<FeeInvoiceResponse>> GetAllAsync(
+    FeeInvoiceQueryRequest request)
 {
+    var query = new List<string>
+    {
+        $"page={request.Page}",
+        $"pageSize={request.PageSize}"
+    };
+
+    if (!string.IsNullOrWhiteSpace(request.StudentName))
+        query.Add($"studentName={Uri.EscapeDataString(request.StudentName)}");
+
+    if (!string.IsNullOrWhiteSpace(request.TeacherName))
+        query.Add($"teacherName={Uri.EscapeDataString(request.TeacherName)}");
+
+    if (request.TeacherId.HasValue)
+        query.Add($"teacherId={request.TeacherId.Value}");
+
+    if (request.CourseId.HasValue)
+        query.Add($"courseId={request.CourseId.Value}");
+
+    if (!string.IsNullOrWhiteSpace(request.Gender))
+        query.Add($"gender={Uri.EscapeDataString(request.Gender)}");
+
+    if (request.Status.HasValue)
+        query.Add($"status={request.Status.Value}");
+
+    if (request.StudentId.HasValue)
+        query.Add($"studentId={request.StudentId.Value}");
+
+    var url = $"api/FeeInvoices?{string.Join("&", query)}";
+
     var response =
         await _httpClient.GetFromJsonAsync<
-            ApiResponse<PagedResponse<FeeInvoiceResponse>>>(
-            "api/FeeInvoices");
+            ApiResponse<PagedResponse<FeeInvoiceResponse>>>(url);
 
-    return response?.Data?.Items
-           ?? new List<FeeInvoiceResponse>();
+    return response?.Data
+        ?? new PagedResponse<FeeInvoiceResponse>
+        {
+            Items = new List<FeeInvoiceResponse>(),
+            Page = request.Page,
+            PageSize = request.PageSize,
+            TotalCount = 0,
+            TotalPages = 0
+        };
+}
+
+public async Task<List<FeeInvoiceResponse>> GetAllForExportAsync(
+    FeeInvoiceQueryRequest request)
+{
+    var query = new List<string>();
+
+    if (!string.IsNullOrWhiteSpace(request.StudentName))
+        query.Add(
+            $"studentName={Uri.EscapeDataString(request.StudentName)}");
+
+    if (!string.IsNullOrWhiteSpace(request.TeacherName))
+        query.Add(
+            $"teacherName={Uri.EscapeDataString(request.TeacherName)}");
+
+    if (request.TeacherId.HasValue)
+        query.Add($"teacherId={request.TeacherId.Value}");
+
+    if (request.CourseId.HasValue)
+        query.Add($"courseId={request.CourseId.Value}");
+
+    if (!string.IsNullOrWhiteSpace(request.Gender))
+        query.Add(
+            $"gender={Uri.EscapeDataString(request.Gender)}");
+
+    if (request.Status.HasValue)
+        query.Add($"status={request.Status.Value}");
+
+    if (request.StudentId.HasValue)
+        query.Add($"studentId={request.StudentId.Value}");
+
+    var url = "api/FeeInvoices/export/data";
+
+    if (query.Count > 0)
+        url += "?" + string.Join("&", query);
+
+    var response =
+        await _httpClient.GetFromJsonAsync<
+            ApiResponse<List<FeeInvoiceResponse>>>(url);
+
+    return response?.Data
+        ?? new List<FeeInvoiceResponse>();
+}
+
+public async Task<byte[]> DownloadFilteredPdfAsync(
+    FeeInvoiceQueryRequest request)
+{
+    var query = new List<string>();
+
+    if (!string.IsNullOrWhiteSpace(request.StudentName))
+        query.Add(
+            $"studentName={Uri.EscapeDataString(request.StudentName)}");
+
+    if (!string.IsNullOrWhiteSpace(request.TeacherName))
+        query.Add(
+            $"teacherName={Uri.EscapeDataString(request.TeacherName)}");
+
+    if (request.TeacherId.HasValue)
+        query.Add($"teacherId={request.TeacherId.Value}");
+
+    if (request.CourseId.HasValue)
+        query.Add($"courseId={request.CourseId.Value}");
+
+    if (!string.IsNullOrWhiteSpace(request.Gender))
+        query.Add(
+            $"gender={Uri.EscapeDataString(request.Gender)}");
+
+    if (request.Status.HasValue)
+        query.Add($"status={request.Status.Value}");
+
+    if (request.StudentId.HasValue)
+        query.Add($"studentId={request.StudentId.Value}");
+
+    var url = "api/FeeInvoices/export/pdf";
+
+    if (query.Count > 0)
+        url += "?" + string.Join("&", query);
+
+    return await _httpClient.GetByteArrayAsync(url);
 }
     public async Task CreateAsync(
         CreateFeeInvoiceRequest request)

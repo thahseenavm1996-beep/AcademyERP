@@ -24,4 +24,9 @@ public class ApproveStudentRequest
 
     public List<DayOfWeek> DaysOfWeek { get; set; }
         = new();
+
+    // Finance
+    public decimal FinalStudentFee { get; set; }
+
+    public decimal TeacherPaymentAmount { get; set; }
 }

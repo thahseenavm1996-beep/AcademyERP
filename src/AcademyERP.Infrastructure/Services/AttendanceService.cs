@@ -648,8 +648,7 @@ public async Task<List<
 
                 ParentId = parent?.ParentId,
                 ParentName = parent?.Parent?.FullName ?? string.Empty,
-                ParentPhoneNumber =
-                    parent?.Parent?.PhoneNumber ?? string.Empty,
+               ParentPhoneNumber = student.PhoneNumber,
 
                 TeacherId =
                     latest.ScheduledClass.TeachingSchedule.TeacherId,

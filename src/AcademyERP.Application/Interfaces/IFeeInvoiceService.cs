@@ -9,6 +9,9 @@ public interface IFeeInvoiceService
     Task<PagedResponse<FeeInvoiceResponse>> GetAllAsync(
         FeeInvoiceQueryRequest request);
 
+    Task<List<FeeInvoiceResponse>> GetAllForExportAsync(
+        FeeInvoiceQueryRequest request);
+
     Task<FeeInvoiceResponse?> GetByIdAsync(Guid id);
 
     Task<FeeInvoiceResponse> CreateAsync(
@@ -31,6 +34,6 @@ public interface IFeeInvoiceService
         Guid enrollmentId,
         DateTime resumeDate);
 
-        Task<List<FeeInvoiceResponse>> GetTeacherOutstandingInvoicesAsync(
-    Guid applicationUserId);
+    Task<List<FeeInvoiceResponse>> GetTeacherOutstandingInvoicesAsync(
+        Guid applicationUserId);
 }

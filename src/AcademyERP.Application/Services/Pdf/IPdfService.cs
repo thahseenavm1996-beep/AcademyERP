@@ -13,6 +13,9 @@ public interface IPdfService
     byte[] GenerateFeeInvoiceReport(
         AcademyERP.Application.DTOs.Fees.FeeInvoiceResponse invoice);
 
+    byte[] GenerateFeeInvoicesReport(
+        IReadOnlyList<AcademyERP.Application.DTOs.Fees.FeeInvoiceResponse> invoices);
+
     byte[] GenerateTeacherReportMonitoringReport(
         IReadOnlyList<
             AcademyERP.Application.DTOs.ClassReports.TeacherReportMonitoringResponse> reports,
@@ -22,4 +25,9 @@ public interface IPdfService
         string? courseName,
         AcademyERP.Domain.Enums.Gender? gender,
         bool? reportSubmitted);
+
+        byte[] GenerateTeacherRegistrationReport(
+    IReadOnlyList<
+        AcademyERP.Application.DTOs.TeacherRegistrations.TeacherRegistrationResponse>
+        requests);
 }

@@ -55,9 +55,11 @@ builder.Services.AddScoped<AttendanceReportApiService>();
 builder.Services.AddScoped<FinanceReportApiService>();
 builder.Services.AddScoped<ParentPortalApiService>();
 builder.Services.AddScoped<TeacherPortalApiService>();
+builder.Services.AddScoped<TeacherStudentRequestApiService>();
 builder.Services.AddScoped<TeacherPaymentApiService>();
 builder.Services.AddScoped<CommunicationApiService>();
 builder.Services.AddScoped<ReportUnlockRequestApiService>();
+builder.Services.AddScoped<TeacherRegistrationApiService>();
 builder.Services.AddScoped<
     RegistrationRequestApiService>();
 builder.Services.AddScoped<

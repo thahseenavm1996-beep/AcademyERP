@@ -12,6 +12,9 @@ using AcademyERP.Application.Constants;
 using AcademyERP.Persistence.Context;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using AcademyERP.Application.Services;
+using AcademyERP.Application.DTOs.TeacherPayments;
+using AcademyERP.Domain.Entities.Finance;
 
 namespace AcademyERP.Infrastructure.Services;
 
@@ -19,15 +22,18 @@ public class RegistrationRequestService
     : IRegistrationRequestService
 {
     private readonly ApplicationDbContext _context;
-    private readonly UserManager<ApplicationUser> _userManager;
+private readonly UserManager<ApplicationUser> _userManager;
+private readonly ITeacherPaymentService _teacherPaymentService;
 
-    public RegistrationRequestService(
-        ApplicationDbContext context,
-        UserManager<ApplicationUser> userManager)
-    {
-        _context = context;
-        _userManager = userManager;
-    }
+   public RegistrationRequestService(
+    ApplicationDbContext context,
+    UserManager<ApplicationUser> userManager,
+    ITeacherPaymentService teacherPaymentService)
+{
+    _context = context;
+    _userManager = userManager;
+    _teacherPaymentService = teacherPaymentService;
+}
 
     public async Task<List<RegistrationRequestResponse>>
         GetAllAsync()
@@ -803,86 +809,240 @@ public class RegistrationRequestService
                 _context.StudentParents.Add(
                     studentParent);
 
-                // ==========================================
-                // ONE ENROLLMENT
-                // ==========================================
+               // ==========================================
+// FINANCE VALIDATION
+// ==========================================
 
-                var enrollment =
-                    new Enrollment
-                    {
-                        Student =
-                            student,
+if (approvalStudent.FinalStudentFee < 0)
+{
+    throw new InvalidOperationException(
+        $"Final student fee cannot be negative for {registrationStudent.StudentName}.");
+}
 
-                        CourseId =
-                            course.Id,
+if (approvalStudent.FinalStudentFee >
+    course.StandardMonthlyFee)
+{
+    throw new InvalidOperationException(
+        $"Final student fee cannot be greater than the standard course fee for {registrationStudent.StudentName}.");
+}
 
-                        TeacherId =
-                            teacher.Id,
+if (approvalStudent.TeacherPaymentAmount < 0)
+{
+    throw new InvalidOperationException(
+        $"Teacher payment amount cannot be negative for {registrationStudent.StudentName}.");
+}
 
-                        StartDate =
-                            DateTime.UtcNow,
+var discountAmount =
+    course.StandardMonthlyFee -
+    approvalStudent.FinalStudentFee;
 
-                        MonthlyFee =
-                            course.StandardMonthlyFee,
+var startDate = DateTime.UtcNow;
 
-                        ScholarshipAmount =
-                            0,
+// ==========================================
+// ONE ENROLLMENT
+// ==========================================
 
-                        DiscountAmount =
-                            0,
+var enrollment =
+    new Enrollment
+    {
+        Student =
+            student,
 
-                        FinalMonthlyFee =
-                            course.StandardMonthlyFee,
+        CourseId =
+            course.Id,
 
-                        NextBillingDate =
-                            DateTime.UtcNow.AddMonths(1),
+        TeacherId =
+            teacher.Id,
 
-                        Status =
-                            EnrollmentStatus.Active
-                    };
+        StartDate =
+            startDate,
 
-                // ==========================================
-                // ONE ENROLLMENT SCHEDULE PER SELECTED DAY
-                // ==========================================
+        MonthlyFee =
+            approvalStudent.FinalStudentFee,
 
-                foreach (var day in selectedDays)
-                {
-                    enrollment.EnrollmentSchedules.Add(
-                        new EnrollmentSchedule
-                        {
-                            DayOfWeek =
-                                day,
+        ScholarshipAmount =
+            0,
 
-                            TimeSlotId =
-                                timeSlot.Id,
+        DiscountAmount =
+            discountAmount,
 
-                            ClassDurationId =
-                                classDuration.Id,
+        FinalMonthlyFee =
+            approvalStudent.FinalStudentFee,
 
-                            IsActive =
-                                true
-                        });
-                }
+        NextBillingDate =
+            startDate.AddMonths(1),
 
-                // ==========================================
-                // ADD ENROLLMENT ONLY ONCE
-                // ==========================================
+        Status =
+            EnrollmentStatus.Active
+    };
 
-                _context.Enrollments.Add(
-                    enrollment);
+// ==========================================
+// ONE ENROLLMENT SCHEDULE PER SELECTED DAY
+// ==========================================
 
-                // IMPORTANT:
-                // Do NOT call EnrollmentService here.
-                // Do NOT create TeachingSchedule here.
-                //
-                // Registration approval creates:
-                // Student
-                // StudentParent
-                // Enrollment
-                // EnrollmentSchedules
-                //
-                // TeachingSchedule is created separately
-                // from the Teaching Schedule screen.
+foreach (var day in selectedDays)
+{
+    enrollment.EnrollmentSchedules.Add(
+        new EnrollmentSchedule
+        {
+            DayOfWeek =
+                day,
+
+            TimeSlotId =
+                timeSlot.Id,
+
+            ClassDurationId =
+                classDuration.Id,
+
+            IsActive =
+                true
+        });
+}
+
+// ==========================================
+// ADD ENROLLMENT
+// ==========================================
+
+_context.Enrollments.Add(
+    enrollment);
+
+// Save first so the enrollment gets its database ID.
+await _context.SaveChangesAsync();
+
+// ==========================================
+// CREATE FEE INVOICES
+// ==========================================
+//
+// If registration is approved after its joining date,
+// completed historical billing cycles are treated as
+// already settled. Only the current cycle remains pending.
+//
+// Example:
+// Joining Date : 01 Aug
+// Approved     : 29 Sep
+//
+// 01 Aug cycle -> Paid
+// 01 Sep cycle -> Pending
+// 01 Oct cycle -> Not created yet
+// ==========================================
+
+var billingCycleStart =
+    startDate.Date;
+
+var billingToday =
+    DateTime.UtcNow.Date;
+
+while (billingCycleStart.AddMonths(1) <= billingToday)
+{
+    var historicalInvoice =
+        new FeeInvoice
+        {
+            EnrollmentId =
+                enrollment.Id,
+
+            InvoiceNumber =
+                $"INV-{billingCycleStart:yyyyMMdd}-{enrollment.Id.ToString()[..8]}",
+
+            Amount =
+                enrollment.FinalMonthlyFee,
+
+            DiscountAmount =
+                discountAmount,
+
+            PaidAmount =
+                enrollment.FinalMonthlyFee,
+
+            BalanceAmount =
+                0,
+
+            InvoiceDate =
+                billingCycleStart,
+
+            DueDate =
+                billingCycleStart,
+
+            PaidDate =
+                billingToday,
+
+            Status =
+                FeeStatus.Paid,
+
+            Remarks =
+                "Historical billing cycle settled during late enrollment approval."
+        };
+
+    _context.FeeInvoices.Add(historicalInvoice);
+
+    billingCycleStart =
+        billingCycleStart.AddMonths(1);
+}
+
+// Current billing cycle remains unpaid.
+var firstInvoice =
+    new FeeInvoice
+    {
+        EnrollmentId =
+            enrollment.Id,
+
+        InvoiceNumber =
+            $"INV-{billingCycleStart:yyyyMMdd}-{enrollment.Id.ToString()[..8]}",
+
+        Amount =
+            enrollment.FinalMonthlyFee,
+
+        DiscountAmount =
+            discountAmount,
+
+        PaidAmount =
+            0,
+
+        BalanceAmount =
+            enrollment.FinalMonthlyFee,
+
+        InvoiceDate =
+            billingCycleStart,
+
+        DueDate =
+            billingCycleStart,
+
+        Status =
+            FeeStatus.Pending,
+
+        Remarks =
+            "Generated automatically for the current enrollment billing cycle."
+    };
+
+_context.FeeInvoices.Add(
+    firstInvoice);
+
+enrollment.NextBillingDate =
+    billingCycleStart.AddMonths(1);
+
+// ==========================================
+// TEACHER PAYMENT CONFIGURATION
+// ==========================================
+
+await _teacherPaymentService.CreateConfigurationAsync(
+    new CreateTeacherPaymentConfigurationRequest
+    {
+        TeacherId =
+            teacher.Id,
+
+        EnrollmentId =
+            enrollment.Id,
+
+        PaymentAmount =
+            approvalStudent.TeacherPaymentAmount,
+
+        EffectiveFrom =
+            startDate,
+
+        EffectiveTo =
+            enrollment.EndDate,
+
+        Remarks =
+            "Created automatically during registration approval."
+    });
             }
 
             // ==========================================

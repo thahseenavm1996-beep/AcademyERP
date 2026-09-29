@@ -20,6 +20,8 @@ using AcademyERP.Application.Services.Pdf;
 using QuestPDF.Infrastructure;
 using AcademyERP.Application.Services.Reports;
 using AcademyERP.Infrastructure.Services.Reports;
+using AcademyERP.Application.Interfaces.TeacherStudentRequests;
+
 
 
 
@@ -80,6 +82,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IStudentService, StudentService>();
 builder.Services.AddScoped<ITeacherService, TeacherService>();
+builder.Services.AddScoped<ITeacherRegistrationService, TeacherRegistrationService>();
 builder.Services.AddScoped<IParentService, ParentService>();
 builder.Services.AddScoped<IProgramService, ProgramService>();
 builder.Services.AddScoped<IAdmissionApplicationService, AdmissionApplicationService>();
@@ -96,6 +99,8 @@ builder.Services.AddScoped<IFeeInvoiceService, FeeInvoiceService>();
 builder.Services.AddScoped<ITeacherPaymentService, TeacherPaymentService>();
 builder.Services.AddScoped<IAdmissionConversionService, AdmissionConversionService>();
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
+builder.Services.AddScoped<ITeacherStudentRequestService, TeacherStudentRequestService>();
+
 builder.Services.AddScoped<IStudentReportService, StudentReportService>();
 builder.Services.AddScoped<TeacherReportService>();
 builder.Services.AddScoped<StudentReportDashboardService>();

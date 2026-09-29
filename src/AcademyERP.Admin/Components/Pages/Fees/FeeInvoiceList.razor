@@ -4,11 +4,15 @@
 @using AcademyERP.Admin.Models.Courses
 @using AcademyERP.Admin.Services
 @using MudBlazor
+@using AcademyERP.Domain.Enums
+@using ClosedXML.Excel
+@inject IJSRuntime JS
 
 @inject FeeInvoiceApiService FeeInvoiceApi
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject CourseApiService CourseApi
+@inject TeacherApiService TeacherApi
 
 <PageTitle>Fees</PageTitle>
 
@@ -33,36 +37,105 @@
                     Generated Fee Invoices
                 </MudText>
 
-                <MudStack Row="true" Spacing="2" Class="fee-invoice-actions">
-                    <MudButton Variant="Variant.Outlined"
-                               Color="Color.Primary"
-                               StartIcon="@Icons.Material.Filled.Autorenew"
-                               OnClick="@GenerateDueFees">
-                        Generate All Fees
-                    </MudButton>
+              <MudStack Row="true"
+          Spacing="2"
+          Class="fee-invoice-actions"
+          Wrap="Wrap.Wrap">
 
-                    <MudButton Variant="Variant.Filled"
-                               Color="Color.Primary"
-                               StartIcon="@Icons.Material.Filled.Add"
-                               OnClick="@CreateInvoice">
-                        Create Invoice
-                    </MudButton>
-                </MudStack>
+    <MudButton Variant="Variant.Outlined"
+               Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.Autorenew"
+               OnClick="@GenerateDueFees">
+        Generate All Fees
+    </MudButton>
+
+    <MudButton Variant="Variant.Outlined"
+               Color="Color.Success"
+               StartIcon="@Icons.Material.Filled.TableView"
+               OnClick="@DownloadExcelAsync">
+        Download Excel
+    </MudButton>
+<MudButton Variant="Variant.Outlined"
+           Color="Color.Error"
+           StartIcon="@Icons.Material.Filled.PictureAsPdf"
+           OnClick="@DownloadPdfAsync">
+    Download PDF
+</MudButton>
+
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.Add"
+               OnClick="@CreateInvoice">
+        Create Invoice
+    </MudButton>
+
+</MudStack>
 
             </MudStack>
 
-           <MudGrid Class="mb-2">
+        <MudGrid Class="mb-2">
+
+    <MudItem xs="12" md="4">
+        <MudTextField T="string"
+                      Label="Student Name"
+                      Placeholder="Search student..."
+                      Variant="Variant.Outlined"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      @bind-Value="_studentName"
+                      Immediate="false" />
+    </MudItem>
+
+    <MudItem xs="12" md="4">
+        <MudTextField T="string"
+                      Label="Teacher Name"
+                      Placeholder="Search teacher..."
+                      Variant="Variant.Outlined"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.PersonSearch"
+                      @bind-Value="_teacherName" />
+    </MudItem>
+
+    <MudItem xs="12" md="4">
+        <MudSelect T="Guid?"
+                   Label="Teacher"
+                   Variant="Variant.Outlined"
+                   Clearable="true"
+                   @bind-Value="_teacherId">
+
+            @foreach (var teacher in _teachers)
+            {
+                <MudSelectItem T="Guid?" Value="@((Guid?)teacher.Id)">
+                    @teacher.FullName
+                </MudSelectItem>
+            }
+
+        </MudSelect>
+    </MudItem>
 
     <MudItem xs="12" sm="6" md="3">
-
-        <MudSelect T="string"
-                   Label="Student section"
+        <MudSelect T="Guid?"
+                   Label="Course"
                    Variant="Variant.Outlined"
-                   @bind-Value="_genderFilter">
+                   Clearable="true"
+                   @bind-Value="_courseId">
 
-            <MudSelectItem T="string" Value="@("All")">
-                All students
-            </MudSelectItem>
+            @foreach (var course in _courses)
+            {
+                <MudSelectItem T="Guid?" Value="@((Guid?)course.Id)">
+                    @course.CourseName
+                </MudSelectItem>
+            }
+
+        </MudSelect>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudSelect T="string"
+                   Label="Gender"
+                   Variant="Variant.Outlined"
+                   Clearable="true"
+                   @bind-Value="_genderFilter">
 
             <MudSelectItem T="string" Value="@("Male")">
                 Boys
@@ -73,95 +146,55 @@
             </MudSelectItem>
 
         </MudSelect>
-
     </MudItem>
 
     <MudItem xs="12" sm="6" md="3">
-
-        <MudSelect T="string"
-                   Label="Course"
+        <MudSelect T="FeeStatus?"
+                   Label="Payment Status"
                    Variant="Variant.Outlined"
                    Clearable="true"
-                   @bind-Value="_courseFilter">
+                   @bind-Value="_statusFilter">
 
-            <MudSelectItem T="string" Value="@("All")">
-                All courses
+            <MudSelectItem T="FeeStatus?" Value="@((FeeStatus?)1)">
+                Pending
             </MudSelectItem>
 
-            @foreach (var course in _courses)
-            {
-                <MudSelectItem T="string" Value="@course.CourseName">
-                    @course.CourseName
-                </MudSelectItem>
-            }
-
-        </MudSelect>
-
-    </MudItem>
-
-    <MudItem xs="12" sm="6" md="3">
-
-        <MudSelect T="string"
-                   Label="Fee status"
-                   Variant="Variant.Outlined"
-                   @bind-Value="_dueFilter">
-
-            <MudSelectItem T="string" Value="@("All")">
-                All fees
+            <MudSelectItem T="FeeStatus?" Value="@((FeeStatus?)2)">
+                Partially Paid
             </MudSelectItem>
 
-            <MudSelectItem T="string" Value="@("Due")">
-                Due today
+            <MudSelectItem T="FeeStatus?" Value="@((FeeStatus?)3)">
+                Paid
             </MudSelectItem>
 
-            <MudSelectItem T="string" Value="@("Near")">
-                Nearing overdue (next 7 days)
-            </MudSelectItem>
-
-            <MudSelectItem T="string" Value="@("Overdue")">
-                Past overdue
+            <MudSelectItem T="FeeStatus?" Value="@((FeeStatus?)4)">
+                Overdue
             </MudSelectItem>
 
         </MudSelect>
-
     </MudItem>
 
     <MudItem xs="12" sm="6" md="3" Class="d-flex align-center">
-    <MudStack Row="true"
-              Spacing="1"
-              Wrap="Wrap.NoWrap"
-              Style="width:100%; overflow-x:auto;">
+        <MudStack Row="true"
+                  Spacing="1"
+                  Class="w-100">
 
-        <MudChip T="string"
-                 Size="Size.Small"
-                 Color="Color.Primary"
-                 Variant="Variant.Outlined">
-            All: @FilteredInvoices.Count()
-        </MudChip>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Search"
+                       OnClick="ApplyFilters">
+                Search
+            </MudButton>
 
-        <MudChip T="string"
-                 Size="Size.Small"
-                 Color="Color.Warning"
-                 Variant="Variant.Outlined">
-            Due: @DueInvoices.Count()
-        </MudChip>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       StartIcon="@Icons.Material.Filled.Clear"
+                       OnClick="ClearFilters">
+                Clear
+            </MudButton>
 
-        <MudChip T="string"
-                 Size="Size.Small"
-                 Color="Color.Error"
-                 Variant="Variant.Outlined">
-            Overdue: @OverdueInvoices.Count()
-        </MudChip>
-
-        <MudChip T="string"
-                 Size="Size.Small"
-                 Color="Color.Info"
-                 Variant="Variant.Outlined">
-            Nearing: @NearingDueInvoices.Count()
-        </MudChip>
-
-    </MudStack>
-</MudItem>
+        </MudStack>
+    </MudItem>
 
 </MudGrid>
 
@@ -239,16 +272,22 @@
     @GetReminderStageText(context)
 </MudText>
                         }
-                        else if (context.BalanceAmount > 0)
-                        {
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                No parent phone
-                            </MudText>
-                        }
-                        else
-                        {
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">-</MudText>
-                        }
+                        else if (context.Status == 3)
+{
+    <MudText Typo="Typo.caption" Color="Color.Success">
+        ✓ Paid
+    </MudText>
+}
+else if (HasOutstandingBalance(context))
+{
+    <MudText Typo="Typo.caption" Color="Color.Secondary">
+        No parent phone
+    </MudText>
+}
+else
+{
+    <MudText Typo="Typo.caption" Color="Color.Secondary">-</MudText>
+}
                     </MudTd>
 
                     <MudTd>
@@ -269,6 +308,28 @@
 
             </MudTable>
 
+     @if (_totalPages > 1)
+{
+    <div class="d-flex justify-content-center align-items-center mt-4">
+        <MudPagination T="int"
+                       Count="_totalPages"
+                       Selected="_page"
+                       SelectedChanged="OnPageChanged"
+                       Size="Size.Medium"
+                       Color="Color.Primary"
+                       Variant="Variant.Outlined" />
+    </div>
+
+    <div class="text-center mt-2">
+        <MudText Typo="Typo.caption" Color="Color.Secondary">
+            Showing
+            @((_page - 1) * _pageSize + 1)
+            -
+            @Math.Min(_page * _pageSize, _totalCount)
+            of @_totalCount invoices
+        </MudText>
+    </div>
+}
         </MudTabPanel>
 
         <MudTabPanel Text="Payments">
@@ -283,49 +344,78 @@
 
 @code
 {
+    private int _page = 1;
+private int _pageSize = 20;
+private int _totalCount;
+private int _totalPages;
+
+private FeeInvoiceQueryRequest _query = new()
+{
+    Page = 1,
+    PageSize = 20
+};
     private List<FeeInvoiceResponse> _invoices = new();
 
 private List<CourseResponse> _courses = new();
 
-private string _genderFilter = "All";
+private string? _studentName;
+private string? _teacherName;
+private Guid? _teacherId;
+private Guid? _courseId;
+private string? _genderFilter;
+private FeeStatus? _statusFilter;
 
-private string _courseFilter = "All";
+private List<TeacherResponse> _teachers = new();
 
-private string _dueFilter = "All";
-
-   private IEnumerable<FeeInvoiceResponse> BaseFilteredInvoices =>
-    _invoices.Where(invoice =>
-        (_genderFilter == "All" ||
-         invoice.Gender == _genderFilter) &&
-
-        (_courseFilter == "All" ||
-         invoice.CourseName == _courseFilter));
+   private IEnumerable<FeeInvoiceResponse> FilteredInvoices => _invoices;
 
 private IEnumerable<FeeInvoiceResponse> DueInvoices =>
-    BaseFilteredInvoices.Where(IsDueToday);
+    _invoices.Where(IsDueToday);
 
 private IEnumerable<FeeInvoiceResponse> OverdueInvoices =>
-    BaseFilteredInvoices.Where(IsOverdue);
+    _invoices.Where(IsOverdue);
 
 private IEnumerable<FeeInvoiceResponse> NearingDueInvoices =>
-    BaseFilteredInvoices.Where(IsNearingDue);
+    _invoices.Where(IsNearingDue);
 
-private IEnumerable<FeeInvoiceResponse> FilteredInvoices =>
-    BaseFilteredInvoices.Where(invoice =>
-        _dueFilter == "All" ||
-        (_dueFilter == "Due" && IsDueToday(invoice)) ||
-        (_dueFilter == "Near" && IsNearingDue(invoice)) ||
-        (_dueFilter == "Overdue" && IsOverdue(invoice)));
-
-   protected override async Task OnInitializedAsync()
+  protected override async Task OnInitializedAsync()
 {
     await LoadCourses();
+    await LoadTeachers();
+
+    _page = 1;
     await LoadData();
 }
-    private async Task LoadData()
-    {
-        _invoices = await FeeInvoiceApi.GetAllAsync();
-    }
+  private async Task LoadData()
+{
+    _query.Page = _page;
+    _query.PageSize = _pageSize;
+
+    _query.StudentName = string.IsNullOrWhiteSpace(_studentName)
+        ? null
+        : _studentName.Trim();
+
+    _query.TeacherName = string.IsNullOrWhiteSpace(_teacherName)
+        ? null
+        : _teacherName.Trim();
+
+    _query.TeacherId = _teacherId;
+    _query.CourseId = _courseId;
+
+    _query.Gender = string.IsNullOrWhiteSpace(_genderFilter)
+        ? null
+        : _genderFilter;
+
+    _query.Status = _statusFilter;
+
+    var result = await FeeInvoiceApi.GetAllAsync(_query);
+
+    _invoices = result.Items;
+    _totalCount = result.TotalCount;
+    _totalPages = result.TotalPages;
+
+    StateHasChanged();
+}
     private async Task LoadCourses()
 {
     try
@@ -351,7 +441,8 @@ private IEnumerable<FeeInvoiceResponse> FilteredInvoices =>
     {
         await FeeInvoiceApi.DeleteAsync(id);
 
-        await LoadData();
+       _page = 1;
+await LoadData();
 
         StateHasChanged();
     }
@@ -385,7 +476,8 @@ private IEnumerable<FeeInvoiceResponse> FilteredInvoices =>
                 Remarks = data.Remarks
             });
 
-        await LoadData();
+       _page = 1;
+await LoadData();
 
         StateHasChanged();
     }
@@ -401,7 +493,8 @@ private IEnumerable<FeeInvoiceResponse> FilteredInvoices =>
                     : "No additional fee cycles are ready to generate.",
                 generated > 0 ? Severity.Success : Severity.Info);
 
-            await LoadData();
+           _page = 1;
+await LoadData();
         }
         catch (Exception ex)
         {
@@ -443,7 +536,8 @@ private IEnumerable<FeeInvoiceResponse> FilteredInvoices =>
         id,
         request);
 
-    await LoadData();
+   _page = 1;
+await LoadData();
 
     StateHasChanged();
 }
@@ -481,8 +575,8 @@ private async Task ViewDetails(Guid id)
         };
     }
 
-    private static bool HasOutstandingBalance(FeeInvoiceResponse invoice) =>
-        invoice.BalanceAmount > 0;
+   private static bool HasOutstandingBalance(FeeInvoiceResponse invoice) =>
+    invoice.Status != 3 && invoice.BalanceAmount > 0;
 
     private static bool IsDueToday(FeeInvoiceResponse invoice) =>
         HasOutstandingBalance(invoice) && invoice.DueDate.Date == DateTime.Today;
@@ -640,5 +734,263 @@ private static string GetWhatsAppUrl(FeeInvoiceResponse invoice)
     };
 
     return $"https://wa.me/{phone}?text={Uri.EscapeDataString(message)}";
+}
+
+private async Task OnPageChanged(int page)
+{
+    _page = page;
+await LoadData();
+}
+
+private async Task LoadTeachers()
+{
+    try
+    {
+        var result = await TeacherApi.GetTeachersAsync(
+            new TeacherQueryRequest
+            {
+                Page = 1,
+                PageSize = 1000
+            });
+
+        _teachers = result?.Data?.Items?
+            .Where(x => x.IsActive)
+            .OrderBy(x => x.FullName)
+            .ToList()
+            ?? new List<TeacherResponse>();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(ex);
+
+        Snackbar.Add(
+            "Unable to load teachers.",
+            Severity.Error);
+    }
+}
+
+private async Task ApplyFilters()
+{
+    _page = 1;
+    await LoadData();
+}
+
+private async Task ClearFilters()
+{
+    _studentName = null;
+    _teacherName = null;
+    _teacherId = null;
+    _courseId = null;
+    _genderFilter = null;
+    _statusFilter = null;
+
+    _page = 1;
+
+    await LoadData();
+}
+
+private async Task DownloadExcelAsync()
+{
+    try
+    {
+        var request = new FeeInvoiceQueryRequest
+        {
+            StudentName = _studentName,
+            TeacherName = _teacherName,
+            TeacherId = _teacherId,
+            CourseId = _courseId,
+            Gender = _genderFilter,
+            Status = _statusFilter
+        };
+
+        Snackbar.Add(
+            "Preparing Excel file...",
+            Severity.Info);
+
+        var invoices =
+            await FeeInvoiceApi.GetAllForExportAsync(request);
+
+        using var workbook = new XLWorkbook();
+
+        var worksheet =
+            workbook.Worksheets.Add("Fee Invoices");
+
+        var headers = new[]
+        {
+            "Invoice No",
+            "Admission No",
+            "Student",
+            "Mobile",
+            "Gender",
+            "Teacher",
+            "Course",
+            "Amount",
+            "Paid",
+            "Balance",
+            "Status",
+            "Invoice Date",
+            "Due Date",
+            "Paid Date",
+            "Remarks"
+        };
+
+        for (var i = 0; i < headers.Length; i++)
+        {
+            worksheet.Cell(1, i + 1).Value = headers[i];
+        }
+
+        var headerRange =
+            worksheet.Range(
+                1,
+                1,
+                1,
+                headers.Length);
+
+        headerRange.Style.Font.Bold = true;
+
+        var row = 2;
+
+        foreach (var invoice in invoices)
+        {
+            worksheet.Cell(row, 1).Value =
+                invoice.InvoiceNumber;
+
+            worksheet.Cell(row, 2).Value =
+                invoice.AdmissionNumber ?? "";
+
+            worksheet.Cell(row, 3).Value =
+                invoice.StudentName;
+
+            worksheet.Cell(row, 4).Value =
+                invoice.ParentPhoneNumber ?? "";
+
+            worksheet.Cell(row, 5).Value =
+                invoice.Gender;
+
+            worksheet.Cell(row, 6).Value =
+                invoice.TeacherName ?? "";
+
+            worksheet.Cell(row, 7).Value =
+                invoice.CourseName;
+
+            worksheet.Cell(row, 8).Value =
+                invoice.Amount;
+
+            worksheet.Cell(row, 9).Value =
+                invoice.PaidAmount;
+
+            worksheet.Cell(row, 10).Value =
+                invoice.BalanceAmount;
+
+            worksheet.Cell(row, 11).Value =
+                GetFeeState(invoice);
+
+            worksheet.Cell(row, 12).Value =
+                invoice.InvoiceDate;
+
+            worksheet.Cell(row, 13).Value =
+                invoice.DueDate;
+
+            worksheet.Cell(row, 14).Value =
+                invoice.PaidDate;
+
+            worksheet.Cell(row, 15).Value =
+                invoice.Remarks ?? "";
+
+            row++;
+        }
+
+        worksheet.Column(8).Style.NumberFormat.Format = "₹#,##0.00";
+        worksheet.Column(9).Style.NumberFormat.Format = "₹#,##0.00";
+        worksheet.Column(10).Style.NumberFormat.Format = "₹#,##0.00";
+
+        worksheet.Column(12).Style.NumberFormat.Format =
+            "dd/MM/yyyy";
+
+        worksheet.Column(13).Style.NumberFormat.Format =
+            "dd/MM/yyyy";
+
+        worksheet.Column(14).Style.NumberFormat.Format =
+            "dd/MM/yyyy";
+
+        worksheet.Columns().AdjustToContents();
+
+        using var stream = new MemoryStream();
+
+        workbook.SaveAs(stream);
+
+        var bytes = stream.ToArray();
+
+        var base64 =
+            Convert.ToBase64String(bytes);
+
+        var fileName =
+            $"FeeInvoices_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+
+        await JS.InvokeVoidAsync(
+            "downloadFile",
+            fileName,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            base64);
+
+        Snackbar.Add(
+            $"{invoices.Count} invoice(s) exported to Excel.",
+            Severity.Success);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(ex);
+
+        Snackbar.Add(
+            $"Unable to download Excel: {ex.Message}",
+            Severity.Error);
+    }
+}
+
+private async Task DownloadPdfAsync()
+{
+    try
+    {
+        var request = new FeeInvoiceQueryRequest
+        {
+            StudentName = _studentName,
+            TeacherName = _teacherName,
+            TeacherId = _teacherId,
+            CourseId = _courseId,
+            Gender = _genderFilter,
+            Status = _statusFilter
+        };
+
+        Snackbar.Add(
+            "Preparing PDF file...",
+            Severity.Info);
+
+        var bytes =
+            await FeeInvoiceApi.DownloadFilteredPdfAsync(request);
+
+        var base64 =
+            Convert.ToBase64String(bytes);
+
+        var fileName =
+            $"FeeInvoices_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+
+        await JS.InvokeVoidAsync(
+            "downloadFile",
+            fileName,
+            "application/pdf",
+            base64);
+
+        Snackbar.Add(
+            "PDF file downloaded successfully.",
+            Severity.Success);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(ex);
+
+        Snackbar.Add(
+            $"Unable to download PDF: {ex.Message}",
+            Severity.Error);
+    }
 }
 }

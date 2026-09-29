@@ -14,9 +14,8 @@ public class UpdateStudentRequest
     [Required]
     public string PhoneNumber { get; set; }
 
-    [Required]
     [EmailAddress]
-    public string Email { get; set; }
+public string? Email { get; set; }
 
     public string Country { get; set; } = string.Empty;
 

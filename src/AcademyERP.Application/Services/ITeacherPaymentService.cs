@@ -45,5 +45,7 @@ Task<TeacherPaymentConfigurationResponse?> ResumeConfigurationAsync(
     Task<TeacherPaymentResponse?> CancelAsync(Guid id);
 
     Task<int> GeneratePendingCyclesAsync(
-        DateTime asOfDate);
+        DateTime asOfDate,
+        Guid? enrollmentId = null,
+        bool initializeLateEnrollment = false);
 }

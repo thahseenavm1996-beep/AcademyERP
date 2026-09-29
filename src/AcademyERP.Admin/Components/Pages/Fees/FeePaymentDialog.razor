@@ -97,8 +97,14 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _invoices =
-            await FeeInvoiceApi.GetAllAsync();
+       var result = await FeeInvoiceApi.GetAllAsync(
+    new FeeInvoiceQueryRequest
+    {
+        Page = 1,
+        PageSize = 100
+    });
+
+_invoices = result.Items;
 
         _paymentMethods =
             await PaymentMethodApi.GetAllAsync();

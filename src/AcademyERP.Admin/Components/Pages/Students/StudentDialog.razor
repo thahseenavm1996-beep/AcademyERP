@@ -25,11 +25,10 @@
                            MaxDate="@DateTime.Today.AddYears(-4)" />
 
             <MudSelect T="int" Label="Gender" @bind-Value="_model.Gender" For="@(() => _model.Gender)">
-
-                <MudSelectItem Value="0">Male</MudSelectItem>
-                <MudSelectItem Value="1">Female</MudSelectItem>
-
-            </MudSelect>
+    <MudSelectItem Value="1">Male</MudSelectItem>
+    <MudSelectItem Value="2">Female</MudSelectItem>
+    <MudSelectItem Value="3">Other</MudSelectItem>
+</MudSelect>
 
             <MudTextField Label="Mobile Number" @bind-Value="_model.MobileNumber" />
 
@@ -45,8 +44,8 @@
               Label="Password"
               @bind-Value="_model.Password"
               InputType="InputType.Password"
-              Required="true"
-              RequiredError="Password is required."
+              Required="@(!IsEdit && !string.IsNullOrWhiteSpace(_model.Email))"
+RequiredError="Password is required when an email is provided."
               Validation="@(new Func<string, IEnumerable<string>>(ValidatePassword))"
               Immediate="true"
               HelperText="Minimum 6 characters • 1 uppercase • 1 lowercase • 1 number • 1 special character" />
@@ -99,7 +98,9 @@
                 DateOfBirth = _model.DateOfBirth!.Value,
                 Gender = _model.Gender,
                 PhoneNumber = _model.MobileNumber,
-                Email = _model.Email,
+                Email = string.IsNullOrWhiteSpace(_model.Email)
+    ? null
+    : _model.Email.Trim(),
                 Country = _model.Country,
                 TimeZone = _model.TimeZone,
                 Remarks = _model.Remarks
@@ -118,16 +119,19 @@
                     Snackbar.Add(error, Severity.Error);
             }
         }
-        else
-        {
-            // Your existing CreateStudentAsync() code stays here.
+       else
+{
+    _model.Email = string.IsNullOrWhiteSpace(_model.Email)
+        ? null
+        : _model.Email.Trim();
 
-            await _form!.ValidateAsync();
+    await _form!.ValidateAsync();
 
-            if (!_form.IsValid)
-                return;
+    if (!_form.IsValid)
+        return;
 
-            var result = await StudentApi.CreateStudentAsync(_model);
+    var result = await StudentApi.CreateStudentAsync(_model);
+
 
             if (result.Success)
             {
@@ -156,9 +160,10 @@
             _model.DateOfBirth = Student.DateOfBirth;
             _model.Gender = Student.Gender switch
 {
-    "Male" => 0,
-    "Female" => 1,
-    _ => 0
+    "Male" => 1,
+    "Female" => 2,
+    "Other" => 3,
+    _ => 1
 };
           _model.MobileNumber = Student.PhoneNumber;
 _model.Email = Student.Email;

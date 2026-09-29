@@ -37,4 +37,23 @@ public class StudentApprovalModel
         get;
         set;
     } = new();
+
+    // Finance
+    public decimal StandardCourseFee
+    {
+        get;
+        set;
+    }
+
+    public decimal FinalStudentFee
+    {
+        get;
+        set;
+    }
+
+    public decimal TeacherPaymentAmount
+    {
+        get;
+        set;
+    }
 }

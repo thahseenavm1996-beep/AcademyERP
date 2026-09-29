@@ -21,6 +21,9 @@ public class CreateEnrollmentRequest
 
     public decimal MonthlyFee { get; set; }
 
+    public decimal TeacherPaymentAmount { get; set; }
+
+
     public decimal ScholarshipAmount { get; set; }
 
     public string? ScholarshipReason { get; set; }

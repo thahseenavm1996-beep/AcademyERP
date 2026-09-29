@@ -136,6 +136,14 @@ public class TeacherPaymentService : ITeacherPaymentService
 
         await _context.SaveChangesAsync();
 
+        // For a newly-created enrollment/payment configuration:
+        // completed historical cycles are considered settled,
+        // the current cycle is pending, and future cycles are not created.
+        await GeneratePendingCyclesAsync(
+            DateTime.Today,
+            configuration.EnrollmentId,
+            initializeLateEnrollment: true);
+
         return (await GetConfigurationByIdAsync(configuration.Id))!;
     }
 
@@ -356,13 +364,24 @@ public class TeacherPaymentService : ITeacherPaymentService
         return await GetPaymentByIdAsync(id);
     }
 
-    public async Task<int> GeneratePendingCyclesAsync(DateTime asOfDate)
-{
-    var configurations = await _context
+    public async Task<int> GeneratePendingCyclesAsync(
+        DateTime asOfDate,
+        Guid? enrollmentId = null,
+        bool initializeLateEnrollment = false)
+    {
+    var configurationsQuery = _context
         .TeacherPaymentConfigurations
         .Include(x => x.Enrollment)
         .Include(x => x.Pauses)
-        .ToListAsync();
+        .AsQueryable();
+
+    if (enrollmentId.HasValue)
+    {
+        configurationsQuery = configurationsQuery
+            .Where(x => x.EnrollmentId == enrollmentId.Value);
+    }
+
+    var configurations = await configurationsQuery.ToListAsync();
 
     var affectedCount = 0;
     var today = asOfDate.Date;
@@ -431,7 +450,8 @@ public class TeacherPaymentService : ITeacherPaymentService
              * resumes.
              */
 
-            if (extendedCycleEnd > today)
+            if (extendedCycleEnd > today &&
+                !initializeLateEnrollment)
                 break;
 
             /*
@@ -549,13 +569,20 @@ public class TeacherPaymentService : ITeacherPaymentService
              * Partial configuration periods are prorated.
              */
 
-            var amount =
-                Math.Round(
-                    configuration.PaymentAmount *
-                    payableScheduledDays /
-                    (decimal)cycleScheduledDays,
-                    2,
-                    MidpointRounding.AwayFromZero);
+           const decimal SubsequentCycleIncrease = 100m;
+
+var monthlyPaymentAmount =
+    cycleStart == enrollment.StartDate.Date
+        ? configuration.PaymentAmount
+        : configuration.PaymentAmount + SubsequentCycleIncrease;
+
+var amount =
+    Math.Round(
+        monthlyPaymentAmount *
+        payableScheduledDays /
+        (decimal)cycleScheduledDays,
+        2,
+        MidpointRounding.AwayFromZero);
 
             /*
              * Find an existing payment by cycle START.
@@ -632,10 +659,22 @@ public class TeacherPaymentService : ITeacherPaymentService
                         amount,
 
                     Status =
-                        TeacherPaymentStatus.Pending,
+                        initializeLateEnrollment &&
+                        extendedCycleEnd <= today
+                            ? TeacherPaymentStatus.Paid
+                            : TeacherPaymentStatus.Pending,
+
+                    PaidDate =
+                        initializeLateEnrollment &&
+                        extendedCycleEnd <= today
+                            ? today
+                            : null,
 
                     Remarks =
-                        configuration.Remarks
+                        initializeLateEnrollment &&
+                        extendedCycleEnd <= today
+                            ? "Historical teacher payment cycle settled during late enrollment creation."
+                            : configuration.Remarks
                 };
 
                 _context.TeacherPayments.Add(payment);
@@ -646,6 +685,19 @@ public class TeacherPaymentService : ITeacherPaymentService
                 payment.Status ==
                 TeacherPaymentStatus.Pending)
             {
+                if (initializeLateEnrollment &&
+                    extendedCycleEnd <= today)
+                {
+                    payment.Status =
+                        TeacherPaymentStatus.Paid;
+
+                    payment.PaidDate =
+                        today;
+
+                    payment.Remarks =
+                        "Historical teacher payment cycle settled during late enrollment creation.";
+                }
+
                 /*
                  * Recalculate pending payments.
                  *
@@ -677,8 +729,6 @@ public class TeacherPaymentService : ITeacherPaymentService
 
                 payment.Amount =
                     amount;
-
-                affectedCount++;
             }
 
             /*

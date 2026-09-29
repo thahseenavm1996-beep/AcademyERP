@@ -1,0 +1,941 @@
+@page "/teacher/students/add"
+@layout TeacherLayout
+
+@using MudBlazor
+@using AcademyERP.Admin.Models
+@using AcademyERP.Admin.Models.Courses
+@using AcademyERP.Admin.Models.Lookups
+@using AcademyERP.Admin.Models.TeacherStudentRequests
+@using AcademyERP.Admin.Services
+
+@inject CourseApiService CourseApi
+@inject LookupApiService LookupApi
+@inject TeacherStudentRequestApiService RequestApi
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Add Students</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="pa-4">
+
+    <MudText Typo="Typo.h3" Class="mb-1">Add Students</MudText>
+    <MudText Typo="Typo.body2" Color="Color.Info" Class="mb-5">
+        Submit students to Admin for approval. Existing students will be matched automatically.
+    </MudText>
+
+    <MudPaper Elevation="0" Class="table-wrapper">
+
+        <MudTable Items="_rows"
+                  Hover="true"
+                  Dense="true"
+                  Bordered="true"
+                  Striped="true"
+                  Class="student-table">
+
+            <HeaderContent>
+
+                <MudTh Style="width:55px;
+                               background:#e3f2fd;
+                               color:#1565c0;
+                               font-weight:700;">
+                    #
+                </MudTh>
+
+                <MudTh Style="min-width:240px;
+                               background:#e3f2fd;
+                               color:#1565c0;
+                               font-weight:700;">
+                    Student Name
+                </MudTh>
+
+                <MudTh Style="min-width:170px;
+                               background:#e3f2fd;
+                               color:#1565c0;
+                               font-weight:700;">
+                    Mobile Number
+                </MudTh>
+
+                <MudTh Style="min-width:190px;
+                               background:#e3f2fd;
+                               color:#1565c0;
+                               font-weight:700;">
+                    Course
+                </MudTh>
+
+                <MudTh Style="min-width:140px;
+                               background:#e3f2fd;
+                               color:#1565c0;
+                               font-weight:700;">
+                    Fee
+                </MudTh>
+
+                <MudTh Style="min-width:300px;
+                               background:#e3f2fd;
+                               color:#1565c0;
+                               font-weight:700;">
+                    Class Schedule
+                </MudTh>
+
+                <MudTh Style="min-width:155px;
+                               background:#e3f2fd;
+                               color:#1565c0;
+                               font-weight:700;">
+                    Joining Date
+                </MudTh>
+
+                <MudTh Style="min-width:210px;
+                               background:#e3f2fd;
+                               color:#1565c0;
+                               font-weight:700;">
+                    Remarks
+                </MudTh>
+
+                <MudTh Style="width:70px;
+                               background:#e3f2fd;
+                               color:#1565c0;
+                               font-weight:700;">
+                    Action
+                </MudTh>
+
+            </HeaderContent>
+
+            <RowTemplate>
+
+                
+
+                    <!-- NUMBER -->
+                    <MudTd DataLabel="#"
+                           Style="vertical-align:top;">
+                        <MudText Typo="Typo.body2"
+                                 Style="font-weight:600;">
+                            @(_rows.IndexOf(context) + 1)
+                        </MudText>
+                    </MudTd>
+
+                    <!-- STUDENT NAME -->
+                    <MudTd DataLabel="Student Name"
+                           Style="vertical-align:top;">
+
+                        <MudTextField T="string"
+                                      @bind-Value="context.StudentName"
+                                      Label="Student Name"
+                                      Placeholder="Enter student name"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Immediate="true"
+                                      FullWidth="true" />
+
+                        @if (context.StudentChecked)
+                        {
+                            @if (context.StudentFound)
+                            {
+                                <MudAlert Severity="Severity.Success"
+                                          Dense="true"
+                                          Variant="Variant.Filled"
+                                          Class="mt-2"
+                                          Style="border-radius:8px;">
+
+                                    <div style="font-size:12px;font-weight:600;">
+                                        ✓ Existing Student
+                                    </div>
+
+                                    @if (!string.IsNullOrWhiteSpace(context.AdmissionNumber))
+                                    {
+                                        <div style="font-size:11px;">
+                                            Admission:
+                                            @context.AdmissionNumber
+                                        </div>
+                                    }
+
+                                </MudAlert>
+                            }
+                            else
+                            {
+                                <MudAlert Severity="Severity.Warning"
+                                          Dense="true"
+                                          Variant="Variant.Filled"
+                                          Class="mt-2"
+                                          Style="border-radius:8px;">
+
+                                    <div style="font-size:12px;font-weight:600;">
+                                        New Student
+                                    </div>
+
+                                    <div style="font-size:11px;">
+                                        Admin verification required
+                                    </div>
+
+                                </MudAlert>
+                            }
+                        }
+
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Search"
+                                   Disabled="@context.CheckingStudent"
+                                   OnClick="@(() => CheckStudentAsync(context))"
+                                   Class="mt-2">
+
+                            @(context.CheckingStudent
+                                ? "Checking..."
+                                : "Check Student")
+
+                        </MudButton>
+
+                    </MudTd>
+
+                    <!-- MOBILE NUMBER -->
+                    <MudTd DataLabel="Mobile Number"
+                           Style="vertical-align:top;">
+
+                        <MudTextField T="string"
+                                      @bind-Value="context.StudentNumber"
+                                      Label="Mobile Number"
+                                      Placeholder="Mobile number"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Immediate="true"
+                                      FullWidth="true" />
+
+                    </MudTd>
+
+                    <!-- COURSE -->
+                    <MudTd DataLabel="Course"
+                           Style="vertical-align:top;">
+
+                        <MudSelect T="Guid"
+                                   @bind-Value="context.CourseId"
+                                   Label="Course"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   FullWidth="true">
+
+                            @foreach (var course in _courses)
+                            {
+                                <MudSelectItem T="Guid"
+                                               Value="@course.Id">
+                                    @course.CourseName
+                                </MudSelectItem>
+                            }
+
+                        </MudSelect>
+
+                    </MudTd>
+
+                    <!-- FEE -->
+                    <MudTd DataLabel="Fee"
+                           Style="vertical-align:top;">
+
+                        <MudNumericField T="decimal"
+                                         @bind-Value="context.StudentFee"
+                                         Label="Monthly Fee"
+                                         Placeholder="0"
+                                         Variant="Variant.Outlined"
+                                         Margin="Margin.Dense"
+                                         Min="0"
+                                         Adornment="Adornment.Start"
+                                         AdornmentText="₹"
+                                         FullWidth="true" />
+
+                    </MudTd>
+
+                    <!-- SCHEDULE -->
+                    <MudTd DataLabel="Class Schedule"
+                           Style="vertical-align:top;min-width:300px;">
+
+                        @if (context.Schedules.Count == 0)
+                        {
+                            <MudPaper Elevation="0"
+                                      Class="pa-3"
+                                      Style="background:#f8fafc;
+                                             border:1px dashed #cbd5e1;
+                                             border-radius:8px;">
+
+                                <MudText Typo="Typo.body2"
+                                         Color="Color.Secondary">
+                                    No schedule added
+                                </MudText>
+
+                            </MudPaper>
+                        }
+                        else
+                        {
+                            <div style="display:flex;
+                                        flex-wrap:wrap;
+                                        gap:6px;">
+
+                                @foreach (var schedule in context.Schedules)
+                                {
+                                    <MudChip T="string"
+                                             Size="Size.Small"
+                                             Variant="Variant.Filled"
+                                             Color="Color.Info"
+                                             OnClose="@(() => RemoveSchedule(context, schedule))">
+
+                                        @schedule.DayOfWeek
+                                        • @GetTimeSlotName(schedule.TimeSlotId)
+                                        • @GetDurationName(schedule.ClassDurationId)
+
+                                    </MudChip>
+                                }
+
+                            </div>
+                        }
+
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Add"
+                                   OnClick="@(() => OpenSchedulePopup(context))"
+                                   Class="mt-2">
+
+                            @(context.Schedules.Count == 0
+                                ? "Add Schedule"
+                                : "Edit Schedule")
+
+                        </MudButton>
+
+                    </MudTd>
+
+                    <!-- JOINING DATE -->
+                    <MudTd DataLabel="Joining Date"
+                           Style="vertical-align:top;">
+
+                        <MudDatePicker @bind-Date="context.StartDate"
+                                       Label="Joining Date"
+                                       Variant="Variant.Outlined"
+                                       Margin="Margin.Dense"
+                                       Editable="true"
+                                       DateFormat="dd/MM/yyyy" />
+
+                    </MudTd>
+
+                    <!-- REMARKS -->
+                    <MudTd DataLabel="Remarks"
+                           Style="vertical-align:top;">
+
+                        <MudTextField T="string"
+                                      @bind-Value="context.Remarks"
+                                      Label="Remarks"
+                                      Placeholder="Optional"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Lines="2"
+                                      FullWidth="true" />
+
+                    </MudTd>
+
+                    <!-- ACTION -->
+                    <MudTd DataLabel="Action"
+                           Style="vertical-align:top;text-align:center;">
+
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                       Color="Color.Error"
+                                       Disabled="@(_rows.Count == 1)"
+                                       OnClick="@(() => RemoveRow(context))" />
+
+                    </MudTd>
+
+                
+
+            </RowTemplate>
+
+        </MudTable>
+
+    </MudPaper>
+
+    <div class="bottom-actions">
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.PersonAdd"
+                   OnClick="AddRow">
+            Add Student
+        </MudButton>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Size="Size.Large"
+                   StartIcon="@Icons.Material.Filled.Send"
+                   Disabled="_saving"
+                   OnClick="SubmitAllAsync">
+            @(_saving ? "Submitting..." : "Submit All Requests")
+        </MudButton>
+    </div>
+
+</MudContainer>
+
+@if (_schedulePopupOpen && _editingRow != null)
+{
+    <div class="schedule-overlay">
+        <div class="schedule-modal">
+
+            <div class="schedule-modal-header">
+                <MudText Typo="Typo.h6">Select Class Schedule</MudText>
+
+                <MudIconButton Icon="@Icons.Material.Filled.Close"
+                               OnClick="CloseSchedulePopup" />
+            </div>
+
+            <div class="schedule-modal-body">
+
+                <MudText Typo="Typo.subtitle1" Class="mb-3">
+                    Select Class Days
+                </MudText>
+
+                <div class="day-grid">
+                    @foreach (var day in _days)
+                    {
+                        <label class="day-checkbox">
+                            <input type="checkbox"
+                                   checked="@_selectedDays.Contains(day)"
+                                   @onchange="@(() => ToggleDay(day))" />
+
+                            <span>@day</span>
+                        </label>
+                    }
+                </div>
+
+                <MudDivider Class="my-5" />
+
+                <MudGrid Spacing="2">
+
+                    <MudItem xs="12" sm="6">
+                        <MudSelect T="Guid"
+                                   @bind-Value="_popupTimeSlotId"
+                                   Label="Time Slot"
+                                   Variant="Variant.Outlined"
+                                   Required="true"
+                                   FullWidth="true">
+
+                            @foreach (var slot in _timeSlots)
+                            {
+                                <MudSelectItem T="Guid" Value="@slot.Id">
+                                    @slot.Name
+                                </MudSelectItem>
+                            }
+
+                        </MudSelect>
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6">
+                        <MudSelect T="Guid"
+                                   @bind-Value="_popupDurationId"
+                                   Label="Duration"
+                                   Variant="Variant.Outlined"
+                                   Required="true"
+                                   FullWidth="true">
+
+                            @foreach (var duration in _durations)
+                            {
+                                <MudSelectItem T="Guid" Value="@duration.Id">
+                                    @duration.Name
+                                </MudSelectItem>
+                            }
+
+                        </MudSelect>
+                    </MudItem>
+
+                </MudGrid>
+
+                @if (_selectedDays.Count > 0)
+                {
+                    <MudAlert Severity="Severity.Info" Dense="true" Class="mt-4">
+                        @string.Join(", ", _selectedDays.OrderBy(x => (int)x))
+                        selected
+                    </MudAlert>
+                }
+
+            </div>
+
+            <div class="schedule-modal-actions">
+
+                <MudButton Variant="Variant.Text"
+                           OnClick="CloseSchedulePopup">
+                    Cancel
+                </MudButton>
+
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="SaveSchedulePopup">
+                    Add Schedule
+                </MudButton>
+
+            </div>
+
+        </div>
+    </div>
+}
+
+<style>
+    .table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .student-table {
+        min-width: 1550px;
+    }
+
+    .schedule-list {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .schedule-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 4px 6px;
+        border-radius: 5px;
+        background: #f5f8fc;
+    }
+
+    .bottom-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 18px;
+    }
+
+    .schedule-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 2000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .schedule-modal {
+        width: 100%;
+        max-width: 650px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+        overflow: hidden;
+    }
+
+    .schedule-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 20px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .schedule-modal-body {
+        padding: 22px;
+    }
+
+    .schedule-modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 15px 20px;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .day-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .day-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px;
+        border: 1px solid #d8dee8;
+        border-radius: 7px;
+        cursor: pointer;
+        font-size: 15px;
+        transition: background 0.15s ease;
+    }
+
+    .day-checkbox:hover {
+        background: #f4f7fb;
+    }
+
+    .day-checkbox input {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+
+    @@media (max-width: 700px) {
+        .bottom-actions {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+        }
+
+        .day-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .schedule-modal {
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+    }
+</style>
+
+@code {
+    private readonly List<DayOfWeek> _days = Enum.GetValues<DayOfWeek>()
+        .OrderBy(x => x == DayOfWeek.Sunday ? 7 : (int)x)
+        .ToList();
+
+    private List<StudentRow> _rows = new() { new StudentRow() };
+
+    private List<CourseResponse> _courses = new();
+    private List<TimeSlotResponse> _timeSlots = new();
+    private List<ClassDurationResponse> _durations = new();
+
+    private bool _saving;
+
+    private bool _schedulePopupOpen;
+    private StudentRow? _editingRow;
+
+    private readonly HashSet<DayOfWeek> _selectedDays = new();
+
+    private Guid _popupTimeSlotId = Guid.Empty;
+    private Guid _popupDurationId = Guid.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLookupsAsync();
+    }
+
+    private async Task LoadLookupsAsync()
+    {
+        try
+        {
+            _courses = await CourseApi.GetAllAsync() ?? new();
+            _timeSlots = await LookupApi.GetTimeSlotsAsync() ?? new();
+            _durations = await LookupApi.GetClassDurationsAsync() ?? new();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load course/schedule options: {ex.Message}",
+                Severity.Error);
+        }
+    }
+
+    private async Task CheckStudentAsync(StudentRow row)
+    {
+        if (string.IsNullOrWhiteSpace(row.StudentName))
+        {
+            Snackbar.Add("Enter the student name first.", Severity.Warning);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(row.StudentNumber))
+        {
+            Snackbar.Add("Enter the student's mobile number first.", Severity.Warning);
+            return;
+        }
+
+        row.CheckingStudent = true;
+        row.StudentChecked = false;
+        row.StudentFound = false;
+        row.StudentId = null;
+        row.AdmissionNumber = null;
+
+        try
+        {
+            var student = await RequestApi.FindStudentAsync(
+                row.StudentName.Trim(),
+                row.StudentNumber.Trim());
+
+            if (student != null)
+            {
+                row.StudentId = student.Id;
+                row.AdmissionNumber = student.AdmissionNumber;
+                row.StudentFound = true;
+            }
+            else
+            {
+                row.StudentFound = false;
+            }
+
+            row.StudentChecked = true;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Unable to check student: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            row.CheckingStudent = false;
+        }
+    }
+
+    private void AddRow()
+    {
+        _rows.Add(new StudentRow());
+    }
+
+    private void RemoveRow(StudentRow row)
+    {
+        if (_rows.Count > 1)
+        {
+            _rows.Remove(row);
+        }
+    }
+
+    private void OpenSchedulePopup(StudentRow row)
+    {
+        _editingRow = row;
+
+        _selectedDays.Clear();
+
+        foreach (var schedule in row.Schedules)
+        {
+            _selectedDays.Add(schedule.DayOfWeek);
+        }
+
+        _popupTimeSlotId = row.Schedules.FirstOrDefault()?.TimeSlotId ?? Guid.Empty;
+        _popupDurationId = row.Schedules.FirstOrDefault()?.ClassDurationId ?? Guid.Empty;
+
+        _schedulePopupOpen = true;
+
+        StateHasChanged();
+    }
+
+    private void ToggleDay(DayOfWeek day)
+    {
+        if (_selectedDays.Contains(day))
+        {
+            _selectedDays.Remove(day);
+        }
+        else
+        {
+            _selectedDays.Add(day);
+        }
+    }
+
+    private void CloseSchedulePopup()
+    {
+        _schedulePopupOpen = false;
+        _editingRow = null;
+        _selectedDays.Clear();
+        _popupTimeSlotId = Guid.Empty;
+        _popupDurationId = Guid.Empty;
+    }
+
+    private void SaveSchedulePopup()
+    {
+        if (_editingRow == null)
+            return;
+
+        if (_selectedDays.Count == 0)
+        {
+            Snackbar.Add("Select at least one class day.",
+                Severity.Warning);
+            return;
+        }
+
+        if (_popupTimeSlotId == Guid.Empty)
+        {
+            Snackbar.Add("Select a time slot.",
+                Severity.Warning);
+            return;
+        }
+
+        if (_popupDurationId == Guid.Empty)
+        {
+            Snackbar.Add("Select a duration.",
+                Severity.Warning);
+            return;
+        }
+
+        foreach (var day in _selectedDays)
+        {
+            var existing = _editingRow.Schedules
+                .FirstOrDefault(x => x.DayOfWeek == day);
+
+            if (existing != null)
+            {
+                existing.TimeSlotId = _popupTimeSlotId;
+                existing.ClassDurationId = _popupDurationId;
+            }
+            else
+            {
+                _editingRow.Schedules.Add(new ScheduleRow
+                {
+                    DayOfWeek = day,
+                    TimeSlotId = _popupTimeSlotId,
+                    ClassDurationId = _popupDurationId
+                });
+            }
+        }
+
+        Snackbar.Add(
+            $"{_selectedDays.Count} class day(s) added.",
+            Severity.Success);
+
+        CloseSchedulePopup();
+    }
+
+    private void RemoveSchedule(StudentRow row, ScheduleRow schedule)
+    {
+        row.Schedules.Remove(schedule);
+    }
+
+    private string GetTimeSlotName(Guid id)
+    {
+        return _timeSlots.FirstOrDefault(x => x.Id == id)?.Name
+            ?? "Unknown";
+    }
+
+    private string GetDurationName(Guid id)
+    {
+        return _durations.FirstOrDefault(x => x.Id == id)?.Name
+            ?? "Unknown";
+    }
+
+    private async Task SubmitAllAsync()
+    {
+        if (_rows.Count == 0)
+            return;
+
+        foreach (var row in _rows)
+        {
+            if (string.IsNullOrWhiteSpace(row.StudentName))
+            {
+                Snackbar.Add("Enter a student name for every row.",
+                    Severity.Warning);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(row.StudentNumber))
+            {
+                Snackbar.Add("Enter a mobile number for every row.",
+                    Severity.Warning);
+                return;
+            }
+
+            if (!row.StudentChecked)
+            {
+                Snackbar.Add(
+                    $"Please check student '{row.StudentName}' before submitting.",
+                    Severity.Warning);
+                return;
+            }
+
+            if (row.CourseId == Guid.Empty)
+            {
+                Snackbar.Add(
+                    $"Select a course for '{row.StudentName}'.",
+                    Severity.Warning);
+                return;
+            }
+
+            if (!row.StartDate.HasValue)
+            {
+                Snackbar.Add(
+                    $"Select a start date for '{row.StudentName}'.",
+                    Severity.Warning);
+                return;
+            }
+
+            if (row.Schedules.Count == 0)
+            {
+                Snackbar.Add(
+                    $"Add at least one class schedule for '{row.StudentName}'.",
+                    Severity.Warning);
+                return;
+            }
+        }
+
+        _saving = true;
+
+        try
+        {
+            foreach (var row in _rows)
+            {
+                await RequestApi.CreateAsync(
+                    new CreateTeacherStudentRequestDto
+                    {
+                        StudentId = row.StudentId,
+                        StudentName = row.StudentName.Trim(),
+                        StudentPhoneNumber = row.StudentNumber.Trim(),
+                        CourseId = row.CourseId,
+                        StartDate = row.StartDate!.Value,
+                        StudentFee = row.StudentFee,
+                        TeacherRemarks = row.Remarks,
+                        Schedules = row.Schedules
+                            .Select(x => new CreateTeacherStudentRequestScheduleDto
+                            {
+                                DayOfWeek = x.DayOfWeek,
+                                TimeSlotId = x.TimeSlotId,
+                                ClassDurationId = x.ClassDurationId
+                            })
+                            .ToList()
+                    });
+            }
+
+            Snackbar.Add(
+                "Student request(s) submitted successfully.",
+                Severity.Success);
+
+            _rows = new List<StudentRow>
+            {
+                new StudentRow()
+            };
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Failed to submit request: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private sealed class StudentRow
+    {
+        public Guid? StudentId { get; set; }
+
+        public string StudentName { get; set; } = string.Empty;
+
+        public string StudentNumber { get; set; } = string.Empty;
+
+        public string? AdmissionNumber { get; set; }
+
+        public bool CheckingStudent { get; set; }
+
+        public bool StudentChecked { get; set; }
+
+        public bool StudentFound { get; set; }
+
+        public Guid CourseId { get; set; }
+
+        public decimal StudentFee { get; set; }
+
+        public DateTime? StartDate { get; set; } = DateTime.Today;
+
+        public string? Remarks { get; set; }
+
+        public List<ScheduleRow> Schedules { get; set; } = new();
+    }
+
+    private sealed class ScheduleRow
+    {
+        public DayOfWeek DayOfWeek { get; set; }
+
+        public Guid TimeSlotId { get; set; }
+
+        public Guid ClassDurationId { get; set; }
+    }
+}

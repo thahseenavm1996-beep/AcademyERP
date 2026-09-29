@@ -9,25 +9,33 @@ using AcademyERP.Application.Interfaces;
 using AcademyERP.Domain.Entities.Identity;
 using Microsoft.AspNetCore.Identity;
 using AcademyERP.Domain.Enums;
+using AcademyERP.Application.Services;
+
 namespace AcademyERP.Infrastructure.Services;
 
 public class StudentService : IStudentService
 {
     private readonly IRepository<Student> _repository;
-    private readonly IMapper _mapper;
-    private readonly UserManager<ApplicationUser> _userManager;
-    private readonly ApplicationDbContext _context;
+private readonly IMapper _mapper;
+private readonly UserManager<ApplicationUser> _userManager;
+private readonly ApplicationDbContext _context;
+private readonly IFeeInvoiceService _feeInvoiceService;
+private readonly ITeacherPaymentService _teacherPaymentService;
     public StudentService(
-        IRepository<Student> repository,
-        IMapper mapper,
-        ApplicationDbContext context,
-        UserManager<ApplicationUser> userManager)
-    {
-        _repository = repository;
-        _mapper = mapper;
-        _context = context;
-        _userManager = userManager;
-    }
+    IRepository<Student> repository,
+    IMapper mapper,
+    ApplicationDbContext context,
+    UserManager<ApplicationUser> userManager,
+    IFeeInvoiceService feeInvoiceService,
+    ITeacherPaymentService teacherPaymentService)
+{
+    _repository = repository;
+    _mapper = mapper;
+    _context = context;
+    _userManager = userManager;
+    _feeInvoiceService = feeInvoiceService;
+    _teacherPaymentService = teacherPaymentService;
+}
     public async Task<StudentProfileSummaryResponse> GetProfileSummaryAsync(Guid id)
 {
     var student = await _context.Students
@@ -109,29 +117,45 @@ var attendancePercentage = completedClasses == 0
             var generatedNumber = $"{sequence.Prefix}{sequence.NextNumber}";
             sequence.NextNumber++;
 
-            var user = new ApplicationUser
-            {
-                UserName = request.Email,
-                Email = request.Email,
-                FullName = request.FullName,
-                PhoneNumber = request.PhoneNumber,
-                IsActive = true
-            };
+           ApplicationUser? user = null;
 
-            var result = await _userManager.CreateAsync(user, request.Password);
+if (!string.IsNullOrWhiteSpace(request.Email))
+{
+    if (string.IsNullOrWhiteSpace(request.Password))
+    {
+        throw new ArgumentException(
+            "Password is required when an email address is provided.");
+    }
 
-            if (!result.Succeeded)
-            {
-                throw new Exception("Identity Error: " +
-                    string.Join(", ", result.Errors.Select(e => e.Description)));
-            }
+    user = new ApplicationUser
+    {
+        UserName = request.Email.Trim(),
+        Email = request.Email.Trim(),
+        FullName = request.FullName,
+        PhoneNumber = request.PhoneNumber,
+        IsActive = true
+    };
 
-            await _userManager.AddToRoleAsync(user, "Student");
+    var result = await _userManager.CreateAsync(
+        user,
+        request.Password);
 
-            var student = _mapper.Map<Student>(request);
+    if (!result.Succeeded)
+    {
+        throw new Exception(
+            "Identity Error: " +
+            string.Join(", ",
+                result.Errors.Select(e => e.Description)));
+    }
 
-            student.ApplicationUserId = user.Id;
-            student.AdmissionNumber = generatedNumber;
+    await _userManager.AddToRoleAsync(user, "Student");
+}
+
+var student = _mapper.Map<Student>(request);
+
+student.ApplicationUserId = user?.Id;
+student.PhoneNumber = request.PhoneNumber;
+student.AdmissionNumber = generatedNumber;
 
             _context.Students.Add(student);
 
@@ -163,7 +187,9 @@ var attendancePercentage = completedClasses == 0
     }
     public async Task<PagedResponse<StudentResponse>> GetAllAsync(StudentQueryRequest request)
 {
-    var query = _context.Students.AsQueryable();
+    var query = _context.Students
+    .Where(s => !s.IsDeleted)
+    .AsQueryable();
 
     if (!string.IsNullOrWhiteSpace(request.Search))
     {
@@ -279,8 +305,9 @@ var attendancePercentage = completedClasses == 0
         if (student is null)
             throw new KeyNotFoundException("Student not found.");
 
-        student.FullName = request.FullName;
-        student.AdmissionDate = request.AdmissionDate;
+       student.FullName = request.FullName;
+student.PhoneNumber = request.PhoneNumber;
+student.AdmissionDate = request.AdmissionDate;
         student.DateOfBirth = request.DateOfBirth;
         student.Gender = request.Gender;
         student.Country = request.Country;
@@ -289,54 +316,171 @@ var attendancePercentage = completedClasses == 0
 
         var user = await GetStudentUserAsync(student);
 
-        if (user != null)
-        {
-            user.Email = request.Email;
-            user.UserName = request.Email;
-            user.PhoneNumber = request.PhoneNumber;
-            user.FullName = request.FullName;
+if (user != null)
+{
+    if (!string.IsNullOrWhiteSpace(request.Email))
+    {
+        user.Email = request.Email.Trim();
+        user.UserName = request.Email.Trim();
+    }
 
-            var result = await _userManager.UpdateAsync(user);
+    user.PhoneNumber = request.PhoneNumber;
+    user.FullName = request.FullName;
 
-            if (!result.Succeeded)
-            {
-                throw new Exception(string.Join(", ",
-                    result.Errors.Select(x => x.Description)));
-            }
-        }
+    var result = await _userManager.UpdateAsync(user);
 
+    if (!result.Succeeded)
+    {
+        throw new Exception(
+            string.Join(", ",
+                result.Errors.Select(x => x.Description)));
+    }
+}
         await _context.SaveChangesAsync();
 
         return _mapper.Map<StudentResponse>(student);
     }
     public async Task<bool> DeleteAsync(Guid id)
+{
+    var student = await _context.Students.FindAsync(id);
+
+    if (student == null || student.IsDeleted)
+        return false;
+
+    student.IsDeleted = true;
+    student.Status = UserStatus.Inactive;
+
+    await _context.SaveChangesAsync();
+
+    return true;
+}
+
+public async Task<bool> SetStatusAsync(Guid id, bool isActive)
+{
+    await using var transaction =
+        await _context.Database.BeginTransactionAsync();
+
+    try
     {
-        var student = await _context.Students.FindAsync(id);
+        var student = await _context.Students
+            .FirstOrDefaultAsync(x => x.Id == id);
 
         if (student == null)
             return false;
 
-        // Delete Identity User first
-       var user = await GetStudentUserAsync(student);
+        // Always make the student visible again when using
+        // the Active / Inactive workflow.
+        student.IsDeleted = false;
+
+        student.Status = isActive
+            ? UserStatus.Active
+            : UserStatus.Inactive;
+
+        // Enable / disable student login.
+        var user = await GetStudentUserAsync(student);
 
         if (user != null)
         {
-            var result = await _userManager.DeleteAsync(user);
+            user.IsActive = isActive;
+        }
 
-            if (!result.Succeeded)
+        // Reactivating a student does NOT automatically
+        // reactivate enrollments or financial generation.
+        if (!isActive)
+        {
+            var today = DateTime.UtcNow.Date;
+
+            var activeEnrollments = await _context.Enrollments
+                .Include(x => x.FeePauses)
+                .Where(x =>
+                    x.StudentId == student.Id &&
+                    x.Status == EnrollmentStatus.Active)
+                .ToListAsync();
+
+            foreach (var enrollment in activeEnrollments)
             {
-                throw new Exception(string.Join(", ",
-                    result.Errors.Select(x => x.Description)));
+                // -------------------------------------------------
+                // 1. Suspend enrollment
+                // -------------------------------------------------
+
+                enrollment.Status = EnrollmentStatus.Suspended;
+
+                // -------------------------------------------------
+                // 2. Pause fee generation
+                // -------------------------------------------------
+
+                var feePauseStartDate =
+                    enrollment.StartDate.Date > today
+                        ? enrollment.StartDate.Date
+                        : today;
+
+                var hasOpenFeePause =
+                    enrollment.FeePauses.Any(x =>
+                        !x.ResumeDate.HasValue);
+
+                if (!hasOpenFeePause)
+                {
+                    await _feeInvoiceService.PauseEnrollmentAsync(
+                        enrollment.Id,
+                        feePauseStartDate,
+                        "Student deactivated.");
+                }
+
+                // -------------------------------------------------
+                // 3. Pause teacher salary generation
+                // -------------------------------------------------
+
+                var configurations =
+                    await _context.TeacherPaymentConfigurations
+                        .Include(x => x.Pauses)
+                        .Where(x =>
+                            x.EnrollmentId == enrollment.Id)
+                        .ToListAsync();
+
+                foreach (var configuration in configurations)
+                {
+                    var salaryPauseStartDate =
+                        configuration.EffectiveFrom.Date > today
+                            ? configuration.EffectiveFrom.Date
+                            : today;
+
+                    // Configuration already has an open pause.
+                    if (configuration.Pauses.Any(x =>
+                            !x.ResumeDate.HasValue))
+                    {
+                        continue;
+                    }
+
+                    // Configuration already ended before the
+                    // student was deactivated.
+                    if (configuration.EffectiveTo.HasValue &&
+                        configuration.EffectiveTo.Value.Date <=
+                        salaryPauseStartDate)
+                    {
+                        continue;
+                    }
+
+                    await _teacherPaymentService
+                        .PauseConfigurationAsync(
+                            configuration.Id,
+                            salaryPauseStartDate,
+                            "Student deactivated.");
+                }
             }
         }
 
-        // Delete 
-        _context.Students.Remove(student);
-
         await _context.SaveChangesAsync();
+
+        await transaction.CommitAsync();
 
         return true;
     }
+    catch
+    {
+        await transaction.RollbackAsync();
+        throw;
+    }
+}
     public async Task<bool> ResetPasswordAsync(Guid id, string newPassword)
     {
         var student = await _context.Students.FindAsync(id);

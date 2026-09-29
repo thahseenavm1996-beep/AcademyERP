@@ -1,0 +1,1021 @@
+@using AcademyERP.Admin.Models
+@using AcademyERP.Admin.Models.Courses
+@using AcademyERP.Admin.Models.TeacherStudentRequests
+@using AcademyERP.Admin.Services
+@using AcademyERP.Domain.Enums
+@using MudBlazor
+
+@inject TeacherStudentRequestApiService RequestApi
+@inject StudentApiService StudentApi
+@inject ISnackbar Snackbar
+
+<MudDialog>
+
+    <DialogContent>
+
+        @if (_loading)
+        {
+            <div class="d-flex justify-center pa-8">
+                <MudProgressCircular Indeterminate="true"
+                                     Color="Color.Primary"
+                                     Size="Size.Large" />
+            </div>
+        }
+        else if (Request != null)
+        {
+            <MudPaper Elevation="0"
+                      Class="pa-4">
+
+                <!-- HEADER -->
+                <MudPaper Elevation="0"
+                          Class="pa-4 mb-4"
+                          Style="background:linear-gradient(135deg,#e3f2fd,#f8fbff);
+                                 border-radius:14px;
+                                 border:1px solid #d6eaf8;">
+
+                    <div class="d-flex justify-space-between align-center">
+
+                        <div>
+                            <MudText Typo="Typo.h6"
+                                     Style="font-weight:700;color:#1565c0;">
+                                Student Request Details
+                            </MudText>
+
+                            <MudText Typo="Typo.body2"
+                                     Color="Color.Secondary"
+                                     Class="mt-1">
+                                Review the teacher's student admission request.
+                            </MudText>
+                        </div>
+
+                        <MudChip T="string" Color="@GetStatusColor(Request.Status)"
+                                 Variant="Variant.Filled"
+                                 Size="Size.Small">
+                            @Request.Status
+                        </MudChip>
+
+                    </div>
+                </MudPaper>
+
+                <!-- STUDENT / COURSE INFORMATION -->
+                <MudGrid Spacing="2">
+
+                    <MudItem xs="12" md="6">
+
+                        <MudPaper Elevation="0"
+                                  Class="pa-4 h-100"
+                                  Style="border:1px solid #e5e7eb;border-radius:12px;">
+
+                            <MudText Typo="Typo.subtitle1"
+                                     Style="font-weight:700;color:#1565c0;"
+                                     Class="mb-3">
+                                Student Information
+                            </MudText>
+
+                            <div class="mb-2">
+                                <strong>Name:</strong>
+                                @Request.StudentName
+                            </div>
+
+                            <div class="mb-2">
+                                <strong>Mobile:</strong>
+                                @Request.StudentPhoneNumber
+                            </div>
+
+                            <div class="mb-2">
+                                <strong>Admission Number:</strong>
+                                @(Request.StudentAdmissionNumber ?? "Not linked")
+                            </div>
+
+                            <div>
+                                <strong>Teacher:</strong>
+                                @Request.TeacherName
+                            </div>
+
+                        </MudPaper>
+
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+
+                        <MudPaper Elevation="0"
+                                  Class="pa-4 h-100"
+                                  Style="border:1px solid #e5e7eb;border-radius:12px;">
+
+                            <MudText Typo="Typo.subtitle1"
+                                     Style="font-weight:700;color:#1565c0;"
+                                     Class="mb-3">
+                                Course Information
+                            </MudText>
+
+                            <div class="mb-2">
+                                <strong>Course:</strong>
+                                @Request.CourseName
+                            </div>
+
+                            <div class="mb-2">
+                                <strong>Class Start:</strong>
+                                @Request.StartDate.ToLocalTime().ToString("dd MMM yyyy")
+                            </div>
+
+                            <div>
+                                <strong>Submitted:</strong>
+                                @Request.SubmittedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")
+                            </div>
+
+                        </MudPaper>
+
+                    </MudItem>
+
+                    <!-- SCHEDULE -->
+                    <MudItem xs="12">
+
+                        <MudPaper Elevation="0"
+                                  Class="pa-4"
+                                  Style="border:1px solid #e5e7eb;border-radius:12px;">
+
+                            <MudText Typo="Typo.subtitle1"
+                                     Style="font-weight:700;color:#1565c0;"
+                                     Class="mb-3">
+                                Class Schedule
+                            </MudText>
+
+                            <MudTable Items="@Request.Schedules"
+                                      Dense="true"
+                                      Hover="true"
+                                      Striped="true"
+                                      Bordered="true">
+
+                                <HeaderContent>
+                                    <MudTh>Day</MudTh>
+                                    <MudTh>Time Slot</MudTh>
+                                    <MudTh>Duration</MudTh>
+                                </HeaderContent>
+
+                                <RowTemplate>
+                                    <MudTd DataLabel="Day">
+                                        <MudChip T="string" Size="Size.Small"
+                                                 Variant="Variant.Outlined"
+                                                 Color="Color.Primary">
+                                            @context.DayOfWeek
+                                        </MudChip>
+                                    </MudTd>
+
+                                    <MudTd DataLabel="Time Slot">
+                                        @context.TimeSlotName
+                                    </MudTd>
+
+                                    <MudTd DataLabel="Duration">
+                                        @context.ClassDurationName
+                                    </MudTd>
+                                </RowTemplate>
+
+                            </MudTable>
+
+                        </MudPaper>
+
+                    </MudItem>
+
+                    @if (!string.IsNullOrWhiteSpace(Request.TeacherRemarks))
+                    {
+                        <MudItem xs="12">
+
+                            <MudAlert Severity="Severity.Info"
+                                      Variant="Variant.Outlined">
+                                <strong>Teacher Remarks:</strong>
+                                <div class="mt-1">
+                                    @Request.TeacherRemarks
+                                </div>
+                            </MudAlert>
+
+                        </MudItem>
+                    }
+
+                </MudGrid>
+
+                @if (Request.Status == TeacherStudentRequestStatus.Pending)
+                {
+                    <MudDivider Class="my-5" />
+
+                    <!-- STUDENT VERIFICATION -->
+                    <MudPaper Elevation="0"
+                              Class="pa-4"
+                              Style="border:1px solid #dbeafe;
+                                     border-radius:12px;
+                                     background:#f8fbff;">
+
+                        <MudText Typo="Typo.h6"
+                                 Style="font-weight:700;color:#1565c0;"
+                                 Class="mb-1">
+                            Student Verification
+                        </MudText>
+
+                        <MudText Typo="Typo.body2"
+                                 Color="Color.Secondary"
+                                 Class="mb-4">
+                            Search using the student's name and mobile number before creating a new student.
+                        </MudText>
+
+                        <MudGrid Spacing="2">
+
+                            <MudItem xs="12" md="6">
+
+                                <MudTextField @bind-Value="_studentSearchName"
+                                              Label="Student Name"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              FullWidth />
+
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+
+                                <MudTextField @bind-Value="_studentSearchPhone"
+                                              Label="Mobile Number"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              FullWidth />
+
+                            </MudItem>
+
+                            <MudItem xs="12">
+
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           Disabled="@_checkingStudent"
+                                           OnClick="FindStudentAsync">
+
+                                    @if (_checkingStudent)
+                                    {
+                                        <MudProgressCircular Size="Size.Small"
+                                                             Indeterminate="true"
+                                                             Class="mr-2" />
+
+                                        <span>Searching...</span>
+                                    }
+                                    else
+                                    {
+                                        <MudIcon Icon="@Icons.Material.Filled.Search"
+                                                 Class="mr-2" />
+
+                                        <span>Find Student</span>
+                                    }
+
+                                </MudButton>
+
+                            </MudItem>
+
+                        </MudGrid>
+
+                        <!-- EXISTING STUDENT -->
+                        @if (_foundStudent != null)
+                        {
+                            <MudAlert Severity="Severity.Success"
+                                      Variant="Variant.Outlined"
+                                      Class="mt-4">
+
+                                <div class="d-flex justify-space-between align-center flex-wrap">
+
+                                    <div>
+                                        <MudText Typo="Typo.subtitle1"
+                                                 Style="font-weight:700;">
+                                            Existing Student Found
+                                        </MudText>
+
+                                        <MudText Typo="Typo.body2">
+                                            @_foundStudent.FullName
+                                        </MudText>
+
+                                        <MudText Typo="Typo.body2">
+                                            Mobile: @_foundStudent.PhoneNumber
+                                        </MudText>
+
+                                        <MudText Typo="Typo.body2">
+                                            Admission No:
+                                            <strong>@_foundStudent.AdmissionNumber</strong>
+                                        </MudText>
+                                    </div>
+
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Success"
+                                               Disabled="@_linkingStudent"
+                                               OnClick="UseExistingStudentAsync"
+                                               Class="mt-2">
+
+                                        @if (_linkingStudent)
+                                        {
+                                            <MudProgressCircular Size="Size.Small"
+                                                                 Indeterminate="true"
+                                                                 Class="mr-2" />
+                                            <span>Linking...</span>
+                                        }
+                                        else
+                                        {
+                                            <MudIcon Icon="@Icons.Material.Filled.Link"
+                                                     Class="mr-2" />
+                                            <span>Use Existing Student</span>
+                                        }
+
+                                    </MudButton>
+
+                                </div>
+
+                            </MudAlert>
+                        }
+
+                        <!-- NO STUDENT -->
+                        @if (_studentChecked && _foundStudent == null)
+                        {
+                            <MudAlert Severity="Severity.Warning"
+                                      Variant="Variant.Outlined"
+                                      Class="mt-4">
+
+                                <MudText Typo="Typo.subtitle1"
+                                         Style="font-weight:700;">
+                                    New Student Required
+                                </MudText>
+
+                                <MudText Typo="Typo.body2" Class="mt-1">
+                                    No student was found with both the entered name and mobile number.
+                                </MudText>
+
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Warning"
+                                           Class="mt-3"
+                                           Type="Button"
+                                           OnClick="@(() => OpenNewStudentForm())">
+
+                                    <MudIcon Icon="@Icons.Material.Filled.PersonAdd"
+                                             Class="mr-2" />
+
+                                    Create New Student
+
+                                </MudButton>
+
+                            </MudAlert>
+                        }
+
+                        <!-- NEW STUDENT FORM -->
+                        @if (_showNewStudentForm)
+                        {
+                            <MudPaper Elevation="0"
+                                      Class="pa-4 mt-4"
+                                      Style="background:#fffaf0;
+                                             border:1px solid #f6d365;
+                                             border-radius:12px;">
+
+                                <MudText Typo="Typo.subtitle1"
+                                         Style="font-weight:700;color:#b45309;"
+                                         Class="mb-3">
+                                    Create New Student
+                                </MudText>
+
+                                <MudGrid Spacing="2">
+
+                                    <MudItem xs="12" md="6">
+                                        <MudTextField @bind-Value="_newStudentName"
+                                                      Label="Student Name"
+                                                      Variant="Variant.Outlined"
+                                                      Margin="Margin.Dense"
+                                                      FullWidth
+                                                      Required="true" />
+                                    </MudItem>
+
+                                    <MudItem xs="12" md="6">
+                                        <MudTextField @bind-Value="_newStudentPhone"
+                                                      Label="Mobile Number"
+                                                      Variant="Variant.Outlined"
+                                                      Margin="Margin.Dense"
+                                                      FullWidth
+                                                      Required="true" />
+                                    </MudItem>
+
+                                    <MudItem xs="12" md="6">
+                                        <MudDatePicker @bind-Date="_newStudentDob"
+                                                       Label="Date of Birth"
+                                                       Variant="Variant.Outlined"
+                                                       Margin="Margin.Dense"
+                                                       Editable="true"
+                                                       FullWidth />
+                                    </MudItem>
+
+                                    <MudItem xs="12" md="6">
+
+                                        <MudSelect T="int"
+                                                   @bind-Value="_newStudentGender"
+                                                   Label="Gender"
+                                                   Variant="Variant.Outlined"
+                                                   Margin="Margin.Dense"
+                                                   FullWidth>
+
+                                            <MudSelectItem Value="1">Male</MudSelectItem>
+                                            <MudSelectItem Value="2">Female</MudSelectItem>
+                                            <MudSelectItem Value="3">Other</MudSelectItem>
+
+                                        </MudSelect>
+
+                                    </MudItem>
+
+                                    <MudItem xs="12" md="6">
+                                        <MudTextField @bind-Value="_newStudentCountry"
+                                                      Label="Country"
+                                                      Variant="Variant.Outlined"
+                                                      Margin="Margin.Dense"
+                                                      FullWidth
+                                                      Required="true" />
+                                    </MudItem>
+
+                                    <MudItem xs="12" md="6">
+                                        <MudTextField @bind-Value="_newStudentEmail"
+                                                      Label="Email"
+                                                      Variant="Variant.Outlined"
+                                                      Margin="Margin.Dense"
+                                                      FullWidth />
+                                    </MudItem>
+
+                                    <MudItem xs="12" md="6">
+                                        <MudTextField @bind-Value="_newStudentTimeZone"
+                                                      Label="Time Zone"
+                                                      Variant="Variant.Outlined"
+                                                      Margin="Margin.Dense"
+                                                      FullWidth />
+                                    </MudItem>
+
+                                    <MudItem xs="12">
+                                        <MudTextField @bind-Value="_newStudentRemarks"
+                                                      Label="Student Remarks"
+                                                      Variant="Variant.Outlined"
+                                                      Margin="Margin.Dense"
+                                                      Lines="2"
+                                                      FullWidth />
+                                    </MudItem>
+
+                                    <MudItem xs="12">
+
+                                        <MudButton Variant="Variant.Filled"
+                                                   Color="Color.Warning"
+                                                   Disabled="@_creatingStudent"
+                                                   OnClick="CreateNewStudentAsync">
+
+                                            @if (_creatingStudent)
+                                            {
+                                                <MudProgressCircular Size="Size.Small"
+                                                                     Indeterminate="true"
+                                                                     Class="mr-2" />
+                                                <span>Creating Student...</span>
+                                            }
+                                            else
+                                            {
+                                                <MudIcon Icon="@Icons.Material.Filled.PersonAdd"
+                                                         Class="mr-2" />
+                                                <span>Create & Link Student</span>
+                                            }
+
+                                        </MudButton>
+
+                                    </MudItem>
+
+                                </MudGrid>
+
+                            </MudPaper>
+                        }
+
+                        <!-- LINKED -->
+                        @if (Request.StudentId != null)
+                        {
+                            <MudAlert Severity="Severity.Success"
+                                      Variant="Variant.Filled"
+                                      Class="mt-4">
+
+                                <div class="d-flex align-center">
+                                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
+                                             Class="mr-2" />
+
+                                    <strong>
+                                        Student linked successfully.
+                                    </strong>
+                                </div>
+
+                            </MudAlert>
+                        }
+
+                    </MudPaper>
+
+                    <MudDivider Class="my-5" />
+
+                    <!-- APPROVAL DETAILS -->
+                    <MudPaper Elevation="0"
+                              Class="pa-4"
+                              Style="border:1px solid #e5e7eb;border-radius:12px;">
+
+                        <MudText Typo="Typo.h6"
+                                 Style="font-weight:700;color:#1565c0;"
+                                 Class="mb-4">
+                            Approval Details
+                        </MudText>
+
+                        <MudGrid Spacing="2">
+
+                            <MudItem xs="12" md="6">
+
+                                <MudTextField T="decimal"
+                                              @bind-Value="_studentFee"
+                                              Label="Student Monthly Fee"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              InputType="InputType.Number"
+                                              Adornment="Adornment.Start"
+                                              AdornmentText="₹"
+                                              FullWidth />
+
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+
+                                <MudTextField T="decimal"
+                                              @bind-Value="_teacherSalary"
+                                              Label="Teacher Salary"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              InputType="InputType.Number"
+                                              Adornment="Adornment.Start"
+                                              AdornmentText="₹"
+                                              FullWidth />
+
+                            </MudItem>
+
+                            <MudItem xs="12">
+
+                                <MudTextField @bind-Value="_adminRemarks"
+                                              Label="Admin Remarks"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Lines="3"
+                                              FullWidth />
+
+                            </MudItem>
+
+                        </MudGrid>
+
+                    </MudPaper>
+
+                }
+
+            </MudPaper>
+        }
+
+    </DialogContent>
+
+    <DialogActions>
+
+        <MudButton Variant="Variant.Text"
+                   OnClick="Close"
+                   Disabled="@_processing">
+            Close
+        </MudButton>
+
+        @if (Request?.Status == TeacherStudentRequestStatus.Pending)
+        {
+            <MudButton Color="Color.Error"
+                       Variant="Variant.Outlined"
+                       Disabled="@_processing"
+                       OnClick="RejectAsync">
+                Reject
+            </MudButton>
+
+            <MudButton Color="Color.Success"
+                       Variant="Variant.Filled"
+                       Disabled="@_processing"
+                       OnClick="ApproveAsync">
+
+                @if (_processing)
+                {
+                    <MudProgressCircular Size="Size.Small"
+                                         Indeterminate="true"
+                                         Class="mr-2" />
+                }
+
+                Approve
+
+            </MudButton>
+        }
+
+    </DialogActions>
+
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public Guid RequestId { get; set; }
+
+    private TeacherStudentRequestDto? Request;
+
+    private bool _loading = true;
+    private bool _processing;
+
+    private bool _checkingStudent;
+    private bool _studentChecked;
+    private bool _linkingStudent;
+    private bool _showNewStudentForm;
+    private bool _creatingStudent;
+
+    private string _studentSearchName = string.Empty;
+    private string _studentSearchPhone = string.Empty;
+
+    private FindStudentResponseDto? _foundStudent;
+
+    private string _newStudentName = string.Empty;
+    private string _newStudentPhone = string.Empty;
+    private DateTime? _newStudentDob = DateTime.Today;
+    private int _newStudentGender;
+    private string _newStudentCountry = string.Empty;
+    private string? _newStudentEmail;
+    private string _newStudentTimeZone = string.Empty;
+    private string? _newStudentRemarks;
+
+    private decimal _studentFee;
+    private decimal _teacherSalary;
+    private string? _adminRemarks;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRequestAsync();
+    }
+
+    private async Task LoadRequestAsync()
+    {
+        try
+        {
+            _loading = true;
+
+            Request = await RequestApi.GetByIdAsync(RequestId);
+
+            if (Request != null)
+            {
+                _studentSearchName = Request.StudentName;
+                _studentSearchPhone = Request.StudentPhoneNumber;
+
+                _newStudentName = Request.StudentName;
+                _newStudentPhone = Request.StudentPhoneNumber;
+
+                _studentFee = Request.StudentFee ?? 0;
+                _teacherSalary = Request.TeacherSalary ?? 0;
+                _adminRemarks = Request.AdminRemarks;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to load request: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task FindStudentAsync()
+    {
+        if (Request == null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(_studentSearchName) ||
+            string.IsNullOrWhiteSpace(_studentSearchPhone))
+        {
+            Snackbar.Add(
+                "Enter both student name and mobile number.",
+                Severity.Warning);
+
+            return;
+        }
+
+        try
+        {
+            _checkingStudent = true;
+            _studentChecked = false;
+            _foundStudent = null;
+            _showNewStudentForm = false;
+
+            _foundStudent =
+                await RequestApi.FindStudentAsync(
+                    _studentSearchName.Trim(),
+                    _studentSearchPhone.Trim());
+
+            _studentChecked = true;
+
+            if (_foundStudent == null)
+            {
+                Snackbar.Add(
+                    "No existing student found.",
+                    Severity.Info);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Student search failed: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _checkingStudent = false;
+        }
+    }
+
+    private void OpenNewStudentForm()
+    {
+        if (Request == null)
+            return;
+
+        _newStudentName = _studentSearchName.Trim();
+        _newStudentPhone = _studentSearchPhone.Trim();
+
+        _showNewStudentForm = true;
+    }
+
+    private async Task UseExistingStudentAsync()
+    {
+        if (Request == null || _foundStudent == null)
+            return;
+
+        try
+        {
+            _linkingStudent = true;
+
+            var result =
+                await RequestApi.LinkStudentAsync(
+                    Request.Id,
+                    _foundStudent.Id);
+
+            if (result != null)
+            {
+                Request = result;
+
+                Snackbar.Add(
+                    $"Existing student linked: {_foundStudent.FullName}",
+                    Severity.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to link student: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _linkingStudent = false;
+        }
+    }
+
+    private async Task CreateNewStudentAsync()
+    {
+        if (Request == null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(_newStudentName))
+        {
+            Snackbar.Add(
+                "Student name is required.",
+                Severity.Warning);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_newStudentPhone))
+        {
+            Snackbar.Add(
+                "Mobile number is required.",
+                Severity.Warning);
+            return;
+        }
+
+        if (_newStudentDob == null)
+        {
+            Snackbar.Add(
+                "Date of birth is required.",
+                Severity.Warning);
+            return;
+        }
+
+        if (_newStudentGender <= 0)
+        {
+            Snackbar.Add(
+                "Please select gender.",
+                Severity.Warning);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_newStudentCountry))
+        {
+            Snackbar.Add(
+                "Country is required.",
+                Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            _creatingStudent = true;
+
+            var createRequest = new CreateStudentRequest
+            {
+                FullName = _newStudentName.Trim(),
+                MobileNumber = _newStudentPhone.Trim(),
+                AdmissionDate = Request.StartDate.Date,
+                DateOfBirth = _newStudentDob,
+                Gender = _newStudentGender,
+                Email = string.IsNullOrWhiteSpace(_newStudentEmail)
+                    ? null
+                    : _newStudentEmail.Trim(),
+                Country = _newStudentCountry.Trim(),
+                TimeZone = _newStudentTimeZone?.Trim() ?? string.Empty,
+                Password = null,
+                Remarks = string.IsNullOrWhiteSpace(_newStudentRemarks)
+                    ? null
+                    : _newStudentRemarks.Trim()
+            };
+
+            var result =
+                await StudentApi.CreateStudentAsync(createRequest);
+
+            if (!result.Success || result.Data == null)
+            {
+                var message =
+                    result.Errors != null && result.Errors.Any()
+                        ? string.Join(" ", result.Errors)
+                        : "Unable to create student.";
+
+                Snackbar.Add(
+                    message,
+                    Severity.Error);
+
+                return;
+            }
+
+            var createdStudent = result.Data;
+
+            var linkedRequest =
+                await RequestApi.LinkStudentAsync(
+                    Request.Id,
+                    createdStudent.Id);
+
+            if (linkedRequest == null)
+            {
+                Snackbar.Add(
+                    "Student was created, but linking the student request failed.",
+                    Severity.Error);
+
+                return;
+            }
+
+            Request = linkedRequest;
+
+            _foundStudent = new FindStudentResponseDto
+            {
+                Id = createdStudent.Id,
+                AdmissionNumber = createdStudent.AdmissionNumber,
+                FullName = createdStudent.FullName,
+                PhoneNumber = createdStudent.PhoneNumber
+            };
+
+            _studentChecked = true;
+            _showNewStudentForm = false;
+
+            Snackbar.Add(
+                $"New student created and linked successfully. Admission No: {createdStudent.AdmissionNumber}",
+                Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to create student: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _creatingStudent = false;
+        }
+    }
+
+    private async Task ApproveAsync()
+    {
+        if (Request == null)
+            return;
+
+        if (Request.StudentId == null)
+        {
+            Snackbar.Add(
+                "Please find and link an existing student or create a new student before approval.",
+                Severity.Warning);
+
+            return;
+        }
+
+        if (_studentFee <= 0)
+        {
+            Snackbar.Add(
+                "Enter a valid student monthly fee.",
+                Severity.Warning);
+
+            return;
+        }
+
+        if (_teacherSalary <= 0)
+        {
+            Snackbar.Add(
+                "Enter a valid teacher salary.",
+                Severity.Warning);
+
+            return;
+        }
+
+        try
+        {
+            _processing = true;
+
+            await RequestApi.ReviewAsync(
+                Request.Id,
+                new ReviewTeacherStudentRequestDto
+                {
+                    Approve = true,
+                    StudentFee = _studentFee,
+                    TeacherSalary = _teacherSalary,
+                    AdminRemarks = _adminRemarks
+                });
+
+            Snackbar.Add(
+                "Student request approved successfully.",
+                Severity.Success);
+
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Approval failed: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _processing = false;
+        }
+    }
+
+    private async Task RejectAsync()
+    {
+        if (Request == null)
+            return;
+
+        try
+        {
+            _processing = true;
+
+            await RequestApi.ReviewAsync(
+                Request.Id,
+                new ReviewTeacherStudentRequestDto
+                {
+                    Approve = false,
+                    StudentFee = 0,
+                    TeacherSalary = 0,
+                    AdminRemarks = _adminRemarks
+                });
+
+            Snackbar.Add(
+                "Student request rejected.",
+                Severity.Success);
+
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Rejection failed: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _processing = false;
+        }
+    }
+
+    private void Close()
+    {
+        MudDialog.Cancel();
+    }
+
+    private Color GetStatusColor(
+        TeacherStudentRequestStatus status)
+    {
+        return status switch
+        {
+            TeacherStudentRequestStatus.Approved => Color.Success,
+            TeacherStudentRequestStatus.Rejected => Color.Error,
+            _ => Color.Warning
+        };
+    }
+}

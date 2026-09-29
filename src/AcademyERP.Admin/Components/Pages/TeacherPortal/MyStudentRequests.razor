@@ -1,0 +1,427 @@
+@page "/teacher/students/requests"
+
+@layout TeacherLayout
+
+@using AcademyERP.Admin.Models.TeacherStudentRequests
+@using AcademyERP.Admin.Services
+@using AcademyERP.Domain.Enums
+@using MudBlazor
+
+@inject TeacherStudentRequestApiService RequestApi
+@inject ISnackbar Snackbar
+
+<PageTitle>My Student Requests</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="pa-4">
+
+    <div class="d-flex justify-space-between align-center mb-4">
+
+        <div>
+            <MudText Typo="Typo.h4">
+                My Student Requests
+            </MudText>
+
+            <MudText Typo="Typo.body2"
+                     Color="Color.Secondary">
+                View all students you have submitted to Admin for approval.
+            </MudText>
+        </div>
+
+        <MudButton Variant="Variant.Outlined"
+                   StartIcon="@Icons.Material.Filled.Refresh"
+                   OnClick="LoadRequestsAsync"
+                   Disabled="_loading">
+            Refresh
+        </MudButton>
+
+    </div>
+
+    @if (_loading)
+    {
+        <MudPaper Class="pa-6 d-flex justify-center">
+            <MudProgressCircular Indeterminate="true"
+                                 Color="Color.Primary" />
+        </MudPaper>
+    }
+    else if (!_requests.Any())
+    {
+        <MudAlert Severity="Severity.Info">
+            No student requests have been submitted yet.
+        </MudAlert>
+    }
+    else
+    {
+        <MudPaper Elevation="1">
+
+            <MudTable Items="_requests"
+                      Hover="true"
+                      Striped="true"
+                      Bordered="true"
+                      Dense="true">
+
+                <HeaderContent>
+
+                    <MudTh>
+                        Student
+                    </MudTh>
+
+                    <MudTh>
+                        Mobile
+                    </MudTh>
+
+                    <MudTh>
+                        Course
+                    </MudTh>
+
+                    <MudTh>
+                        Joining Date
+                    </MudTh>
+
+                    <MudTh>
+                        Submitted
+                    </MudTh>
+
+                    <MudTh>
+                        Fee
+                    </MudTh>
+
+                    <MudTh>
+                        Status
+                    </MudTh>
+
+                    <MudTh Style="width:80px">
+                        Action
+                    </MudTh>
+
+                </HeaderContent>
+
+                <RowTemplate>
+
+                    <MudTd DataLabel="Student">
+                        <MudText Typo="Typo.body2">
+                            @context.StudentName
+                        </MudText>
+
+                        @if (!string.IsNullOrWhiteSpace(context.StudentAdmissionNumber))
+                        {
+                            <MudText Typo="Typo.caption"
+                                     Color="Color.Secondary">
+                                @context.StudentAdmissionNumber
+                            </MudText>
+                        }
+                    </MudTd>
+
+                    <MudTd DataLabel="Mobile">
+                        @context.StudentPhoneNumber
+                    </MudTd>
+
+                    <MudTd DataLabel="Course">
+                        @context.CourseName
+                    </MudTd>
+
+                    <MudTd DataLabel="Joining Date">
+                        @context.StartDate.ToString("dd MMM yyyy")
+                    </MudTd>
+
+                    <MudTd DataLabel="Submitted">
+                        @context.SubmittedAt.ToLocalTime().ToString("dd MMM yyyy")
+                    </MudTd>
+
+                    <MudTd DataLabel="Fee">
+                        @(context.StudentFee.HasValue
+                            ? $"₹{context.StudentFee.Value:N2}"
+                            : "—")
+                    </MudTd>
+
+                    <MudTd DataLabel="Status">
+                        <MudChip T="string"
+                                 Size="Size.Small"
+                                 Color="@GetStatusColor(context.Status)">
+                            @GetStatusText(context.Status)
+                        </MudChip>
+                    </MudTd>
+
+                    <MudTd DataLabel="Action">
+
+                        <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                       Color="Color.Primary"
+                                       Size="Size.Small"
+                                       Title="View request"
+                                       OnClick="@(() => ViewRequest(context))" />
+
+                    </MudTd>
+
+                </RowTemplate>
+
+            </MudTable>
+
+        </MudPaper>
+    }
+
+    @if (_selectedRequest != null)
+    {
+        <MudPaper Elevation="2"
+                  Class="mt-5 pa-5">
+
+            <div class="d-flex justify-space-between align-center mb-4">
+
+                <MudText Typo="Typo.h5">
+                    Request Details
+                </MudText>
+
+                <MudIconButton Icon="@Icons.Material.Filled.Close"
+                               Color="Color.Default"
+                               OnClick="@(() => _selectedRequest = null)" />
+
+            </div>
+
+            <MudGrid>
+
+                <MudItem xs="12" sm="6" md="4">
+                    <MudText Typo="Typo.caption"
+                             Color="Color.Secondary">
+                        Student
+                    </MudText>
+
+                    <MudText Typo="Typo.body1">
+                        @_selectedRequest.StudentName
+                    </MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6" md="4">
+                    <MudText Typo="Typo.caption"
+                             Color="Color.Secondary">
+                        Mobile Number
+                    </MudText>
+
+                    <MudText Typo="Typo.body1">
+                        @_selectedRequest.StudentPhoneNumber
+                    </MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6" md="4">
+                    <MudText Typo="Typo.caption"
+                             Color="Color.Secondary">
+                        Admission Number
+                    </MudText>
+
+                    <MudText Typo="Typo.body1">
+                        @(_selectedRequest.StudentAdmissionNumber ?? "Not assigned")
+                    </MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6" md="4">
+                    <MudText Typo="Typo.caption"
+                             Color="Color.Secondary">
+                        Course
+                    </MudText>
+
+                    <MudText Typo="Typo.body1">
+                        @_selectedRequest.CourseName
+                    </MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6" md="4">
+                    <MudText Typo="Typo.caption"
+                             Color="Color.Secondary">
+                        Joining Date
+                    </MudText>
+
+                    <MudText Typo="Typo.body1">
+                        @_selectedRequest.StartDate.ToString("dd MMM yyyy")
+                    </MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6" md="4">
+                    <MudText Typo="Typo.caption"
+                             Color="Color.Secondary">
+                        Status
+                    </MudText>
+
+                    <MudChip T="string"
+                             Size="Size.Small"
+                             Color="@GetStatusColor(_selectedRequest.Status)">
+                        @GetStatusText(_selectedRequest.Status)
+                    </MudChip>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.caption"
+                             Color="Color.Secondary">
+                        Student Fee
+                    </MudText>
+
+                    <MudText Typo="Typo.body1">
+                        @(_selectedRequest.StudentFee.HasValue
+                            ? $"₹{_selectedRequest.StudentFee.Value:N2}"
+                            : "Not set")
+                    </MudText>
+                </MudItem>
+
+                @if (_selectedRequest.Status == TeacherStudentRequestStatus.Approved)
+                {
+                    <MudItem xs="12" sm="6">
+                        <MudText Typo="Typo.caption"
+                                 Color="Color.Secondary">
+                            Enrollment
+                        </MudText>
+
+                        <MudText Typo="Typo.body1">
+                            @(_selectedRequest.EnrollmentId?.ToString()
+                                ?? "Created")
+                        </MudText>
+                    </MudItem>
+                }
+
+                <MudItem xs="12">
+
+                    <MudDivider Class="my-4" />
+
+                    <MudText Typo="Typo.h6"
+                             Class="mb-3">
+                        Class Schedule
+                    </MudText>
+
+                    @if (_selectedRequest.Schedules.Any())
+                    {
+                        <MudTable Items="_selectedRequest.Schedules"
+                                  Dense="true"
+                                  Bordered="true"
+                                  Striped="true">
+
+                            <HeaderContent>
+                                <MudTh>Day</MudTh>
+                                <MudTh>Time</MudTh>
+                                <MudTh>Duration</MudTh>
+                            </HeaderContent>
+
+                            <RowTemplate>
+
+                                <MudTd DataLabel="Day">
+                                    @context.DayOfWeek
+                                </MudTd>
+
+                                <MudTd DataLabel="Time">
+                                    @context.TimeSlotName
+                                </MudTd>
+
+                                <MudTd DataLabel="Duration">
+                                    @context.ClassDurationName
+                                </MudTd>
+
+                            </RowTemplate>
+
+                        </MudTable>
+                    }
+                    else
+                    {
+                        <MudText Color="Color.Secondary">
+                            No schedule information available.
+                        </MudText>
+                    }
+
+                </MudItem>
+
+                @if (!string.IsNullOrWhiteSpace(_selectedRequest.TeacherRemarks))
+                {
+                    <MudItem xs="12">
+
+                        <MudText Typo="Typo.h6"
+                                 Class="mb-2">
+                            Your Remarks
+                        </MudText>
+
+                        <MudAlert Severity="Severity.Info"
+                                  Variant="Variant.Outlined">
+                            @_selectedRequest.TeacherRemarks
+                        </MudAlert>
+
+                    </MudItem>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(_selectedRequest.AdminRemarks))
+                {
+                    <MudItem xs="12">
+
+                        <MudText Typo="Typo.h6"
+                                 Class="mb-2">
+                            Admin Remarks
+                        </MudText>
+
+                        <MudAlert Severity="Severity.Warning"
+                                  Variant="Variant.Outlined">
+                            @_selectedRequest.AdminRemarks
+                        </MudAlert>
+
+                    </MudItem>
+                }
+
+            </MudGrid>
+
+        </MudPaper>
+    }
+
+</MudContainer>
+
+@code {
+
+    private List<TeacherStudentRequestDto> _requests = new();
+    private TeacherStudentRequestDto? _selectedRequest;
+    private bool _loading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRequestsAsync();
+    }
+
+    private async Task LoadRequestsAsync()
+    {
+        try
+        {
+            _loading = true;
+
+            _requests =
+                await RequestApi.GetMyRequestsAsync()
+                ?? new List<TeacherStudentRequestDto>();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Unable to load student requests: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void ViewRequest(TeacherStudentRequestDto request)
+    {
+        _selectedRequest = request;
+    }
+
+    private static string GetStatusText(
+        TeacherStudentRequestStatus status)
+    {
+        return status switch
+        {
+            TeacherStudentRequestStatus.Pending => "Pending",
+            TeacherStudentRequestStatus.Approved => "Approved",
+            TeacherStudentRequestStatus.Rejected => "Rejected",
+            _ => "Unknown"
+        };
+    }
+
+    private static Color GetStatusColor(
+        TeacherStudentRequestStatus status)
+    {
+        return status switch
+        {
+            TeacherStudentRequestStatus.Pending => Color.Warning,
+            TeacherStudentRequestStatus.Approved => Color.Success,
+            TeacherStudentRequestStatus.Rejected => Color.Error,
+            _ => Color.Default
+        };
+    }
+}

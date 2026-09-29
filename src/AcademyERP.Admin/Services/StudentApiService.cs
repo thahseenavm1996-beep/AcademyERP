@@ -208,4 +208,13 @@ public class StudentApiService
     return await _httpClient.GetFromJsonAsync<StudentProfileSummaryResponse>(
     $"api/students/{id}/profile-summary");
 }
+
+public async Task<bool> SetStatusAsync(Guid id, bool isActive)
+{
+    var response = await _httpClient.PatchAsync(
+        $"api/Students/{id}/status?isActive={isActive}",
+        null);
+
+    return response.IsSuccessStatusCode;
+}
 }

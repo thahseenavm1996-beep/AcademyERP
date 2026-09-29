@@ -9,15 +9,14 @@ public class UpdateStudentRequest
 
     public DateTime AdmissionDate { get; set; }
 
-    public DateTime DateOfBirth { get; set; }
+    public DateTime? DateOfBirth { get; set; }
 
     public Gender Gender { get; set; }
     [Required]
     public string PhoneNumber { get; set; } = string.Empty;
 
-    [Required]
     [EmailAddress]
-    public string Email { get; set; } = string.Empty;
+public string? Email { get; set; }
 
     public string Country { get; set; } = string.Empty;
 

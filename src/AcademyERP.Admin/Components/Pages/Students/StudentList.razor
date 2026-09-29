@@ -196,14 +196,16 @@
 
             
 
-            <MudTooltip Text="Delete Student">
+         <MudTooltip Text="@(context.Status == "Active"
+    ? "Deactivate Student"
+    : "Activate Student")">
 
-                <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                               Color="Color.Error"
-                               Size="Size.Small"
-                               OnClick="@(() => DeleteStudent(context))" />
-
-            </MudTooltip>
+    <MudSwitch T="bool"
+               Value="@(context.Status == "Active")"
+               ValueChanged="@(value => ConfirmStudentStatusChange(context, value))"
+               Color="Color.Success"
+               Size="Size.Small" />
+</MudTooltip>
 
         </MudTd>
 
@@ -454,26 +456,32 @@
         }
     }
 
-    private async Task DeleteStudent(StudentResponse student)
+    private async Task SetStudentStatus(
+    StudentResponse student,
+    bool isActive)
+{
+    var success =
+        await StudentApi.SetStatusAsync(
+            student.Id,
+            isActive);
+
+    if (success)
     {
-        var success =
-            await StudentApi.DeleteStudentAsync(student.Id);
+        Snackbar.Add(
+            isActive
+                ? "Student activated successfully."
+                : "Student deactivated. Enrollment, fee generation and salary generation have been paused.",
+            Severity.Success);
 
-        if (success)
-        {
-            Snackbar.Add(
-                "Student deleted successfully.",
-                Severity.Success);
-
-            await LoadStudentsAsync();
-        }
-        else
-        {
-            Snackbar.Add(
-                "Failed to delete student.",
-                Severity.Error);
-        }
+        await LoadStudentsAsync();
     }
+    else
+    {
+        Snackbar.Add(
+            "Failed to update student status.",
+            Severity.Error);
+    }
+}
 
     private async Task OpenResetPasswordDialog(Guid studentId)
     {
@@ -507,5 +515,33 @@
         "Other" => "Other",
         _ => gender
     };
+}
+
+private async Task ConfirmStudentStatusChange(
+    StudentResponse student,
+    bool isActive)
+{
+    var message = isActive
+        ? $"Are you sure you want to activate {student.FullName}? " +
+          "The student login will be enabled, but any suspended enrollment " +
+          "and its fee/salary pauses will remain suspended."
+        : $"Are you sure you want to deactivate {student.FullName}? " +
+          "This will disable the student login, suspend active enrollments, " +
+          "pause fee generation, and pause teacher salary generation.";
+
+    var result = await DialogService.ShowMessageBoxAsync(
+        isActive ? "Activate Student" : "Deactivate Student",
+        message,
+        yesText: isActive ? "Activate" : "Deactivate",
+        cancelText: "Cancel");
+
+    if (result != true)
+    {
+        // Restore the switch to its original state.
+        await LoadStudentsAsync();
+        return;
+    }
+
+    await SetStudentStatus(student, isActive);
 }
 }
