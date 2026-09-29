@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -10,29 +10,61 @@ namespace AcademyERP.Persistence.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropIndex(
-                name: "IX_FeeInvoices_EnrollmentId",
-                table: "FeeInvoices");
+            migrationBuilder.Sql("""
+                IF EXISTS (
+                    SELECT 1
+                    FROM sys.indexes
+                    WHERE name = 'IX_FeeInvoices_EnrollmentId'
+                      AND object_id = OBJECT_ID('dbo.FeeInvoices')
+                )
+                BEGIN
+                    DROP INDEX [IX_FeeInvoices_EnrollmentId] ON [dbo].[FeeInvoices];
+                END
+                """);
 
-            migrationBuilder.CreateIndex(
-                name: "IX_FeeInvoices_EnrollmentId_InvoiceDate",
-                table: "FeeInvoices",
-                columns: new[] { "EnrollmentId", "InvoiceDate" },
-                unique: true,
-                filter: "[IsDeleted] = 0");
+            migrationBuilder.Sql("""
+                IF NOT EXISTS (
+                    SELECT 1
+                    FROM sys.indexes
+                    WHERE name = 'IX_FeeInvoices_EnrollmentId_InvoiceDate'
+                      AND object_id = OBJECT_ID('dbo.FeeInvoices')
+                )
+                BEGIN
+                    CREATE UNIQUE INDEX [IX_FeeInvoices_EnrollmentId_InvoiceDate]
+                    ON [dbo].[FeeInvoices] ([EnrollmentId], [InvoiceDate])
+                    WHERE [IsDeleted] = 0;
+                END
+                """);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropIndex(
-                name: "IX_FeeInvoices_EnrollmentId_InvoiceDate",
-                table: "FeeInvoices");
+            migrationBuilder.Sql("""
+                IF EXISTS (
+                    SELECT 1
+                    FROM sys.indexes
+                    WHERE name = 'IX_FeeInvoices_EnrollmentId_InvoiceDate'
+                      AND object_id = OBJECT_ID('dbo.FeeInvoices')
+                )
+                BEGIN
+                    DROP INDEX [IX_FeeInvoices_EnrollmentId_InvoiceDate]
+                    ON [dbo].[FeeInvoices];
+                END
+                """);
 
-            migrationBuilder.CreateIndex(
-                name: "IX_FeeInvoices_EnrollmentId",
-                table: "FeeInvoices",
-                column: "EnrollmentId");
+            migrationBuilder.Sql("""
+                IF NOT EXISTS (
+                    SELECT 1
+                    FROM sys.indexes
+                    WHERE name = 'IX_FeeInvoices_EnrollmentId'
+                      AND object_id = OBJECT_ID('dbo.FeeInvoices')
+                )
+                BEGIN
+                    CREATE INDEX [IX_FeeInvoices_EnrollmentId]
+                    ON [dbo].[FeeInvoices] ([EnrollmentId]);
+                END
+                """);
         }
     }
 }
