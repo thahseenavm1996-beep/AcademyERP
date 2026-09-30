@@ -425,7 +425,7 @@ public async Task<Guid> StartTeacherConversationAsync(
 var conversation = await _context.Conversations
     .Where(c =>
         !c.IsClosed &&
-        c.StudentId == studentId.Value &&
+       c.StudentId == studentId &&
         c.Messages.Any(m =>
             (m.SenderUserId == teacherUserId &&
              m.ReceiverUserId == receiverUserId)
@@ -440,7 +440,7 @@ if (conversation == null)
 {
     conversation = new Conversation
     {
-        StudentId = studentId.Value,
+       StudentId = studentId,
         LastMessageAt = DateTime.UtcNow,
         IsClosed = false
     };
@@ -560,44 +560,33 @@ public async Task<Guid> StartConversationAsync(
         }
     }
 
-    // Find an existing open conversation.
-    //
-    // When StudentId is supplied, the student must
-    // also match. This prevents two children of the
-    // same parent/teacher from sharing one conversation.
-    var conversation =
-        await _context.Conversations
-            .Where(c =>
-                !c.IsClosed &&
+    // Find an existing conversation.
+// For teacher -> administrator messages, studentId can be null.
+var conversation = await _context.Conversations
+    .Where(c =>
+        !c.IsClosed &&
+        c.StudentId == studentId &&
+        c.Messages.Any(m =>
+            (m.SenderUserId == senderUserId &&
+             m.ReceiverUserId == receiverUserId)
+            ||
+            (m.SenderUserId == receiverUserId &&
+             m.ReceiverUserId == senderUserId)))
+    .OrderByDescending(c => c.LastMessageAt)
+    .FirstOrDefaultAsync();
 
-                c.StudentId == studentId &&
-
-                c.Messages.Any(m =>
-                    (m.SenderUserId == senderUserId &&
-                     m.ReceiverUserId == receiverUserId)
-                    ||
-                    (m.SenderUserId == receiverUserId &&
-                     m.ReceiverUserId == senderUserId)
-                ))
-            .OrderByDescending(c =>
-                c.LastMessageAt)
-            .FirstOrDefaultAsync();
-
-    // If no conversation exists, create one.
-    if (conversation == null)
+// Create a new conversation if one does not exist.
+if (conversation == null)
+{
+    conversation = new Conversation
     {
-        conversation = new Conversation
-        {
-            StudentId = studentId,
+        StudentId = studentId,
+        LastMessageAt = DateTime.UtcNow,
+        IsClosed = false
+    };
 
-            LastMessageAt =
-                DateTime.UtcNow,
-
-            IsClosed = false
-        };
-
-        _context.Conversations.Add(conversation);
-    }
+    _context.Conversations.Add(conversation);
+}
 
     // Add message.
     var message = new Message

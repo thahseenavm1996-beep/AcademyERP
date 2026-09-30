@@ -217,17 +217,73 @@ ClassDurationName = x.EnrollmentSchedules
             "Teacher payment amount cannot be negative.");
     }
 
-    await ValidateEnrollmentSchedulesAsync(
-        request.TeacherId.Value,
-        request.Schedules,
-        request.StartDate,
-        request.EndDate);
-
     await using var transaction =
-        await _context.Database.BeginTransactionAsync();
+    await _context.Database.BeginTransactionAsync();
 
-    try
+try
+{
+    if (request.AutoCreateTeacherAvailability)
     {
+        var requestedSchedules = request.Schedules.ToList();
+
+        var requestedTimeSlotIds = requestedSchedules
+            .Select(x => x.TimeSlotId)
+            .Distinct()
+            .ToList();
+
+        var activeTimeSlotIds = await _context.TimeSlots
+            .Where(x =>
+                requestedTimeSlotIds.Contains(x.Id) &&
+                x.IsActive)
+            .Select(x => x.Id)
+            .ToListAsync();
+
+        if (activeTimeSlotIds.Count != requestedTimeSlotIds.Count)
+        {
+            throw new InvalidOperationException(
+                "One or more selected time slots are inactive or invalid.");
+        }
+
+        var existingAvailability =
+            await _context.TeacherAvailabilities
+                .Where(x =>
+                    x.TeacherId == request.TeacherId.Value &&
+                    !x.IsDeleted &&
+                    x.IsAvailable)
+                .ToListAsync();
+
+        foreach (var schedule in requestedSchedules)
+        {
+            var alreadyAvailable =
+                existingAvailability.Any(x =>
+                    x.DayOfWeek == schedule.DayOfWeek &&
+                    x.TimeSlotId == schedule.TimeSlotId &&
+                    x.IsAvailable);
+
+            if (alreadyAvailable)
+                continue;
+
+            var availability = new TeacherAvailability
+            {
+                TeacherId = request.TeacherId.Value,
+                DayOfWeek = schedule.DayOfWeek,
+                TimeSlotId = schedule.TimeSlotId,
+                IsAvailable = true
+            };
+
+            _context.TeacherAvailabilities.Add(availability);
+            existingAvailability.Add(availability);
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    var resolvedStartTimes =
+        await ValidateEnrollmentSchedulesAsync(
+            request.TeacherId.Value,
+            request.Schedules,
+            request.StartDate,
+            request.EndDate);
         // ==========================================
         // CALCULATE FINAL STUDENT FEE
         // ==========================================
@@ -347,7 +403,12 @@ ClassDurationName = x.EnrollmentSchedules
                         schedule.DayOfWeek,
 
                     StartTime =
-                        schedule.TimeSlot.StartTime,
+                        resolvedStartTimes[
+                            (
+                                schedule.DayOfWeek,
+                                schedule.TimeSlotId,
+                                schedule.ClassDurationId
+                            )],
 
                     ClassDurationId =
                         schedule.ClassDurationId,
@@ -643,192 +704,262 @@ foreach (var schedule in request.Schedules)
     }
 
 
-    private async Task ValidateEnrollmentSchedulesAsync(
-    Guid teacherId,
-    IEnumerable<CreateEnrollmentScheduleRequest> schedules,
-    DateTime startDate,
-    DateTime? endDate)
-{
-    var scheduleList = schedules.ToList();
-
-    if (scheduleList.Count == 0)
-        throw new ArgumentException(
-            "At least one class schedule is required.");
-
-    var teacherExists = await _context.Teachers
-        .AsNoTracking()
-        .AnyAsync(x => x.Id == teacherId);
-
-    if (!teacherExists)
-        throw new ArgumentException(
-            "Selected teacher was not found.");
-
-    var slotIds = scheduleList
-        .Select(x => x.TimeSlotId)
-        .Distinct()
-        .ToList();
-
-    var durationIds = scheduleList
-        .Select(x => x.ClassDurationId)
-        .Distinct()
-        .ToList();
-
-    var timeSlots = await _context.TimeSlots
-        .AsNoTracking()
-        .Where(x => slotIds.Contains(x.Id) && x.IsActive)
-        .ToListAsync();
-
-    var durations = await _context.ClassDurations
-        .AsNoTracking()
-        .Where(x => durationIds.Contains(x.Id))
-        .ToListAsync();
-
-    if (timeSlots.Count != slotIds.Count)
-        throw new InvalidOperationException(
-            "One or more selected time slots are inactive or invalid.");
-
-    if (durations.Count != durationIds.Count)
-        throw new InvalidOperationException(
-            "One or more selected class durations are invalid.");
-
-    var availabilities = await _context.TeacherAvailabilities
-        .AsNoTracking()
-        .Include(x => x.TimeSlot)
-        .Where(x =>
-            x.TeacherId == teacherId &&
-            x.IsAvailable)
-        .ToListAsync();
-
-    // If availability has been configured for the teacher,
-    // every enrollment schedule must respect it.
-    if (availabilities.Count == 0)
+    private async Task<Dictionary<(DayOfWeek Day, Guid TimeSlotId, Guid ClassDurationId), TimeOnly>>
+        ValidateEnrollmentSchedulesAsync(
+            Guid teacherId,
+            IEnumerable<CreateEnrollmentScheduleRequest> schedules,
+            DateTime startDate,
+            DateTime? endDate)
     {
-        throw new InvalidOperationException(
-            "This teacher has no availability configured.");
-    }
+        var scheduleList = schedules.ToList();
 
-    var existingTeachingSchedules = await _context.TeachingSchedules
-        .AsNoTracking()
-        .Include(x => x.ClassDuration)
-        .Where(x =>
-            x.TeacherId == teacherId &&
-            x.IsActive)
-        .ToListAsync();
+        if (scheduleList.Count == 0)
+            throw new ArgumentException(
+                "At least one class schedule is required.");
 
-    var requestedRanges = new List<(DayOfWeek Day, int Start, int End)>();
+        var teacherExists = await _context.Teachers
+            .AsNoTracking()
+            .AnyAsync(x => x.Id == teacherId);
 
-    foreach (var schedule in scheduleList)
-    {
-        var slot = timeSlots.First(x => x.Id == schedule.TimeSlotId);
-        var duration = durations.First(x => x.Id == schedule.ClassDurationId);
+        if (!teacherExists)
+            throw new ArgumentException(
+                "Selected teacher was not found.");
 
-        var requestedStart = ToMinutes(slot.StartTime);
-        var requestedEnd = requestedStart + duration.Minutes;
-
-        if (requestedEnd > 24 * 60)
-        {
-            throw new InvalidOperationException(
-                $"The class on {schedule.DayOfWeek} would continue past midnight.");
-        }
-
-        // Check teacher's configured availability.
-        var dayAvailability = availabilities
-            .Where(x =>
-                x.DayOfWeek == schedule.DayOfWeek &&
-                x.IsAvailable)
-            .Select(x => new
-            {
-                Start = ToMinutes(x.TimeSlot.StartTime),
-                End = ToMinutes(x.TimeSlot.EndTime)
-            })
-            .OrderBy(x => x.Start)
+        var slotIds = scheduleList
+            .Select(x => x.TimeSlotId)
+            .Distinct()
             .ToList();
 
-        if (dayAvailability.Count == 0)
+        var durationIds = scheduleList
+            .Select(x => x.ClassDurationId)
+            .Distinct()
+            .ToList();
+
+        var timeSlots = await _context.TimeSlots
+            .AsNoTracking()
+            .Where(x => slotIds.Contains(x.Id) && x.IsActive)
+            .ToListAsync();
+
+        var durations = await _context.ClassDurations
+            .AsNoTracking()
+            .Where(x => durationIds.Contains(x.Id))
+            .ToListAsync();
+
+        if (timeSlots.Count != slotIds.Count)
+            throw new InvalidOperationException(
+                "One or more selected time slots are inactive or invalid.");
+
+        if (durations.Count != durationIds.Count)
+            throw new InvalidOperationException(
+                "One or more selected class durations are invalid.");
+
+        var availabilities = await _context.TeacherAvailabilities
+            .AsNoTracking()
+            .Include(x => x.TimeSlot)
+            .Where(x =>
+                x.TeacherId == teacherId &&
+                x.IsAvailable)
+            .ToListAsync();
+
+        if (availabilities.Count == 0)
         {
             throw new InvalidOperationException(
-                $"Teacher is not available on {schedule.DayOfWeek}.");
+                "This teacher has no availability configured.");
         }
 
-        var coveredUntil = requestedStart;
+        var existingTeachingSchedules =
+            await _context.TeachingSchedules
+                .AsNoTracking()
+                .Include(x => x.ClassDuration)
+                .Where(x =>
+                    x.TeacherId == teacherId &&
+                    x.IsActive)
+                .ToListAsync();
 
-        foreach (var available in dayAvailability)
+        var requestedRanges =
+            new List<(DayOfWeek Day, int Start, int End)>();
+
+        var resolvedStartTimes =
+            new Dictionary<(DayOfWeek Day, Guid TimeSlotId, Guid ClassDurationId), TimeOnly>();
+
+        foreach (var schedule in scheduleList)
         {
-            var availableStart = available.Start;
-            var availableEnd = available.End;
+            var slot = timeSlots.First(x =>
+                x.Id == schedule.TimeSlotId);
 
-            // Handle 11 PM - 12 AM.
-            if (availableEnd <= availableStart)
-                availableEnd = 24 * 60;
+            var duration = durations.First(x =>
+                x.Id == schedule.ClassDurationId);
 
-            if (availableStart > coveredUntil)
-                break;
+            var slotStart = ToMinutes(slot.StartTime);
+            var slotEnd = ToMinutes(slot.EndTime);
 
-            if (availableEnd > coveredUntil)
-                coveredUntil = availableEnd;
+            if (slotEnd <= slotStart)
+                slotEnd = 24 * 60;
 
-            if (coveredUntil >= requestedEnd)
-                break;
+            if (slotStart + duration.Minutes > 24 * 60)
+            {
+                throw new InvalidOperationException(
+                    $"The selected time slot on {schedule.DayOfWeek} " +
+                    $"cannot accommodate the requested class duration.");
+            }
+
+            // ---------------------------------------------------------
+            // Find teacher availability windows for this day.
+            // ---------------------------------------------------------
+            var dayAvailability = availabilities
+                .Where(x =>
+                    x.DayOfWeek == schedule.DayOfWeek &&
+                    x.IsAvailable)
+                .Select(x =>
+                {
+                    var start = ToMinutes(x.TimeSlot.StartTime);
+                    var end = ToMinutes(x.TimeSlot.EndTime);
+
+                    if (end <= start)
+                        end = 24 * 60;
+
+                    return new
+                    {
+                        Start = start,
+                        End = end
+                    };
+                })
+                .Where(x =>
+                    x.End > slotStart &&
+                    x.Start < slotEnd)
+                .OrderBy(x => x.Start)
+                .ToList();
+
+            if (dayAvailability.Count == 0)
+            {
+                throw new InvalidOperationException(
+                    $"Teacher is not available on {schedule.DayOfWeek} " +
+                    $"during the selected time slot.");
+            }
+
+            TimeOnly? resolvedStart = null;
+
+            // ---------------------------------------------------------
+            // Find the earliest free period inside:
+            // TimeSlot + TeacherAvailability + Existing schedules.
+            // ---------------------------------------------------------
+            foreach (var availability in dayAvailability)
+            {
+                var windowStart =
+                    Math.Max(slotStart, availability.Start);
+
+                var windowEnd =
+                    Math.Min(slotEnd, availability.End);
+
+                if (windowEnd - windowStart < duration.Minutes)
+                    continue;
+
+                var candidate = windowStart;
+
+                while (candidate + duration.Minutes <= windowEnd)
+                {
+                    var candidateEnd =
+                        candidate + duration.Minutes;
+
+                    // Existing recurring classes.
+                    var existingConflict =
+                        existingTeachingSchedules
+                            .Where(existing =>
+                                existing.DayOfWeek ==
+                                schedule.DayOfWeek)
+                            .Where(existing =>
+                            {
+                                var datesOverlap =
+                                    existing.EffectiveFrom.Date <=
+                                        (endDate ??
+                                         DateTime.MaxValue).Date
+                                    &&
+                                    (!existing.EffectiveTo.HasValue ||
+                                     existing.EffectiveTo.Value.Date >=
+                                         startDate.Date);
+
+                                return datesOverlap;
+                            })
+                            .Select(existing =>
+                            {
+                                var existingStart =
+                                    ToMinutes(existing.StartTime);
+
+                                var existingEnd =
+                                    Math.Min(
+                                        24 * 60,
+                                        existingStart +
+                                        existing.ClassDuration.Minutes);
+
+                                return new
+                                {
+                                    Start = existingStart,
+                                    End = existingEnd
+                                };
+                            })
+                            .FirstOrDefault(existing =>
+                                candidate < existing.End &&
+                                candidateEnd > existing.Start);
+
+                    if (existingConflict != null)
+                    {
+                        candidate = existingConflict.End;
+                        continue;
+                    }
+
+                    // Another schedule in the same enrollment.
+                    var requestConflict =
+                        requestedRanges
+                            .FirstOrDefault(existing =>
+                                existing.Day ==
+                                    schedule.DayOfWeek &&
+                                candidate < existing.End &&
+                                candidateEnd > existing.Start);
+
+                    if (requestConflict != default)
+                    {
+                        candidate = requestConflict.End;
+                        continue;
+                    }
+
+                    resolvedStart =
+                        TimeOnly.FromTimeSpan(
+                            TimeSpan.FromMinutes(candidate));
+
+                    break;
+                }
+
+                if (resolvedStart.HasValue)
+                    break;
+            }
+
+            if (!resolvedStart.HasValue)
+            {
+                throw new InvalidOperationException(
+                    $"No {duration.Minutes}-minute free time is available " +
+                    $"for the teacher on {schedule.DayOfWeek} " +
+                    $"inside the selected time slot.");
+            }
+
+            var actualStart =
+                ToMinutes(resolvedStart.Value);
+
+            var actualEnd =
+                actualStart + duration.Minutes;
+
+            requestedRanges.Add(
+                (schedule.DayOfWeek, actualStart, actualEnd));
+
+            resolvedStartTimes[
+                (
+                    schedule.DayOfWeek,
+                    schedule.TimeSlotId,
+                    schedule.ClassDurationId
+                )] = resolvedStart.Value;
         }
 
-        if (coveredUntil < requestedEnd)
-        {
-            throw new InvalidOperationException(
-                $"Teacher is not available on {schedule.DayOfWeek} " +
-                $"for the selected time and duration.");
-        }
-
-        // Check for overlapping schedules inside this same enrollment.
-        var overlapsRequest = requestedRanges.Any(existing =>
-            existing.Day == schedule.DayOfWeek &&
-            requestedStart < existing.End &&
-            requestedEnd > existing.Start);
-
-        if (overlapsRequest)
-        {
-            throw new InvalidOperationException(
-                $"The enrollment contains overlapping classes on " +
-                $"{schedule.DayOfWeek}.");
-        }
-
-        requestedRanges.Add(
-            (schedule.DayOfWeek, requestedStart, requestedEnd));
-
-        // Check existing recurring teaching schedules.
-        var hasConflict = existingTeachingSchedules.Any(existing =>
-        {
-            if (existing.DayOfWeek != schedule.DayOfWeek)
-                return false;
-
-            var existingStart = ToMinutes(existing.StartTime);
-            var existingEnd =
-                existingStart + existing.ClassDuration.Minutes;
-
-            if (existingEnd > 24 * 60)
-                existingEnd = 24 * 60;
-
-            var datesOverlap =
-                existing.EffectiveFrom.Date <=
-                    (endDate ?? DateTime.MaxValue).Date
-                &&
-                (!existing.EffectiveTo.HasValue ||
-                 existing.EffectiveTo.Value.Date >= startDate.Date);
-
-            if (!datesOverlap)
-                return false;
-
-            return requestedStart < existingEnd &&
-                   requestedEnd > existingStart;
-        });
-
-        if (hasConflict)
-        {
-            throw new InvalidOperationException(
-                $"The selected teacher already has a class " +
-                $"overlapping this time on {schedule.DayOfWeek}.");
-        }
+        return resolvedStartTimes;
     }
-}
 
 private static int ToMinutes(TimeOnly time)
 {

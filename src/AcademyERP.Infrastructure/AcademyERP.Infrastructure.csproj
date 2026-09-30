@@ -24,6 +24,12 @@
   </PropertyGroup>
 
 <ItemGroup>
+
+  <None Update="Assets/Fonts/*.ttf">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+  </None>
+
   <None Update="Assets/ms-academy-logo.png">
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </None>

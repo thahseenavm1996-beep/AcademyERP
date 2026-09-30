@@ -167,13 +167,6 @@
                             Approve Teacher
                         </MudText>
 
-                        <MudTextField @bind-Value="_password"
-                                      Label="Temporary Password"
-                                      Variant="Variant.Outlined"
-                                      InputType="InputType.Password"
-                                      HelperText="Minimum 8 characters"
-                                      Class="mb-3" />
-
                         <MudTextField @bind-Value="_reviewRemarks"
                                       Label="Review Remarks"
                                       Variant="Variant.Outlined"
@@ -222,7 +215,6 @@
     [Parameter]
     public TeacherRegistrationResponse Request { get; set; } = new();
 
-    private string _password = string.Empty;
     private string? _reviewRemarks;
     private bool _processing;
 
@@ -250,15 +242,6 @@
 
     private async Task Approve()
     {
-        if (string.IsNullOrWhiteSpace(_password) || _password.Length < 8)
-        {
-            Snackbar.Add(
-                "Password must contain at least 8 characters.",
-                Severity.Warning);
-
-            return;
-        }
-
         try
         {
             _processing = true;
@@ -267,7 +250,6 @@
                 Request.Id,
                 new ApproveTeacherRegistrationRequest
                 {
-                    Password = _password,
                     ReviewRemarks = _reviewRemarks
                 });
 

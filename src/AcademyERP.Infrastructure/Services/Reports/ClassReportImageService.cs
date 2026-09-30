@@ -1367,11 +1367,9 @@ const int logoHeight = 122;
         bool bold)
     {
         using var typeface =
-            SKTypeface.FromFamilyName(
-                "DejaVu Sans",
-                bold
-                    ? SKFontStyle.Bold
-                    : SKFontStyle.Normal);
+            bold
+                ? ReportFontHelper.Bold()
+                : ReportFontHelper.Regular();
 
         using var font =
             new SKFont(
@@ -1406,11 +1404,9 @@ const int logoHeight = 122;
         bool bold)
     {
         using var typeface =
-            SKTypeface.FromFamilyName(
-                "DejaVu Sans",
-                bold
-                    ? SKFontStyle.Bold
-                    : SKFontStyle.Normal);
+            bold
+                ? ReportFontHelper.Bold()
+                : ReportFontHelper.Regular();
 
         using var font =
             new SKFont(

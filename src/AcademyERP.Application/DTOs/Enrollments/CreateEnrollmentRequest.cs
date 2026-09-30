@@ -9,6 +9,10 @@ public class CreateEnrollmentRequest
 
     public Guid? TeacherId { get; set; }
 
+    // When true, EnrollmentService may automatically add the
+    // requested Day + TimeSlot to the teacher's availability.
+    // Used by Teacher Student Request approval.
+    public bool AutoCreateTeacherAvailability { get; set; }
 
     public List<CreateEnrollmentScheduleRequest> Schedules { get; set; }
         = new();

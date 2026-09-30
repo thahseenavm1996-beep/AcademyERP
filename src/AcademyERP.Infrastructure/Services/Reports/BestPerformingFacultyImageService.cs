@@ -77,14 +77,10 @@ public class BestPerformingFacultyImageService
             SKColor.Parse("#F4F8FC"));
 
         using var bold =
-            SKTypeface.FromFamilyName(
-                "Arial",
-                SKFontStyle.Bold);
+            ReportFontHelper.Bold();
 
         using var normal =
-            SKTypeface.FromFamilyName(
-                "Arial",
-                SKFontStyle.Normal);
+            ReportFontHelper.Regular();
 
         using var titleFont =
             new SKFont(bold, 34);
@@ -763,14 +759,10 @@ public class BestPerformingFacultyImageService
             accentPaint);
 
         using var bold =
-            SKTypeface.FromFamilyName(
-                "Arial",
-                SKFontStyle.Bold);
+            ReportFontHelper.Bold();
 
         using var normal =
-            SKTypeface.FromFamilyName(
-                "Arial",
-                SKFontStyle.Normal);
+            ReportFontHelper.Regular();
 
         using var titleFont =
             new SKFont(bold, 13);
@@ -902,9 +894,7 @@ public class BestPerformingFacultyImageService
             paint);
 
         using var typeface =
-            SKTypeface.FromFamilyName(
-                "Arial",
-                SKFontStyle.Bold);
+            ReportFontHelper.Bold();
 
         using var font =
             new SKFont(typeface, 16);

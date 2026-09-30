@@ -79,3 +79,11 @@ src/AcademyERP.API/Storage/
 merge_academy_fix.sh
 setup-best-performing-faculty.sh
 setup-best-reports.sh
+
+51 to 201.xlsx
+MS 50 MSG.xlsx
+academy-admin.zip
+academy-api.zip
+academy-website.zip
+add-student-phone-production.sql
+tools/

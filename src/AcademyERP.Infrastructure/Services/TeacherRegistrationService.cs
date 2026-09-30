@@ -5,6 +5,7 @@ using AcademyERP.Domain.Entities.TeacherRegistrations;
 using AcademyERP.Domain.Enums;
 using AcademyERP.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using AcademyERP.Application.Services;
 
 namespace AcademyERP.Infrastructure.Services;
@@ -13,13 +14,16 @@ public class TeacherRegistrationService : ITeacherRegistrationService
 {
     private readonly ApplicationDbContext _context;
     private readonly ITeacherService _teacherService;
+    private readonly IConfiguration _configuration;
 
     public TeacherRegistrationService(
         ApplicationDbContext context,
-        ITeacherService teacherService)
+        ITeacherService teacherService,
+        IConfiguration configuration)
     {
         _context = context;
         _teacherService = teacherService;
+        _configuration = configuration;
     }
 
     public async Task<TeacherRegistrationResponse> CreateAsync(
@@ -152,11 +156,12 @@ CourseId = item.CourseId,
         Guid id,
         ApproveTeacherRegistrationRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Password) ||
-            request.Password.Length < 8)
+        var defaultPassword = _configuration["TeacherDefaultPassword"];
+
+        if (string.IsNullOrWhiteSpace(defaultPassword))
         {
-            throw new ArgumentException(
-                "Password must be at least 8 characters long.");
+            throw new InvalidOperationException(
+                "Teacher default password is not configured.");
         }
 
         var registration = await _context.TeacherRegistrationRequests
@@ -210,7 +215,7 @@ CourseId = item.CourseId,
             TimeZone = GetDefaultTimeZone(registration.Country),
             Address = registration.Address,
             Remarks = registration.Remarks,
-            Password = request.Password,
+            Password = defaultPassword,
             Availability = registration.Availability
                 .Select(x => new TeacherAvailabilityRequest
                 {

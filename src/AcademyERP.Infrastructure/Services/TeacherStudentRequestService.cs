@@ -4,6 +4,7 @@ using AcademyERP.Application.DTOs.TeacherStudentRequests;
 using AcademyERP.Application.Interfaces;
 using AcademyERP.Application.Services;
 using AcademyERP.Application.Interfaces.TeacherStudentRequests;
+using AcademyERP.Domain.Entities.TeacherAvailabilities;
 using AcademyERP.Domain.Entities.TeacherStudentRequests;
 using AcademyERP.Domain.Enums;
 using AcademyERP.Persistence.Context;
@@ -285,12 +286,18 @@ public class TeacherStudentRequestService : ITeacherStudentRequestService
             throw new InvalidOperationException(
                 "The request has no class schedule.");
 
+
+        // =========================================================
+        // CREATE ENROLLMENT
+        // =========================================================
+
         var enrollment = await _enrollmentService.CreateAsync(
             new CreateEnrollmentRequest
             {
                 StudentId = entity.StudentId.Value,
                 CourseId = entity.CourseId,
                 TeacherId = entity.TeacherId,
+                AutoCreateTeacherAvailability = true,
                 StartDate = entity.StartDate,
                 EndDate = null,
                 MonthlyFee = request.StudentFee,

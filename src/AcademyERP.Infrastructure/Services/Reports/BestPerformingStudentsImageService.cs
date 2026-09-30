@@ -58,8 +58,8 @@ public class BestPerformingStudentsImageService
 
         canvas.Clear(SKColor.Parse("#F4F8FC"));
 
-        using var bold = SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold);
-        using var normal = SKTypeface.FromFamilyName("Arial", SKFontStyle.Normal);
+        using var bold = ReportFontHelper.Bold();
+        using var normal = ReportFontHelper.Regular();
 
         using var titleFont = new SKFont(bold, 34);
         using var academyFont = new SKFont(bold, 25);
@@ -521,11 +521,9 @@ public class BestPerformingStudentsImageService
                 x + 16, y + 94),
             2, 2, accentPaint);
 
-        using var bold = SKTypeface.FromFamilyName(
-            "Arial", SKFontStyle.Bold);
+        using var bold = ReportFontHelper.Bold();
 
-        using var normal = SKTypeface.FromFamilyName(
-            "Arial", SKFontStyle.Normal);
+        using var normal = ReportFontHelper.Regular();
 
         using var titleFont = new SKFont(bold, 13);
         using var valueFont = new SKFont(bold, 28);
@@ -616,8 +614,7 @@ public class BestPerformingStudentsImageService
         canvas.DrawRoundRect(
             rect, 8, 8, paint);
 
-        using var typeface = SKTypeface.FromFamilyName(
-            "Arial", SKFontStyle.Bold);
+        using var typeface = ReportFontHelper.Bold();
 
         using var font = new SKFont(typeface, 16);
 
