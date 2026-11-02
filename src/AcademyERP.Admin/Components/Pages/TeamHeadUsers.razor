@@ -1,0 +1,275 @@
+@page "/team-head-users"
+@using AcademyERP.Admin.Models
+@using AcademyERP.Admin.Services
+@using MudBlazor
+@inject TeamHeadUserApiService TeamHeadUserApi
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<PageTitle>Team Head Accounts</PageTitle>
+<MudText Typo="Typo.h4" Class="mb-2">Team Head Accounts</MudText>
+<MudText Typo="Typo.body2" Class="mb-4">
+    Create and manage Team Head sign-in accounts. Last login is shown in your local time.
+</MudText>
+
+<MudGrid Spacing="3" Class="mb-4">
+    <MudItem xs="12" lg="5">
+        <MudPaper Class="pa-4" Elevation="2">
+            <MudText Typo="Typo.h6" Class="mb-3">Create Team Head</MudText>
+            <MudTextField Label="Full name" @bind-Value="_fullName" Required="true" />
+            <MudTextField Label="Login username (email)" @bind-Value="_email" Required="true" />
+            <MudTextField Label="Temporary password" @bind-Value="_password" Required="true" InputType="InputType.Password" />
+            <MudButton Class="mt-4" Variant="Variant.Filled" Color="Color.Primary"
+                       Disabled="_saving" OnClick="CreateAsync">
+                Create Team Head
+            </MudButton>
+        </MudPaper>
+    </MudItem>
+
+    @if (_selectedUser is not null)
+    {
+        <MudItem xs="12" lg="7">
+            <MudPaper Class="pa-4" Elevation="2">
+                <MudText Typo="Typo.h6" Class="mb-3">Manage @_selectedUser.FullName</MudText>
+                <MudTextField Label="Login username (email)" @bind-Value="_selectedUsername" />
+                <MudButton Class="mt-2" Variant="Variant.Outlined" Color="Color.Primary"
+                           Disabled="_saving" OnClick="SaveUsernameAsync">
+                    Save username
+                </MudButton>
+                <MudDivider Class="my-4" />
+                <MudTextField Label="New password" @bind-Value="_newPassword" InputType="InputType.Password" />
+                <MudTextField Label="Confirm new password" @bind-Value="_confirmPassword" InputType="InputType.Password" />
+                <MudButton Class="mt-2" Variant="Variant.Outlined" Color="Color.Warning"
+                           Disabled="_saving" OnClick="ResetPasswordAsync">
+                    Change password
+                </MudButton>
+            </MudPaper>
+        </MudItem>
+    }
+</MudGrid>
+
+<MudPaper Class="pa-4" Elevation="2">
+    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
+        <MudText Typo="Typo.h6">Team Head users</MudText>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh"
+                   Disabled="_loading" OnClick="LoadUsersAsync">Refresh</MudButton>
+    </MudStack>
+
+    <MudTable Items="_teamHeads" Loading="_loading" Hover="true" Dense="true" Striped="true" Breakpoint="Breakpoint.Sm">
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh>Username</MudTh>
+            <MudTh>Last login</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Name">@context.FullName</MudTd>
+            <MudTd DataLabel="Username">@context.Username</MudTd>
+            <MudTd DataLabel="Last login">
+                @(context.LastLoginAt.HasValue
+                    ? context.LastLoginAt.Value.ToLocalTime().ToString("dd MMM yyyy hh:mm tt")
+                    : "Never")
+            </MudTd>
+            <MudTd DataLabel="Status">
+                <MudChip T="string" Size="Size.Small" Color="@(context.IsActive ? Color.Success : Color.Default)">
+                    @(context.IsActive ? "Active" : "Inactive")
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Actions">
+                <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary"
+                           OnClick="@(() => SelectUser(context))">Manage</MudButton>
+                <MudButton Size="Size.Small" Variant="Variant.Text"
+                           Color="@(context.IsActive ? Color.Error : Color.Success)"
+                           Disabled="_saving"
+                           OnClick="@(() => ToggleActiveAsync(context))">
+                    @(context.IsActive ? "Deactivate" : "Activate")
+                </MudButton>
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Class="pa-4">No Team Head accounts have been created.</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudPaper>
+
+@code {
+    private List<TeamHeadUserResponse> _teamHeads = new();
+    private TeamHeadUserResponse? _selectedUser;
+    private string _fullName = string.Empty;
+    private string _email = string.Empty;
+    private string _password = string.Empty;
+    private string _selectedUsername = string.Empty;
+    private string _newPassword = string.Empty;
+    private string _confirmPassword = string.Empty;
+    private bool _loading;
+    private bool _saving;
+
+    protected override Task OnInitializedAsync() => LoadUsersAsync();
+
+    private async Task LoadUsersAsync()
+    {
+        _loading = true;
+        try
+        {
+            _teamHeads = await TeamHeadUserApi.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Unable to load Team Head accounts: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void SelectUser(TeamHeadUserResponse user)
+    {
+        _selectedUser = user;
+        _selectedUsername = user.Username;
+        _newPassword = string.Empty;
+        _confirmPassword = string.Empty;
+    }
+
+    private async Task CreateAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_fullName) || string.IsNullOrWhiteSpace(_email) || string.IsNullOrWhiteSpace(_password))
+        {
+            Snackbar.Add("Enter a name, username, and temporary password.", Severity.Warning);
+            return;
+        }
+
+        _saving = true;
+        try
+        {
+            var error = await TeamHeadUserApi.CreateAsync(_fullName, _email, _password);
+            if (error is not null)
+            {
+                Snackbar.Add(error, Severity.Error);
+                return;
+            }
+
+            Snackbar.Add("Team Head account created.", Severity.Success);
+            _fullName = _email = _password = string.Empty;
+            await LoadUsersAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Unable to create account: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task SaveUsernameAsync()
+    {
+        if (_selectedUser is null || string.IsNullOrWhiteSpace(_selectedUsername))
+        {
+            Snackbar.Add("Enter the username to save.", Severity.Warning);
+            return;
+        }
+
+        _saving = true;
+        try
+        {
+            var error = await TeamHeadUserApi.UpdateUsernameAsync(_selectedUser.Id, _selectedUsername.Trim());
+            if (error is not null)
+            {
+                Snackbar.Add(error, Severity.Error);
+                return;
+            }
+
+            Snackbar.Add("Team Head username updated.", Severity.Success);
+            await LoadUsersAsync();
+            _selectedUser = _teamHeads.FirstOrDefault(x => x.Id == _selectedUser.Id);
+            if (_selectedUser is not null)
+                _selectedUsername = _selectedUser.Username;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Unable to update username: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task ResetPasswordAsync()
+    {
+        if (_selectedUser is null || string.IsNullOrWhiteSpace(_newPassword))
+        {
+            Snackbar.Add("Enter a new password.", Severity.Warning);
+            return;
+        }
+        if (_newPassword != _confirmPassword)
+        {
+            Snackbar.Add("The passwords do not match.", Severity.Warning);
+            return;
+        }
+
+        _saving = true;
+        try
+        {
+            var error = await TeamHeadUserApi.ResetPasswordAsync(_selectedUser.Id, _newPassword);
+            if (error is not null)
+            {
+                Snackbar.Add(error, Severity.Error);
+                return;
+            }
+
+            _newPassword = _confirmPassword = string.Empty;
+            Snackbar.Add("Team Head password changed.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Unable to change password: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task ToggleActiveAsync(TeamHeadUserResponse user)
+    {
+        var activating = !user.IsActive;
+        var verb = activating ? "Activate" : "Deactivate";
+        var message = activating
+            ? $"Allow {user.FullName} to sign in to the Team Head portal again?"
+            : $"Disable sign-in for {user.FullName}? Existing sign-in tokens may remain valid for up to one hour.";
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            $"{verb} Team Head account",
+            message,
+            yesText: verb,
+            cancelText: "Cancel");
+        if (confirmed != true)
+            return;
+
+        _saving = true;
+        try
+        {
+            var error = await TeamHeadUserApi.SetActiveAsync(user.Id, activating);
+            if (error is not null)
+                Snackbar.Add(error, Severity.Error);
+            else
+            {
+                Snackbar.Add($"Team Head account {verb.ToLowerInvariant()}d.", Severity.Success);
+                await LoadUsersAsync();
+                if (_selectedUser?.Id == user.Id)
+                    _selectedUser = _teamHeads.FirstOrDefault(x => x.Id == user.Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Unable to update account status: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+}

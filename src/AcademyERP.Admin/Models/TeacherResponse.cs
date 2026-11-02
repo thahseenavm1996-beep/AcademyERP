@@ -27,5 +27,7 @@ public class TeacherResponse
 
     public bool IsActive { get; set; }
 
+    public DateTime? LastLoginAt { get; set; }
+
     public List<TeacherAvailabilityResponse> Availability { get; set; } = new();
 }

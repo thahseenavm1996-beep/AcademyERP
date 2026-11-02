@@ -4,18 +4,63 @@
 @using AcademyERP.Admin.Models.Admissions
 @using AcademyERP.Admin.Services
 @using AcademyERP.Admin.Models
+@using AcademyERP.Admin.Services.Exports
 @using MudBlazor
 
 @inject AdmissionApplicationApiService AdmissionApi
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inject TeacherApiService TeacherApi
+@inject IJSRuntime JS
 
 <PageTitle>Admission Applications</PageTitle>
 
-<MudText Typo="Typo.h4" Class="mb-4">
-    Admission Applications
-</MudText>
+<MudStack Row="true"
+          Justify="Justify.SpaceBetween"
+          AlignItems="AlignItems.Center"
+          Class="mb-4">
+    <MudText Typo="Typo.h4">
+        Admission Applications
+    </MudText>
+
+    <MudStack Row="true"
+              AlignItems="AlignItems.Center"
+              Spacing="2"
+              Style="flex-wrap:wrap;">
+        <MudTextField T="string"
+                      @bind-Value="_enquiryOfficerSearch"
+                      Immediate="true"
+                      Label="Enquiry officer"
+                      Placeholder="Search enquiry officer"
+                      Variant="Variant.Outlined"
+                      Clearable="true"
+                      Style="width:240px;" />
+
+        <MudDatePicker @bind-Date="_pdfFromDate"
+                       Label="From Date"
+                       DateFormat="dd MMM yyyy"
+                       Variant="Variant.Outlined"
+                       Clearable="true"
+                       Editable="true"
+                       Style="width:180px;" />
+
+        <MudDatePicker @bind-Date="_pdfToDate"
+                       Label="To Date"
+                       DateFormat="dd MMM yyyy"
+                       Variant="Variant.Outlined"
+                       Clearable="true"
+                       Editable="true"
+                       Style="width:180px;" />
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.PictureAsPdf"
+                   Disabled="@(_loading || !FilteredApplications.Any())"
+                   OnClick="DownloadFilteredPdfAsync">
+            Download PDF
+        </MudButton>
+    </MudStack>
+</MudStack>
 
 <!-- SUMMARY CARDS -->
 <MudGrid Class="mb-4">
@@ -221,6 +266,7 @@
         <MudTh>WhatsApp</MudTh>
         <MudTh>Country</MudTh>
         <MudTh>Status</MudTh>
+        <MudTh>Enquiry Officer</MudTh>
         <MudTh>Submitted</MudTh>
         <MudTh>Actions</MudTh>
 
@@ -258,6 +304,10 @@
 
             </MudChip>
 
+        </MudTd>
+
+        <MudTd DataLabel="Enquiry Officer">
+            @(string.IsNullOrWhiteSpace(context.Message) ? "—" : context.Message)
         </MudTd>
 
         <MudTd DataLabel="Submitted">
@@ -321,10 +371,13 @@
     private int? _selectedMonth;
     private int? _selectedYear;
     private int? _selectedStatus;
+    private DateTime? _pdfFromDate;
+    private DateTime? _pdfToDate;
+    private string? _enquiryOfficerSearch;
 private List<TeacherResponse> _teachers = new();
     private IEnumerable<int> AvailableYears =>
         _applications
-            .Select(x => x.CreatedAt.ToLocalTime().Year)
+            .Select(x => ConvertToIndiaTime(x.CreatedAt).Year)
             .Distinct()
             .OrderByDescending(x => x);
 
@@ -332,13 +385,25 @@ private List<TeacherResponse> _teachers = new();
         _applications
             .Where(x =>
                 !_selectedMonth.HasValue ||
-                x.CreatedAt.ToLocalTime().Month == _selectedMonth.Value)
+                ConvertToIndiaTime(x.CreatedAt).Month == _selectedMonth.Value)
             .Where(x =>
                 !_selectedYear.HasValue ||
-                x.CreatedAt.ToLocalTime().Year == _selectedYear.Value)
+                ConvertToIndiaTime(x.CreatedAt).Year == _selectedYear.Value)
+            .Where(x =>
+                !_pdfFromDate.HasValue ||
+                ConvertToIndiaTime(x.CreatedAt).Date >= _pdfFromDate.Value.Date)
+            .Where(x =>
+                !_pdfToDate.HasValue ||
+                ConvertToIndiaTime(x.CreatedAt).Date <= _pdfToDate.Value.Date)
             .Where(x =>
                 !_selectedStatus.HasValue ||
                 x.Status == _selectedStatus.Value)
+            .Where(x =>
+                string.IsNullOrWhiteSpace(_enquiryOfficerSearch) ||
+                (!string.IsNullOrWhiteSpace(x.Message) &&
+                 x.Message.Contains(
+                     _enquiryOfficerSearch.Trim(),
+                     StringComparison.OrdinalIgnoreCase)))
             .OrderByDescending(x => x.CreatedAt)
             .ToList();
 
@@ -394,6 +459,64 @@ private async Task LoadTeachersAsync()
         _selectedMonth = null;
         _selectedYear = null;
         _selectedStatus = null;
+        _pdfFromDate = null;
+        _pdfToDate = null;
+        _enquiryOfficerSearch = null;
+    }
+
+    private static DateTime ConvertToIndiaTime(DateTime dateTime)
+    {
+        var utcDateTime = dateTime.Kind switch
+        {
+            DateTimeKind.Utc => dateTime,
+            DateTimeKind.Local => dateTime.ToUniversalTime(),
+            _ => DateTime.SpecifyKind(dateTime, DateTimeKind.Utc)
+        };
+
+        return TimeZoneInfo.ConvertTimeFromUtc(
+            utcDateTime,
+            TimeZoneInfo.FindSystemTimeZoneById("Asia/Kolkata"));
+    }
+
+    private async Task DownloadFilteredPdfAsync()
+    {
+        var applications = FilteredApplications;
+        if (applications.Count == 0)
+        {
+            Snackbar.Add("There are no admission applications to export.", Severity.Info);
+            return;
+        }
+
+        try
+        {
+            var pdf = AdmissionApplicationExportService.GeneratePdf(
+                applications,
+                _pdfFromDate,
+                _pdfToDate,
+                _enquiryOfficerSearch);
+            await JS.InvokeVoidAsync(
+                "downloadFile",
+                $"admission-applications-{GetEnquiryOfficerFilePart()}-{DateTime.Now:yyyyMMdd-HHmm}.pdf",
+                "application/pdf",
+                Convert.ToBase64String(pdf));
+
+            Snackbar.Add("Admission applications PDF downloaded.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Unable to download admission applications PDF: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private string GetEnquiryOfficerFilePart()
+    {
+        if (string.IsNullOrWhiteSpace(_enquiryOfficerSearch))
+            return "all-officers";
+
+        var normalized = _enquiryOfficerSearch.Trim().Replace(' ', '-');
+        var safe = string.Concat(normalized.Where(character =>
+            char.IsLetterOrDigit(character) || character is '-' or '_'));
+        return string.IsNullOrWhiteSpace(safe) ? "filtered-officer" : safe;
     }
 
     private static string GetStatusText(int status)

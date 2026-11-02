@@ -109,6 +109,7 @@
 <MudTh>Gender</MudTh>
 <MudTh>Department</MudTh>
 <MudTh>Country</MudTh>
+<MudTh>Last Login</MudTh>
 <MudTh>Status</MudTh>
 
     </HeaderContent>
@@ -129,6 +130,11 @@
 <MudTd>
     @context.Country
 </MudTd>
+        <MudTd>
+            @(context.LastLoginAt.HasValue
+                ? context.LastLoginAt.Value.ToLocalTime().ToString("dd MMM yyyy hh:mm tt")
+                : "Never")
+        </MudTd>
         <MudTd>
             @(context.IsActive ? "Active" : "Inactive")
         </MudTd>

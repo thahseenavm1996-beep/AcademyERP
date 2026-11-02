@@ -26,7 +26,8 @@ public static class DbInitializer
             Roles.Parent,
             Roles.Student,
             Roles.Accountant,
-            Roles.HR
+            Roles.HR,
+            Roles.TeamHead
         };
 
         foreach (var role in roles)

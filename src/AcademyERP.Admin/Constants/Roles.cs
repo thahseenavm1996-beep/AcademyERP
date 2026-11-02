@@ -9,4 +9,5 @@ public static class Roles
     public const string Student = "Student";
     public const string Accountant = "Accountant";
     public const string HR = "HR";
+    public const string TeamHead = "TeamHead";
 }

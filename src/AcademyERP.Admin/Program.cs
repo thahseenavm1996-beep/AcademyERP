@@ -47,6 +47,7 @@ builder.Services.AddScoped<AuthStateService>();
 builder.Services.AddScoped<TeachingScheduleApiService>();
 builder.Services.AddScoped<ScheduledClassApiService>();
 builder.Services.AddScoped<FeeInvoiceApiService>();
+builder.Services.AddScoped<TeamHeadUserApiService>();
 builder.Services.AddScoped<ClassProgressApiService>();
 builder.Services.AddScoped<StudentReportApiService>();
 builder.Services.AddScoped<StudentPerformanceApiService>();

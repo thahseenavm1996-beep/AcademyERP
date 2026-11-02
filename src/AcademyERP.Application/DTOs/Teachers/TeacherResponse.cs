@@ -33,5 +33,6 @@ public class TeacherResponse
     public string? Remarks { get; set; }
 
     public bool IsActive { get; set; }
+    public DateTime? LastLoginAt { get; set; }
     public List<TeacherAvailabilityResponse> Availability { get; set; } = new();
 }

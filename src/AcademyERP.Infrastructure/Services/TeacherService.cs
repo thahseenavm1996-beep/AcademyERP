@@ -3,13 +3,15 @@ using AcademyERP.Persistence.Context;
 using AcademyERP.Application.DTOs.Teachers;
 using AcademyERP.Domain.Entities.Teachers;
 using Microsoft.EntityFrameworkCore;
-using AutoMapper;
+using MapsterMapper;
 using AcademyERP.Application.Common;
 using AcademyERP.Application.Interfaces;
 using AcademyERP.Domain.Entities.Identity;
 using Microsoft.AspNetCore.Identity;
 using AcademyERP.Domain.Entities.TeacherAvailabilities;
 using AcademyERP.Domain.Enums;
+using AcademyERP.Application.Constants;
+using System.Globalization;
 
 
 namespace AcademyERP.Infrastructure.Services;
@@ -149,9 +151,12 @@ if (!string.IsNullOrWhiteSpace(request.Department))
     .Skip((request.Page - 1) * request.PageSize)
     .Take(request.PageSize)
     .ToListAsync();
+        var teacherResponses = _mapper.Map<List<TeacherResponse>>(teachers);
+        await PopulateLastLoginAsync(teachers, teacherResponses);
+
         return new PagedResponse<TeacherResponse>
         {
-            Items = _mapper.Map<List<TeacherResponse>>(teachers),
+            Items = teacherResponses,
             Page = request.Page,
             PageSize = request.PageSize,
             TotalCount = totalCount,
@@ -168,7 +173,49 @@ if (!string.IsNullOrWhiteSpace(request.Department))
         if (teacher == null)
             return null;
 
-        return _mapper.Map<TeacherResponse>(teacher);
+        var response = _mapper.Map<TeacherResponse>(teacher);
+        await PopulateLastLoginAsync(new[] { teacher }, new[] { response });
+        return response;
+    }
+
+    private async Task PopulateLastLoginAsync(
+        IReadOnlyCollection<Teacher> teachers,
+        IReadOnlyCollection<TeacherResponse> responses)
+    {
+        if (teachers.Count == 0)
+            return;
+
+        var userIds = teachers.Select(x => x.ApplicationUserId).ToList();
+        var loginClaims = await _context.UserClaims
+            .AsNoTracking()
+            .Where(x => userIds.Contains(x.UserId) &&
+                        x.ClaimType == AccountClaimTypes.LastLoginUtc)
+            .ToListAsync();
+        var lastLoginByUserId = loginClaims
+            .Select(claim => new
+            {
+                claim.UserId,
+                Parsed = DateTime.TryParse(
+                    claim.ClaimValue,
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.RoundtripKind,
+                    out var value)
+                    ? value
+                    : (DateTime?)null
+            })
+            .Where(x => x.Parsed.HasValue)
+            .GroupBy(x => x.UserId)
+            .ToDictionary(group => group.Key, group => group.Max(x => x.Parsed));
+        var teacherById = teachers.ToDictionary(x => x.Id);
+
+        foreach (var response in responses)
+        {
+            if (teacherById.TryGetValue(response.Id, out var teacher) &&
+                lastLoginByUserId.TryGetValue(teacher.ApplicationUserId, out var lastLogin))
+            {
+                response.LastLoginAt = lastLogin;
+            }
+        }
     }
 
     public async Task<TeacherResponse> UpdateAsync(Guid id, UpdateTeacherRequest request)
